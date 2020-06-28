@@ -27,7 +27,7 @@ package recipes
 import (
 	"fmt"
 
-	"github.com/ottenwbe/go-life/core"
+	"github.com/ottenwbe/go-cook/core"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -28,7 +28,7 @@ import (
 	"github.com/satori/go.uuid"
 	"golang.org/x/oauth2"
 
-	"github.com/ottenwbe/go-life/recipes"
+	"github.com/ottenwbe/go-cook/recipes"
 )
 
 //SourceID represents a unique id of a sourceClient

@@ -41,8 +41,8 @@ import (
 	"os"
 	"sync"
 
-	"github.com/ottenwbe/go-life/recipes"
-	"github.com/ottenwbe/go-life/utils"
+	"github.com/ottenwbe/go-cook/recipes"
+	"github.com/ottenwbe/go-cook/utils"
 )
 
 //driveRecipes is a cache for recipes from Drive

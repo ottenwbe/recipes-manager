@@ -1,4 +1,4 @@
-module github.com/ottenwbe/go-life
+module github.com/ottenwbe/go-cook
 
 go 1.13
 

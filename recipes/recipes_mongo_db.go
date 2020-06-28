@@ -35,7 +35,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 
-	"github.com/ottenwbe/go-life/utils"
+	"github.com/ottenwbe/go-cook/utils"
 )
 
 const (

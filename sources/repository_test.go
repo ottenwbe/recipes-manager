@@ -25,12 +25,13 @@
 package sources
 
 import (
-	"github.com/ottenwbe/go-life/recipes"
 	"github.com/satori/go.uuid"
-	oauth2 "golang.org/x/oauth2"
+	"golang.org/x/oauth2"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"github.com/ottenwbe/go-cook/recipes"
 )
 
 var _ = Describe("sourceClient repository", func() {

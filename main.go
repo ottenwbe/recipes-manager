@@ -27,9 +27,9 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 
-	"github.com/ottenwbe/go-life/core"
-	"github.com/ottenwbe/go-life/recipes"
-	"github.com/ottenwbe/go-life/sources"
+	"github.com/ottenwbe/go-cook/core"
+	"github.com/ottenwbe/go-cook/recipes"
+	"github.com/ottenwbe/go-cook/sources"
 )
 
 func init() {
