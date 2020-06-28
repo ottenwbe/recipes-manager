@@ -11,4 +11,6 @@ install:
 script:
   - make vet
   - make lint
+  - make build
   - make test
+  - make relase

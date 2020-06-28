@@ -4,8 +4,11 @@ set -uex pipefail
 
 echo "Prepare tests..."
 
+# remove existing test container
+# or ignore the error if the container does not exist
 docker stop test-mongo | true
 docker rm test-mongo | true
+# run a mongo-db
 docker run -d --name=test-mongo -p 27017:27017 mongo:3
 
 mkdir -p ~/.go-cook
@@ -21,6 +24,7 @@ ginkgo -v -cover ./...
 
 echo "Collecting results"
 
+# delete outdated result iff they exist
 rm -rf test/results
 rm -rf test/coverage
 
