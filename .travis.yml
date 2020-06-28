@@ -3,7 +3,9 @@ go:
 - '1.13'
 - '1.14'
 
-before_install:
+install:
+  - go get -u github.com/onsi/ginkgo/ginkgo
+  - go get -u github.com/onsi/gomega/...
   - go get -u golang.org/x/lint/golint
 
 script:

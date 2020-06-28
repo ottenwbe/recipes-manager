@@ -15,9 +15,6 @@ mkdir -p ~/.go-cook
     echo "  host: mongodb://localhost:27017"
 } > ~/.go-cook/go-cook-config.yml
 
-go get -u github.com/onsi/ginkgo/ginkgo  # installs the ginkgo CLI
-go get -u github.com/onsi/gomega/...     # fetches the matcher library
-
 echo "Testing..."
 
 ginkgo -v -cover ./...
