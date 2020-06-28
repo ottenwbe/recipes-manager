@@ -3,6 +3,9 @@ go:
 - '1.13'
 - '1.14'
 
+before_install:
+  - go get -u golang.org/x/lint/golint
+
 script:
   - make vet
   - make lint
