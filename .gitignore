@@ -1,0 +1,21 @@
+# IDE
+.idea/
+*iml
+
+# App and config
+client_secret.json
+token*json
+go-cook*
+
+# Test
+Test Results*
+coverage.out
+*.coverprofile
+*junit.xml
+results/
+
+# Misc
+tmp/
+pics/
+helper/
+

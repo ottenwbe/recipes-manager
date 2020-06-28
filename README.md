@@ -17,9 +17,6 @@ Backend Service to Manage Recipes.
     go get github.com/onsi/gomega/...
     ```
 
-### Notice
-* base makefile from: https://github.com/vincentbernat/hellogopher
-
 ## ARM
 
 ### Docker builds 

@@ -32,7 +32,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/ottenwbe/go-life/utils"
+	"github.com/ottenwbe/go-cook/utils"
 )
 
 const (
