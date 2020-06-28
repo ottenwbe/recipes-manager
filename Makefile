@@ -45,7 +45,7 @@ vet: ; $(info $(M) running vet…) @ ## Run go vet
 	done
 
 .PHONY: lint
-lint: $(GOLINT) ; $(info $(M) running golint…) @ ## Run golint
+lint: ; $(info $(M) running golint…) @ ## Run golint
 	@for d in $$($(GO) list ./...); do \
 		$(GOLINT) $${d};  \
 	done
