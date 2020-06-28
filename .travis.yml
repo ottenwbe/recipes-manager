@@ -5,7 +5,6 @@ go:
 arch:
   - amd64
   - arm64
-  - armv7
 
 install:
   - go get -u github.com/onsi/ginkgo/ginkgo
