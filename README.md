@@ -35,6 +35,12 @@ make build
 make release
 ```
 
+### Docker builds
+
+```
+make docker
+```
+
 ### ARM Docker builds 
 
 ```
