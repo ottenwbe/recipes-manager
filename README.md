@@ -1,6 +1,8 @@
 # go-cook
 
-Backend Service to Manage Recipes.
+[![Build Status](https://travis-ci.org/ottenwbe/go-cook.svg?branch=master)](https://travis-ci.org/ottenwbe/go-cook)
+
+Backend service to manage recipes in a database.
 
 ### Development Dependencies
 
@@ -17,30 +19,45 @@ Backend Service to Manage Recipes.
     go get github.com/onsi/gomega/...
     ```
 
-## ARM
+## Builds
 
-### Docker builds 
+A Makefile supports the build process.
 
+### Build Snapshot
+
+```
+make build 
+```
+
+### Build Release Version
+
+```
+make release
+```
+
+### Docker builds
+
+```
+make docker
+```
+
+### ARM Docker builds 
+
+```
 make docker-arm 
+```
 
-### Tips and Tricks
+### Docker Tips and Tricks
 
 * If necessary, stop all container; i.e., if they hang
     ```    
     docker stop $(docker ps -a -q)
     ```    
 
-1. Remove all container and their volumes
+* Remove all container and their volumes
     ```    
     docker rm -v $(docker ps -a -q)      
     ```
-
-### approvals in jenkins /scriptapprovals
-
-method hudson.plugins.git.GitSCM getBranches
-method hudson.plugins.git.GitSCM getUserRemoteConfigs
-method hudson.plugins.git.GitSCM isDoGenerateSubmoduleConfigurations
-method hudson.plugins.git.GitSCMBackwardCompatibility getExtensions
  
  ### Disclaimer
  

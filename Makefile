@@ -1,8 +1,10 @@
-APP		 = go-cook
-TMPAPP	 = $(APP)-tmp
+APP      = go-cook
+TMPAPP   = $(APP)-tmp
 SNAPSHOT = $(APP)-snapshot
 DATE     = $(shell date +%F_%T)
 VERSION  = $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || echo v0.0.0)
+
+MAINTAINER ?= Beate Ottenwaelder <ottenwbe.public@gmail.com>
 
 VERSIONPKG = "github.com/ottenwbe/go-life/core.appVersionString"
 
@@ -56,8 +58,6 @@ fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
 		$(GOFMT) -l -w $$d/*.go  ; \
 	 done
 
-cleanup: ; docker stop test-mongo && docker rm -v test-mongo
-
 .PHONY: test
 test: ; $(info $(M) running tests…) @ ## Run tests
 	@sh test.sh
@@ -65,12 +65,28 @@ test: ; $(info $(M) running tests…) @ ## Run tests
 # Misc
 
 .PHONY: docker-arm
-docker-arm: ## Create docker image
-	docker -H $(BUILD_DOCKER_HOST)  build --label "version=m${VERSION}" --label "build_date=${DATE}"  --label "maintaner=Beate Ottenwaelder <ottenwbe.public@gmail.com>" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile.armhf .
+docker-arm: ## Create docker image for arm
+ifndef BUILD_DOCKER_HOST
+	docker build --label "version=${VERSION}" --build-arg "APP=$(APP)-$(VERSION)"  --label "build_date=${DATE}" --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile.armhf .
+else
+	docker -H $(BUILD_DOCKER_HOST)  build --build-arg "APP=$(APP)-$(VERSION)"  --label "version=${VERSION}" --label "build_date=${DATE}" --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile.armhf .
+endif
+
+.PHONY: docker
+docker: ## Create docker image
+ifndef BUILD_DOCKER_HOST
+	docker build --label "version=${VERSION}" --build-arg "APP=$(APP)-$(VERSION)"  --label "build_date=${DATE}"  --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile .
+else
+	docker -H $(BUILD_DOCKER_HOST) build --build-arg "APP=$(APP)-$(VERSION)"  --label "version=${VERSION}" --label "build_date=${DATE}"  --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile .
+endif
 
 .PHONY: docker-push
-	docker-push: ## Push docker image
-		docker -H $(BUILD_DOCKER_HOST) push $(DOCKER_PREFIX)go-cook:$(VERSION)
+docker-push: ## Push docker image
+ifndef BUILD_DOCKER_HOST
+	docker push $(DOCKER_PREFIX)go-cook:$(VERSION)
+else
+	docker -H $(BUILD_DOCKER_HOST) push $(DOCKER_PREFIX)go-cook:$(VERSION)
+endif
 
 .PHONY: help
 help:
