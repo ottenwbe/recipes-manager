@@ -25,7 +25,9 @@
 package core
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/contrib/ginrus"
@@ -72,18 +74,17 @@ type Routes interface {
 
 //Router is a facade for a HTTP router and can be implemented by a concrete router like gin.
 type Router interface {
-	Run() error
 	API(version int16) Routes
+	http.Handler
 }
 
 //APICallContext is a facade for any concrete Context, e.g. gins
 type APICallContext = gin.Context
 
-//NewRouterA creates a Router for API Calls with a given ADDRESS
-func NewRouterA(addr string) Router {
+//NewRouter creates a router for API calls with a pre-configured ADDRESS
+func NewRouter() Router {
 	router := &ginRouter{
 		gin.New(),
-		addr,
 		make(map[string]Routes),
 	}
 	router.configure()
@@ -91,15 +92,13 @@ func NewRouterA(addr string) Router {
 	return router
 }
 
-//NewRouter creates a router for API calls with a pre-configured ADDRESS
-func NewRouter() Router {
-	return NewRouterA(defaultAddress)
-}
-
 type ginRouter struct {
 	router       *gin.Engine
-	address      string
 	routerGroups map[string]Routes
+}
+
+func (g *ginRouter) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	g.router.ServeHTTP(writer, request)
 }
 
 func (g *ginRouter) addSubGroup(groupName string, subGroupName string) Routes {
@@ -124,11 +123,6 @@ func (g *ginRouter) API(version int16) Routes {
 		g.routerGroups[v(version)] = rg
 	}
 	return rg
-}
-
-//Run the server for the api
-func (g *ginRouter) Run() error {
-	return g.router.Run(g.address)
 }
 
 func (g *ginRouter) route(route string) Routes {
@@ -191,4 +185,50 @@ func (g *ginRouter) corsMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+// Server interface
+type Server struct {
+	Address string
+	server  *http.Server
+}
+
+//NewServerA creates a new server with default address
+func NewServerA(addr string) Server {
+	return Server{
+		Address: addr,
+		server: &http.Server{
+			Addr:    addr,
+			Handler: NewRouter(),
+		}}
+}
+
+//NewServerH creates a new server with default address
+func NewServerH(handler http.Handler) Server {
+	return Server{server: &http.Server{
+		Addr:    defaultAddress,
+		Handler: handler,
+	}}
+}
+
+//NewServer creates a new server to listen on the defaultAddress
+func NewServer() Server {
+	return NewServerA(defaultAddress)
+}
+
+//Run the server for the api
+func (s Server) Run() {
+	go func() {
+		if err := s.server.ListenAndServe(); err != nil {
+			log.Errorf("Server's running: %s\n", err)
+		}
+	}()
+}
+
+//Close the server
+func (s Server) Close() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := s.server.Shutdown(ctx)
+	return err
 }

@@ -46,9 +46,12 @@ var _ = Describe("http", func() {
 			r := NewRouter()
 			Expect(reflect.TypeOf(r)).To(Equal(reflect.TypeOf(&ginRouter{})))
 		})
+	})
+
+	Context("creation of the server", func() {
 		It("should set the configured ADDRESS", func() {
-			r := NewRouter()
-			Expect(r.(*ginRouter).address).To(Equal(utils.Config.GetString(addressCfg)))
+			s := NewServer()
+			Expect(s.Address).To(Equal(utils.Config.GetString(addressCfg)))
 		})
 	})
 
@@ -59,10 +62,6 @@ var _ = Describe("http", func() {
 			Expect(v1).ToNot(BeNil())
 			Expect(v1.Path()).To(Equal("/api/v1"))
 			Expect(r.(*ginRouter).routerGroups).To(HaveKey("v1"))
-		})
-		It("should use the configured ADDRESS by default", func() {
-			r := NewRouter()
-			Expect(r.(*ginRouter).address).To(Equal(utils.Config.GetString(addressCfg)))
 		})
 	})
 })

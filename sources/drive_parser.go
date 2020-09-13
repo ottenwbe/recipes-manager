@@ -197,10 +197,10 @@ func handleIngredient(p *driveRecipeParser, text string) {
 	num := validNumber.FindAllString(text, -1)
 	strs := validStrings.FindAllString(text, -1)
 
-	var amount = -1
+	var amount = -1.0
 	var err error
 	if len(num) > 0 {
-		amount, err = strconv.Atoi(num[0])
+		amount, err = strconv.ParseFloat(num[0], 32)
 		if err != nil {
 			log.WithError(err).Error("Unexpected error while parsing a number")
 		}

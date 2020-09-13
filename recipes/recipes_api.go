@@ -26,6 +26,8 @@ package recipes
 
 import (
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/ottenwbe/go-cook/core"
 	log "github.com/sirupsen/logrus"
@@ -77,20 +79,12 @@ func (rAPI *API) prepareV1API() {
 	//GET a random recipe
 	v1.GET("/recipes/num", func(c *core.APICallContext) {
 		num := rAPI.recipes.Num()
-		log.Debugf("num %v", num)
+		log.Debugf("Number of Recipes %v", num)
 		c.String(200, fmt.Sprintf("%v", num))
 	})
 
 	//GET a specific recipe
-	v1.GET("/recipes/r/:recipe", func(c *core.APICallContext) {
-		recipeID := c.Param("recipe")
-		recipe := rAPI.recipes.Get(NewRecipeIDFromString(recipeID))
-		if recipe.ID == InvalidRecipeID() {
-			c.String(404, "No such recipe")
-		} else {
-			c.JSON(200, recipe)
-		}
-	})
+	v1.GET("/recipes/r/:recipe", rAPI.getRecipe)
 
 	//GET a specific recipe's picture
 	v1.GET("/recipes/r/:recipe/pictures/:name", func(c *core.APICallContext) {
@@ -104,4 +98,33 @@ func (rAPI *API) prepareV1API() {
 		}
 	})
 
+}
+
+func (rAPI *API) getRecipe(c *core.APICallContext) {
+
+	query := c.Request.URL.Query()
+	portions := extractPortions(query)
+
+	recipeIDS := c.Param("recipe")
+	recipeID := NewRecipeIDFromString(recipeIDS)
+
+	recipe := rAPI.recipes.Get(recipeID)
+	recipe.ScaleTo(portions)
+
+	if recipe.ID == InvalidRecipeID() {
+		c.String(404, "No such recipe: %v", recipeIDS)
+	} else {
+		c.JSON(200, recipe)
+	}
+}
+
+func extractPortions(query url.Values) int {
+	portions := 1
+	if len(query["portions"]) > 0 {
+		portionsS := query["portions"][0]
+		if num, err := strconv.Atoi(portionsS); err != nil {
+			portions = num
+		}
+	}
+	return portions
 }

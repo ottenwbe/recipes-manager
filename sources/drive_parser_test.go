@@ -53,6 +53,7 @@ var _ = Describe("drive parser", func() {
 			Ingredients: expectedIngredients,
 			Description: "\nDo sth.\n\nAnd sth else.\n\nAnd some salad.",
 			PictureLink: []string{"IMG_20141227_132212.jpg"},
+			Portions:    1,
 		}
 	)
 

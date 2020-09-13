@@ -73,16 +73,66 @@ var _ = Describe("recipes", func() {
 
 	Context("conversion", func() {
 		It("should be able to convert a recipe to a string", func() {
-			expected := "{\"id\":\"\",\"name\":\"\",\"components\":null,\"description\":\"\",\"pictureLink\":null}"
+			expected := "{\"id\":\"\",\"name\":\"\",\"components\":null,\"description\":\"\",\"pictureLink\":null,\"portions\":0}"
 			retrieved := &Recipe{}
 			Expect(retrieved.String()).To(Equal(expected))
 		})
 
 		It("should be able to convert a recipe to a json byte string", func() {
-			expected := []byte("{\"id\":\"\",\"name\":\"\",\"components\":null,\"description\":\"\",\"pictureLink\":null}")
+			expected := []byte("{\"id\":\"\",\"name\":\"\",\"components\":null,\"description\":\"\",\"pictureLink\":null,\"portions\":0}")
 			r := &Recipe{}
 			Expect(r.JSON()).To(Equal(expected))
 		})
+	})
 
+	Context("scale", func() {
+		It("should be able to scale up", func() {
+			recipe := Recipe{
+				Portions: 1,
+				Ingredients: []Ingredients{
+					{Amount: 1, Name: "test1", Unit: "g"},
+					{Amount: 2, Name: "test2", Unit: "l"},
+				},
+			}
+			recipe.ScaleBy(2)
+			Expect(recipe.Ingredients[0].Amount).To(Equal(2.0))
+			Expect(recipe.Ingredients[1].Amount).To(Equal(4.0))
+		})
+		It("should be able to scale down", func() {
+			recipe := Recipe{
+				Portions: 1,
+				Ingredients: []Ingredients{
+					{Amount: 1, Name: "test1", Unit: "g"},
+					{Amount: 2, Name: "test2", Unit: "l"},
+				},
+			}
+			recipe.ScaleBy(0.5)
+			Expect(recipe.Ingredients[0].Amount).To(Equal(0.5))
+			Expect(recipe.Ingredients[1].Amount).To(Equal(1.0))
+		})
+		It("should be able to scale up to specific number of portions", func() {
+			recipe := Recipe{
+				Portions: 2,
+				Ingredients: []Ingredients{
+					{Amount: 1, Name: "test1", Unit: "g"},
+					{Amount: 2, Name: "test2", Unit: "l"},
+				},
+			}
+			recipe.ScaleTo(4)
+			Expect(recipe.Ingredients[0].Amount).To(Equal(2.0))
+			Expect(recipe.Ingredients[1].Amount).To(Equal(4.0))
+		})
+		It("should be able to scale down to specific number of portions", func() {
+			recipe := Recipe{
+				Portions: 2,
+				Ingredients: []Ingredients{
+					{Amount: 1, Name: "test1", Unit: "g"},
+					{Amount: 2, Name: "test2", Unit: "l"},
+				},
+			}
+			recipe.ScaleTo(1)
+			Expect(recipe.Ingredients[0].Amount).To(Equal(0.5))
+			Expect(recipe.Ingredients[1].Amount).To(Equal(1.0))
+		})
 	})
 })

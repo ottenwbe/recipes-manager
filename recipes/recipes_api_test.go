@@ -25,15 +25,31 @@
 package recipes
 
 import (
+	"github.com/ottenwbe/go-cook/core"
+	"net/http"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("recipesAPI", func() {
 
+	var (
+		server core.Server
+	)
+
+	BeforeEach(func() {
+		server = core.NewServerA(":8080")
+		server.Run()
+	})
+	AfterEach(func() {
+		server.Close()
+	})
+
 	Context("Creating the API V1", func() {
 		It("should get created", func() {
-			Expect(true).ToNot(BeFalse())
+			_, err := http.Get("http://localhost:8080/api/v1/recipes")
+			Expect(err).ToNot(HaveOccurred())
 		})
 	})
 

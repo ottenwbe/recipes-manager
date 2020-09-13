@@ -22,6 +22,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.5.1 // indirect
+	github.com/ulule/deepcopier v0.0.0-20200430083143-45decc6639b6 // indirect
 	go.mongodb.org/mongo-driver v1.3.4
 	go.opencensus.io v0.22.4 // indirect
 	golang.org/x/net v0.0.0-20200625001655-4c5254603344
