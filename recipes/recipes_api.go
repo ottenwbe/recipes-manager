@@ -35,31 +35,33 @@ import (
 
 //API for recipes
 type API struct {
-	router  core.Router
+	handler core.Handler
 	recipes RecipeDB
 }
 
 //NewRecipesAPI constructs an API for recipes
-func NewRecipesAPI(router core.Router, recipes RecipeDB) *API {
-	return &API{
-		router,
+func AddRecipesAPIToHandler(handler core.Handler, recipes RecipeDB) {
+	api := &API{
+		handler,
 		recipes,
 	}
+
+	api.prepareAPI()
 }
 
-//PrepareAPI registers all api endpoints for recipes
-func (rAPI *API) PrepareAPI() {
+//prepareAPI registers all api endpoints for recipes
+func (rAPI *API) prepareAPI() {
 	rAPI.prepareV1API()
 }
 
 func (rAPI *API) prepareV1API() {
 
-	if rAPI.router == nil {
-		log.Fatal("No router defined")
+	if rAPI.handler == nil {
+		log.Fatal("No handler defined for Recipes API")
 		return
 	}
 
-	v1 := rAPI.router.API(1)
+	v1 := rAPI.handler.API(1)
 
 	//GET the list of recipes
 	v1.GET("/recipes", func(c *core.APICallContext) {

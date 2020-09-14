@@ -38,8 +38,8 @@ import (
 )
 
 const (
-	addressCfg    = "html.address"
-	corsOriginCfg = "html.cors.origin"
+	addressCfg         = "html.address"
+	corsAllowOriginCfg = "html.cors.origin"
 
 	baseAPIPath = "api"
 )
@@ -49,12 +49,12 @@ var (
 	corsOrigin     string
 )
 
-// init configures the router for api calls when the core package is initialized
+// init configures the handler for api calls when the core package is initialized
 func init() {
 	utils.Config.SetDefault(addressCfg, ":8080")
-	utils.Config.SetDefault(corsOriginCfg, "*")
+	utils.Config.SetDefault(corsAllowOriginCfg, "*")
 	defaultAddress = utils.Config.GetString(addressCfg)
-	corsOrigin = utils.Config.GetString(corsOriginCfg)
+	corsOrigin = utils.Config.GetString(corsAllowOriginCfg)
 }
 
 //Routes is managing a set of API endpoints.
@@ -72,8 +72,8 @@ type Routes interface {
 	POST(string, func(c *APICallContext))
 }
 
-//Router is a facade for a HTTP router and can be implemented by a concrete router like gin.
-type Router interface {
+//Handler is a facade for a HTTP handler and can be implemented by a concrete handler like gin.
+type Handler interface {
 	API(version int16) Routes
 	http.Handler
 }
@@ -81,27 +81,27 @@ type Router interface {
 //APICallContext is a facade for any concrete Context, e.g. gins
 type APICallContext = gin.Context
 
-//NewRouter creates a router for API calls with a pre-configured ADDRESS
-func NewRouter() Router {
-	router := &ginRouter{
+//NewHandler creates a handler for API calls with a pre-configured ADDRESS
+func NewHandler() Handler {
+	handler := &ginHandler{
 		gin.New(),
 		make(map[string]Routes),
 	}
-	router.configure()
-	router.prepareDefaultRoutes()
-	return router
+	handler.configure()
+	handler.prepareDefaultRoutes()
+	return handler
 }
 
-type ginRouter struct {
-	router       *gin.Engine
+type ginHandler struct {
+	handler      *gin.Engine
 	routerGroups map[string]Routes
 }
 
-func (g *ginRouter) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	g.router.ServeHTTP(writer, request)
+func (g *ginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	g.handler.ServeHTTP(writer, request)
 }
 
-func (g *ginRouter) addSubGroup(groupName string, subGroupName string) Routes {
+func (g *ginHandler) addSubGroup(groupName string, subGroupName string) Routes {
 	rg, ok := g.routerGroups[groupName]
 	if !ok {
 		// we create the missing group if it cannot be found
@@ -116,7 +116,7 @@ func v(version int16) string {
 }
 
 //API registers the endpoint /api/v<version> and returns a group of endpoints under /api/v<version>
-func (g *ginRouter) API(version int16) Routes {
+func (g *ginHandler) API(version int16) Routes {
 	rg, ok := g.routerGroups[v(version)]
 	if !ok {
 		rg = g.addSubGroup(baseAPIPath, v(version))
@@ -125,20 +125,20 @@ func (g *ginRouter) API(version int16) Routes {
 	return rg
 }
 
-func (g *ginRouter) route(route string) Routes {
-	return &ginRoutes{g.router.Group(route)}
+func (g *ginHandler) route(route string) Routes {
+	return &ginRoutes{g.handler.Group(route)}
 }
 
 // configure the default middleware with a logger and recovery (crash-free) middleware
-func (g *ginRouter) configure() {
-	g.router.Use(ginrus.Ginrus(log.StandardLogger(), time.RFC3339, true))
-	g.router.Use(g.corsMiddleware())
+func (g *ginHandler) configure() {
+	g.handler.Use(ginrus.Ginrus(log.StandardLogger(), time.RFC3339, true))
+	g.handler.Use(g.corsMiddleware())
 	// Return 500 if there was a panic.
-	g.router.Use(gin.Recovery())
+	g.handler.Use(gin.Recovery())
 }
 
-func (g *ginRouter) prepareDefaultRoutes() {
-	g.router.GET("/version", func(c *gin.Context) {
+func (g *ginHandler) prepareDefaultRoutes() {
+	g.handler.GET("/version", func(c *gin.Context) {
 		c.JSON(200, AppVersion())
 	})
 }
@@ -171,7 +171,7 @@ func (g *ginRoutes) Path() string {
 	return g.rg.BasePath()
 }
 
-func (g *ginRouter) corsMiddleware() gin.HandlerFunc {
+func (g *ginHandler) corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", corsOrigin)
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -187,40 +187,37 @@ func (g *ginRouter) corsMiddleware() gin.HandlerFunc {
 	}
 }
 
-// Server interface
+// Server interface which extends the http.Server
 type Server struct {
 	Address string
 	server  *http.Server
 }
 
-//NewServerA creates a new server with default address
-func NewServerA(addr string) Server {
+//NewServerA creates a new server using a given address to listen to
+func NewServerA(addr string, handler http.Handler) Server {
 	return Server{
 		Address: addr,
 		server: &http.Server{
 			Addr:    addr,
-			Handler: NewRouter(),
+			Handler: handler,
 		}}
 }
 
-//NewServerH creates a new server with default address
+//NewServerH creates a new server using the default address with a custom handler
 func NewServerH(handler http.Handler) Server {
-	return Server{server: &http.Server{
-		Addr:    defaultAddress,
-		Handler: handler,
-	}}
+	return NewServerA(defaultAddress, handler)
 }
 
 //NewServer creates a new server to listen on the defaultAddress
 func NewServer() Server {
-	return NewServerA(defaultAddress)
+	return NewServerA(defaultAddress, NewHandler())
 }
 
 //Run the server for the api
 func (s Server) Run() {
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil {
-			log.Errorf("Server's running: %s\n", err)
+			log.Errorf("Server's not running: %s\n", err)
 		}
 	}()
 }

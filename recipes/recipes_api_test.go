@@ -27,6 +27,7 @@ package recipes
 import (
 	"github.com/ottenwbe/go-cook/core"
 	"net/http"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -38,18 +39,24 @@ var _ = Describe("recipesAPI", func() {
 		server core.Server
 	)
 
-	BeforeEach(func() {
-		server = core.NewServerA(":8080")
+	BeforeSuite(func() {
+		handler := core.NewHandler()
+		recipes, _ := NewDatabaseClient()
+		AddRecipesAPIToHandler(handler, recipes)
+		server = core.NewServerA(":8080", handler)
 		server.Run()
+		time.Sleep(500 * time.Millisecond)
 	})
-	AfterEach(func() {
+
+	AfterSuite(func() {
 		server.Close()
 	})
 
 	Context("Creating the API V1", func() {
 		It("should get created", func() {
-			_, err := http.Get("http://localhost:8080/api/v1/recipes")
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes")
 			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode).To(Equal(200))
 		})
 	})
 

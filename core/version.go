@@ -33,7 +33,7 @@ var (
 	appVersion       *Version
 )
 
-//Version of the application and the exposed api
+// Version of the application and the exposed api
 type Version struct {
 	// APP is the version of the current app
 	App string `json:"app"`
@@ -41,7 +41,7 @@ type Version struct {
 	API string `json:"api"`
 }
 
-//AppVersion returns the current major version of the API as well as the applications version
+// AppVersion returns the current major version of the API as well as the applications version
 func AppVersion() *Version {
 	versionGuard.Do(func() {
 		appVersion = &Version{

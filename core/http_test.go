@@ -41,10 +41,10 @@ var _ = Describe("http", func() {
 		})
 	})
 
-	Context("creation of the http router", func() {
-		It("should be of type Router", func() {
-			r := NewRouter()
-			Expect(reflect.TypeOf(r)).To(Equal(reflect.TypeOf(&ginRouter{})))
+	Context("creation of the http handler", func() {
+		It("should be of type Handler", func() {
+			r := NewHandler()
+			Expect(reflect.TypeOf(r)).To(Equal(reflect.TypeOf(&ginHandler{})))
 		})
 	})
 
@@ -57,11 +57,11 @@ var _ = Describe("http", func() {
 
 	Context("routes", func() {
 		It("should create and cache a versioned api route", func() {
-			r := NewRouter()
+			r := NewHandler()
 			v1 := r.API(1)
 			Expect(v1).ToNot(BeNil())
 			Expect(v1.Path()).To(Equal("/api/v1"))
-			Expect(r.(*ginRouter).routerGroups).To(HaveKey("v1"))
+			Expect(r.(*ginHandler).routerGroups).To(HaveKey("v1"))
 		})
 	})
 })

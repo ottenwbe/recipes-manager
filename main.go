@@ -62,10 +62,9 @@ func closeDatabase(recipesDB recipes.RecipeDB) {
 }
 
 func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) core.Server {
-	handler := core.NewRouter()
+	handler := core.NewHandler()
 	server := core.NewServerH(handler)
-	recipesAPI := recipes.NewRecipesAPI(handler, recipesDB)
-	recipesAPI.PrepareAPI()
+	recipes.AddRecipesAPIToHandler(handler, recipesDB)
 	sourcesAPI := sources.NewSourceAPI(srcRepository, recipesDB)
 	sourcesAPI.PrepareAPI(handler, srcRepository, recipesDB)
 	return server
