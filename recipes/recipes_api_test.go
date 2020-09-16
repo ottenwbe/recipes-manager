@@ -60,4 +60,20 @@ var _ = Describe("recipesAPI", func() {
 		})
 	})
 
+	Context("Getting Recipes", func() {
+		It("random recipe with empty get created", func() {
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes/rand")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode).To(Equal(404))
+		})
+	})
+
+	Context("Getting Recipes", func() {
+		It("random recipe with empty get created", func() {
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes/num")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode).To(Equal(200))
+		})
+	})
+
 })

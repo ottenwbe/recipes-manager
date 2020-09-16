@@ -47,7 +47,9 @@ func main() {
 	server := newServer(recipesDB, srcRepository)
 
 	// start the application
-	server.Run()
+	waitForStop := server.Run()
+	waitForStop.Wait()
+	log.Info("Stopping Application")
 }
 
 func newCloseableDatabase() recipes.RecipeDB {

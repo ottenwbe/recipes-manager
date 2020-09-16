@@ -28,11 +28,16 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	swaggerFiles "github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
+
+	_ "github.com/ottenwbe/go-cook/docs"
 
 	"github.com/ottenwbe/go-cook/utils"
 )
@@ -131,6 +136,10 @@ func (g *ginHandler) route(route string) Routes {
 
 // configure the default middleware with a logger and recovery (crash-free) middleware
 func (g *ginHandler) configure() {
+
+	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json") // The url pointing to API definition
+	g.handler.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+
 	g.handler.Use(ginrus.Ginrus(log.StandardLogger(), time.RFC3339, true))
 	g.handler.Use(g.corsMiddleware())
 	// Return 500 if there was a panic.
@@ -187,10 +196,15 @@ func (g *ginHandler) corsMiddleware() gin.HandlerFunc {
 	}
 }
 
+// @title GO-Cook API
+// @version 1.0
+// @description This is the go-cook api
+
 // Server interface which extends the http.Server
 type Server struct {
-	Address string
-	server  *http.Server
+	Address       string
+	server        *http.Server
+	stopWaitGroup *sync.WaitGroup
 }
 
 //NewServerA creates a new server using a given address to listen to
@@ -200,7 +214,8 @@ func NewServerA(addr string, handler http.Handler) Server {
 		server: &http.Server{
 			Addr:    addr,
 			Handler: handler,
-		}}
+		},
+		stopWaitGroup: &sync.WaitGroup{}}
 }
 
 //NewServerH creates a new server using the default address with a custom handler
@@ -214,17 +229,20 @@ func NewServer() Server {
 }
 
 //Run the server for the api
-func (s Server) Run() {
+func (s Server) Run() *sync.WaitGroup {
+	s.stopWaitGroup.Add(1)
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil {
 			log.Errorf("Server's not running: %s\n", err)
 		}
+		s.stopWaitGroup.Done()
 	}()
+	return s.stopWaitGroup
 }
 
 //Close the server
 func (s Server) Close() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	err := s.server.Shutdown(ctx)
 	return err
