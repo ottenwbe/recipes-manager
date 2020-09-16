@@ -69,45 +69,84 @@ const (
 // 	cborSelfDesrTag3 byte = 0xf7
 // )
 
-func cbordesc(bd byte) string {
-	switch bd >> 5 {
-	case cborMajorUint:
-		return "(u)int"
-	case cborMajorNegInt:
-		return "int"
-	case cborMajorBytes:
-		return "bytes"
-	case cborMajorString:
-		return "string"
-	case cborMajorArray:
-		return "array"
-	case cborMajorMap:
-		return "map"
-	case cborMajorTag:
-		return "tag"
-	case cborMajorSimpleOrFloat: // default
-		switch bd {
-		case cborBdNil:
-			return "nil"
-		case cborBdFalse:
-			return "false"
-		case cborBdTrue:
-			return "true"
-		case cborBdFloat16, cborBdFloat32, cborBdFloat64:
-			return "float"
-		case cborBdIndefiniteBytes:
-			return "bytes*"
-		case cborBdIndefiniteString:
-			return "string*"
-		case cborBdIndefiniteArray:
-			return "array*"
-		case cborBdIndefiniteMap:
-			return "map*"
-		default:
-			return "unknown(simple)"
+var (
+	cbordescSimpleNames = map[byte]string{
+		cborBdNil:              "nil",
+		cborBdFalse:            "false",
+		cborBdTrue:             "true",
+		cborBdFloat16:          "float",
+		cborBdFloat32:          "float",
+		cborBdFloat64:          "float",
+		cborBdIndefiniteBytes:  "bytes*",
+		cborBdIndefiniteString: "string*",
+		cborBdIndefiniteArray:  "array*",
+		cborBdIndefiniteMap:    "map*",
+	}
+	cbordescMajorNames = map[byte]string{
+		cborMajorUint:          "(u)int",
+		cborMajorNegInt:        "int",
+		cborMajorBytes:         "bytes",
+		cborMajorString:        "string",
+		cborMajorArray:         "array",
+		cborMajorMap:           "map",
+		cborMajorTag:           "tag",
+		cborMajorSimpleOrFloat: "simple",
+	}
+)
+
+func cbordesc(bd byte) (s string) {
+	bm := bd >> 5
+	if bm == cborMajorSimpleOrFloat {
+		s = cbordescSimpleNames[bd]
+		if s == "" {
+			s = "unknown(simple)"
+		}
+	} else {
+		s = cbordescMajorNames[bm]
+		if s == "" {
+			s = "unknown"
 		}
 	}
-	return "unknown"
+	return
+
+	// switch bd >> 5 {
+	// case cborMajorUint:
+	// 	return "(u)int"
+	// case cborMajorNegInt:
+	// 	return "int"
+	// case cborMajorBytes:
+	// 	return "bytes"
+	// case cborMajorString:
+	// 	return "string"
+	// case cborMajorArray:
+	// 	return "array"
+	// case cborMajorMap:
+	// 	return "map"
+	// case cborMajorTag:
+	// 	return "tag"
+	// case cborMajorSimpleOrFloat: // default
+	// 	switch bd {
+	// 	case cborBdNil:
+	// 		return "nil"
+	// 	case cborBdFalse:
+	// 		return "false"
+	// 	case cborBdTrue:
+	// 		return "true"
+	// 	case cborBdFloat16, cborBdFloat32, cborBdFloat64:
+	// 		return "float"
+	// 	case cborBdIndefiniteBytes:
+	// 		return "bytes*"
+	// 	case cborBdIndefiniteString:
+	// 		return "string*"
+	// 	case cborBdIndefiniteArray:
+	// 		return "array*"
+	// 	case cborBdIndefiniteMap:
+	// 		return "map*"
+	// 	default:
+	// 		return "unknown(simple)"
+	// 	}
+	// }
+	// return "unknown"
 }
 
 // -------------------
@@ -138,11 +177,26 @@ func (e *cborEncDriver) EncodeBool(b bool) {
 }
 
 func (e *cborEncDriver) EncodeFloat32(f float32) {
+	b := math.Float32bits(f)
+	if e.h.OptimumSize {
+		if h := floatToHalfFloatBits(b); halfFloatToFloatBits(h) == b {
+			// fmt.Printf("no 32-16 overflow: %v\n", f)
+			e.e.encWr.writen1(cborBdFloat16)
+			bigenHelper{e.x[:2], e.e.w()}.writeUint16(h)
+			return
+		}
+	}
 	e.e.encWr.writen1(cborBdFloat32)
-	bigenHelper{e.x[:4], e.e.w()}.writeUint32(math.Float32bits(f))
+	bigenHelper{e.x[:4], e.e.w()}.writeUint32(b)
 }
 
 func (e *cborEncDriver) EncodeFloat64(f float64) {
+	if e.h.OptimumSize {
+		if f32 := float32(f); float64(f32) == f {
+			e.EncodeFloat32(f32)
+			return
+		}
+	}
 	e.e.encWr.writen1(cborBdFloat64)
 	bigenHelper{e.x[:8], e.e.w()}.writeUint64(math.Float64bits(f))
 }
@@ -347,12 +401,12 @@ func (d *cborDecDriver) skipTags() {
 	}
 }
 
-func (d *cborDecDriver) uncacheRead() {
-	if d.bdRead {
-		d.d.decRd.unreadn1()
-		d.bdRead = false
-	}
-}
+// func (d *cborDecDriver) uncacheRead() {
+// 	if d.bdRead {
+// 		d.d.decRd.unreadn1()
+// 		d.bdRead = false
+// 	}
+// }
 
 func (d *cborDecDriver) ContainerType() (vt valueType) {
 	d.fnil = false
@@ -378,9 +432,9 @@ func (d *cborDecDriver) ContainerType() (vt valueType) {
 	return valueTypeUnset
 }
 
-func (d *cborDecDriver) Nil() bool {
-	return d.fnil
-}
+// func (d *cborDecDriver) Nil() bool {
+// 	return d.fnil
+// }
 
 func (d *cborDecDriver) TryNil() bool {
 	return d.advanceNil()
@@ -624,12 +678,11 @@ func (d *cborDecDriver) DecodeBytes(bs []byte, zerocopy bool) (bsOut []byte) {
 	}
 	clen := d.decLen()
 	d.bdRead = false
-	if zerocopy {
-		if d.d.bytes {
-			return d.d.decRd.readx(uint(clen))
-		} else if len(bs) == 0 {
-			bs = d.d.b[:]
-		}
+	if d.d.bytes && (zerocopy || d.h.ZeroCopy) {
+		return d.d.decRd.rb.readx(uint(clen))
+	}
+	if zerocopy && len(bs) == 0 {
+		bs = d.d.b[:]
 	}
 	return decByteSlice(d.d.r(), clen, d.h.MaxInitLen, bs)
 }
@@ -714,7 +767,7 @@ func (d *cborDecDriver) DecodeNaked() {
 		n.v = valueTypeInt
 		n.i = d.DecodeInt64()
 	case cborMajorBytes:
-		decNakedReadRawBytes(d, &d.d, n, d.h.RawToString)
+		fauxUnionReadRawBytes(d, &d.d, n, d.h.RawToString)
 	case cborMajorString:
 		n.v = valueTypeString
 		n.s = string(d.DecodeStringAsBytes())
@@ -753,7 +806,7 @@ func (d *cborDecDriver) DecodeNaked() {
 			n.v = valueTypeFloat
 			n.f = d.DecodeFloat64()
 		case cborBdIndefiniteBytes:
-			decNakedReadRawBytes(d, &d.d, n, d.h.RawToString)
+			fauxUnionReadRawBytes(d, &d.d, n, d.h.RawToString)
 		case cborBdIndefiniteString:
 			n.v = valueTypeString
 			n.s = string(d.DecodeStringAsBytes())
