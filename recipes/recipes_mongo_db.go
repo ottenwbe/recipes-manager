@@ -60,6 +60,17 @@ type MongoRecipeDB struct {
 	mtx sync.Mutex
 }
 
+func (m *MongoRecipeDB) Clear() {
+	c := m.getRecipesCollection()
+	if err := c.Drop(ctx()); err != nil {
+		log.WithError(err).Error("Could not drop recipes from MongoDB")
+	}
+	r := m.getPictureCollection()
+	if err := r.Drop(ctx()); err != nil {
+		log.WithError(err).Error("Could not drop pictures from MongoDB")
+	}
+}
+
 //List all recipes from the db
 func (m *MongoRecipeDB) List() (recipes []*Recipe) {
 

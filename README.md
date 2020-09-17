@@ -4,7 +4,7 @@
 
 Backend service to manage recipes in a database.
 
-### Development Dependencies
+## Development Dependencies
 
 * Go >= 1.13
 
@@ -58,6 +58,14 @@ make docker-arm
     ```    
     docker rm -v $(docker ps -a -q)      
     ```
+ 
+ ## API Documentation
+ 
+ ### Generate the Documentation 
+ 
+The Swagger API documentation is based on [gin-swagger](https://github.com/swaggo/gin-swagger):
+ 
+    swag init -d ./core -g http.go --parseInternal
  
  ### Disclaimer
  

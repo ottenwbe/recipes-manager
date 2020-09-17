@@ -22,16 +22,18 @@
  * SOFTWARE.
  */
 
-package recipes
+package docs_test
 
 import (
-	"io"
+	"testing"
+
+	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/gomega"
 )
 
-//RecipeDB is the interface that all DB implementations have to expose
-type RecipeDB interface {
-	io.Closer
-	Recipes
-	Ping() error
-	Clear()
+func TestCore(t *testing.T) {
+	RegisterFailHandler(Fail)
+	junitReporter := reporters.NewJUnitReporter("docs-junit.xml")
+	RunSpecsWithDefaultAndCustomReporters(t, "Docs Suite", []Reporter{junitReporter})
 }

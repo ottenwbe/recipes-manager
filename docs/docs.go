@@ -38,12 +38,12 @@ type swaggerInfo struct {
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
-	Version:     "1.0",
+	Version:     "",
 	Host:        "",
 	BasePath:    "",
 	Schemes:     []string{},
-	Title:       "GO-Cook API",
-	Description: "This is the go-cook api",
+	Title:       "",
+	Description: "",
 }
 
 type s struct{}

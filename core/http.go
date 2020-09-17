@@ -97,6 +97,13 @@ func NewHandler() Handler {
 	return handler
 }
 
+// @title GO-Cook API
+// @version 1.0
+// @description This is the go-cook api
+
+// @license.name MIT
+// @BasePath /api/v1
+
 type ginHandler struct {
 	handler      *gin.Engine
 	routerGroups map[string]Routes
@@ -195,10 +202,6 @@ func (g *ginHandler) corsMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-
-// @title GO-Cook API
-// @version 1.0
-// @description This is the go-cook api
 
 // Server interface which extends the http.Server
 type Server struct {

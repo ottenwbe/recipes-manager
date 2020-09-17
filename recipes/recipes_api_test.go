@@ -25,7 +25,9 @@
 package recipes
 
 import (
+	"encoding/json"
 	"github.com/ottenwbe/go-cook/core"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -36,12 +38,13 @@ import (
 var _ = Describe("recipesAPI", func() {
 
 	var (
-		server core.Server
+		server  core.Server
+		recipes RecipeDB
 	)
 
 	BeforeSuite(func() {
 		handler := core.NewHandler()
-		recipes, _ := NewDatabaseClient()
+		recipes, _ = NewDatabaseClient()
 		AddRecipesAPIToHandler(handler, recipes)
 		server = core.NewServerA(":8080", handler)
 		server.Run()
@@ -49,7 +52,14 @@ var _ = Describe("recipesAPI", func() {
 	})
 
 	AfterSuite(func() {
-		server.Close()
+		err := server.Close()
+		if err != nil {
+			Fail(err.Error())
+		}
+		err = recipes.Close()
+		if err != nil {
+			Fail(err.Error())
+		}
 	})
 
 	Context("Creating the API V1", func() {
@@ -60,20 +70,78 @@ var _ = Describe("recipesAPI", func() {
 		})
 	})
 
-	Context("Getting Recipes", func() {
-		It("random recipe with empty get created", func() {
+	Context("Get Recipes", func() {
+		It("can retrieve an recipe by id", func() {
+			expectedRecipe, _ := createRandomRecipes(1, recipes) //recipes
+
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes/r/" + expectedRecipe[0].ID.String())
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(200))
+
+			var recipe Recipe
+			err = json.NewDecoder(resp.Body).Decode(&recipe)
+
+
+		})
+	})
+
+	Context("Randomly getting recipes", func() {
+		It("returns a 404 when no recipe exists ", func() {
+			recipes.Clear()
+
 			resp, err := http.Get("http://localhost:8080/api/v1/recipes/rand")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(404))
 		})
-	})
 
-	Context("Getting Recipes", func() {
-		It("random recipe with empty get created", func() {
-			resp, err := http.Get("http://localhost:8080/api/v1/recipes/num")
+		It("returns a valid random recipe", func() {
+			recipes.Clear()
+			_, expectedRecipesIDs := createRandomRecipes(10, recipes) //recipes
+
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes/rand")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
+
+			var recipe Recipe
+			err = json.NewDecoder(resp.Body).Decode(&recipe)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(recipe.ID).To(BeElementOf(expectedRecipesIDs))
+		})
+
+	})
+
+	Context("Counting Recipes", func() {
+		It("returns 0 when the db is empty", func() {
+			recipes.Clear()
+
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes/num")
+			Expect(err).ToNot(HaveOccurred())
+
+			result, err := ioutil.ReadAll(resp.Body)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(200))
+			Expect(string(result)).To(Equal("0"))
 		})
 	})
 
 })
+
+func createRandomRecipes(num int, recipes RecipeDB) ([]*Recipe, []RecipeID) {
+
+	randomRecipes := make([]*Recipe, num)
+	randomIds := make([]RecipeID, num)
+
+	for id := 0; id < num ; id++ {
+		randomIds[id] = NewRecipeID()
+		randomRecipes[id] = NewRecipe(randomIds[id])
+	}
+
+	for _, id := range randomRecipes {
+		_ = recipes.Insert(id)
+	}
+
+	return randomRecipes, randomIds
+}
