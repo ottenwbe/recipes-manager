@@ -2,9 +2,11 @@ language: go
 go:
 - '1.13'
 - '1.14'
+- '1.15'
 arch:
   - amd64
   - arm64
+  - arm32
 
 install:
   - go get -u github.com/onsi/ginkgo/ginkgo

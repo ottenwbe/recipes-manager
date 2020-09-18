@@ -26,38 +26,46 @@ package recipes
 
 import (
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/ottenwbe/go-cook/core"
 	log "github.com/sirupsen/logrus"
 )
 
+const SERVINGS = "servings"
+const RECIPE = "recipe"
+const NAME = "name"
+
 //API for recipes
 type API struct {
-	router  core.Router
+	handler core.Handler
 	recipes RecipeDB
 }
 
 //NewRecipesAPI constructs an API for recipes
-func NewRecipesAPI(router core.Router, recipes RecipeDB) *API {
-	return &API{
-		router,
+func AddRecipesAPIToHandler(handler core.Handler, recipes RecipeDB) {
+	api := &API{
+		handler,
 		recipes,
 	}
+
+	api.prepareAPI()
 }
 
-//PrepareAPI registers all api endpoints for recipes
-func (rAPI *API) PrepareAPI() {
+//prepareAPI registers all api endpoints for recipes
+func (rAPI *API) prepareAPI() {
 	rAPI.prepareV1API()
 }
 
 func (rAPI *API) prepareV1API() {
 
-	if rAPI.router == nil {
-		log.Fatal("No router defined")
+	if rAPI.handler == nil {
+		log.Fatal("No handler defined for Recipes API")
 		return
 	}
 
-	v1 := rAPI.router.API(1)
+	v1 := rAPI.handler.API(1)
 
 	//GET the list of recipes
 	v1.GET("/recipes", func(c *core.APICallContext) {
@@ -77,25 +85,17 @@ func (rAPI *API) prepareV1API() {
 	//GET a random recipe
 	v1.GET("/recipes/num", func(c *core.APICallContext) {
 		num := rAPI.recipes.Num()
-		log.Debugf("num %v", num)
+		log.Debugf("Number of Recipes %v", num)
 		c.String(200, fmt.Sprintf("%v", num))
 	})
 
 	//GET a specific recipe
-	v1.GET("/recipes/r/:recipe", func(c *core.APICallContext) {
-		recipeID := c.Param("recipe")
-		recipe := rAPI.recipes.Get(NewRecipeIDFromString(recipeID))
-		if recipe.ID == InvalidRecipeID() {
-			c.String(404, "No such recipe")
-		} else {
-			c.JSON(200, recipe)
-		}
-	})
+	v1.GET("/recipes/r/:recipe", rAPI.getRecipe)
 
 	//GET a specific recipe's picture
 	v1.GET("/recipes/r/:recipe/pictures/:name", func(c *core.APICallContext) {
-		recipeID := NewRecipeIDFromString(c.Param("recipe"))
-		name := c.Param("name")
+		recipeID := NewRecipeIDFromString(c.Param(RECIPE))
+		name := c.Param(NAME)
 		picture := rAPI.recipes.Picture(recipeID, name)
 		if picture.ID == InvalidRecipeID() {
 			c.String(404, "No such picture")
@@ -104,4 +104,39 @@ func (rAPI *API) prepareV1API() {
 		}
 	})
 
+}
+
+func (rAPI *API) getRecipe(c *core.APICallContext) {
+
+	query := c.Request.URL.Query()
+
+	recipeIDS := c.Param(RECIPE)
+	recipeID := NewRecipeIDFromString(recipeIDS)
+
+	servings := extractServings(query)
+
+	recipe := rAPI.recipes.Get(recipeID)
+
+	if servings > 0 {
+		recipe.ScaleTo(servings)
+	}
+
+	if recipe.ID == InvalidRecipeID() {
+		c.String(404, "No such recipe: %v", recipeIDS)
+	} else {
+		c.JSON(200, recipe)
+	}
+}
+
+func extractServings(query url.Values) int {
+	servings := -1
+	if len(query[SERVINGS]) > 0 {
+		servingsS := query[SERVINGS][0]
+		if num, err := strconv.Atoi(servingsS); err == nil {
+			servings = num
+		} else {
+			log.WithError(err).Error("Could not convert the amount of servings requested" )
+		}
+	}
+	return servings
 }

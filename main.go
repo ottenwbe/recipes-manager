@@ -44,11 +44,12 @@ func main() {
 
 	srcRepository := newSources()
 
-	router := newHTTPRouter(recipesDB, srcRepository)
+	server := newServer(recipesDB, srcRepository)
 
 	// start the application
-	err := router.Run()
-	logOnError(err, "Router stopped unexpectedly")
+	waitForStop := server.Run()
+	waitForStop.Wait()
+	log.Info("Stopping Application")
 }
 
 func newCloseableDatabase() recipes.RecipeDB {
@@ -62,13 +63,13 @@ func closeDatabase(recipesDB recipes.RecipeDB) {
 	logOnError(err, "Could not close database ...")
 }
 
-func newHTTPRouter(recipesDB recipes.RecipeDB, srcRepository sources.Sources) core.Router {
-	router := core.NewRouter()
-	recipesAPI := recipes.NewRecipesAPI(router, recipesDB)
-	recipesAPI.PrepareAPI()
+func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) core.Server {
+	handler := core.NewHandler()
+	server := core.NewServerH(handler)
+	recipes.AddRecipesAPIToHandler(handler, recipesDB)
 	sourcesAPI := sources.NewSourceAPI(srcRepository, recipesDB)
-	sourcesAPI.PrepareAPI(router, srcRepository, recipesDB)
-	return router
+	sourcesAPI.PrepareAPI(handler, srcRepository, recipesDB)
+	return server
 }
 
 func newSources() sources.Sources {

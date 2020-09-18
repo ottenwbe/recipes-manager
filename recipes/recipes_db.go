@@ -33,4 +33,5 @@ type RecipeDB interface {
 	io.Closer
 	Recipes
 	Ping() error
+	Clear()
 }

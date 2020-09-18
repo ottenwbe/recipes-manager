@@ -54,48 +54,85 @@ const (
 	// others not currently supported
 )
 
-func bincdesc(vd, vs byte) string {
-	switch vd {
-	case bincVdSpecial:
-		switch vs {
-		case bincSpNil:
-			return "nil"
-		case bincSpFalse:
-			return "false"
-		case bincSpTrue:
-			return "true"
-		case bincSpNan, bincSpPosInf, bincSpNegInf, bincSpZeroFloat:
-			return "float"
-		case bincSpZero:
-			return "uint"
-		case bincSpNegOne:
-			return "int"
-		default:
-			return "unknown"
-		}
-	case bincVdSmallInt, bincVdPosInt:
-		return "uint"
-	case bincVdNegInt:
-		return "int"
-	case bincVdFloat:
-		return "float"
-	case bincVdSymbol:
-		return "string"
-	case bincVdString:
-		return "string"
-	case bincVdByteArray:
-		return "bytes"
-	case bincVdTimestamp:
-		return "time"
-	case bincVdCustomExt:
-		return "ext"
-	case bincVdArray:
-		return "array"
-	case bincVdMap:
-		return "map"
-	default:
-		return "unknown"
+var (
+	bincdescSpecialVsNames = map[byte]string{
+		bincSpNil:       "nil",
+		bincSpFalse:     "false",
+		bincSpTrue:      "true",
+		bincSpNan:       "float",
+		bincSpPosInf:    "float",
+		bincSpNegInf:    "float",
+		bincSpZeroFloat: "float",
+		bincSpZero:      "uint",
+		bincSpNegOne:    "int",
 	}
+	bincdescVdNames = map[byte]string{
+		bincVdSpecial:   "special",
+		bincVdSmallInt:  "uint",
+		bincVdPosInt:    "uint",
+		bincVdFloat:     "float",
+		bincVdSymbol:    "string",
+		bincVdString:    "string",
+		bincVdByteArray: "bytes",
+		bincVdTimestamp: "time",
+		bincVdCustomExt: "ext",
+		bincVdArray:     "array",
+		bincVdMap:       "map",
+	}
+)
+
+func bincdesc(vd, vs byte) (s string) {
+	if vd == bincVdSpecial {
+		s = bincdescSpecialVsNames[vs]
+	} else {
+		s = bincdescVdNames[vd]
+	}
+	if s == "" {
+		s = "unknown"
+	}
+	return
+
+	// 	switch vd {
+	// 	case bincVdSpecial:
+	// 		switch vs {
+	// 		case bincSpNil:
+	// 			return "nil"
+	// 		case bincSpFalse:
+	// 			return "false"
+	// 		case bincSpTrue:
+	// 			return "true"
+	// 		case bincSpNan, bincSpPosInf, bincSpNegInf, bincSpZeroFloat:
+	// 			return "float"
+	// 		case bincSpZero:
+	// 			return "uint"
+	// 		case bincSpNegOne:
+	// 			return "int"
+	// 		default:
+	// 			return "unknown"
+	// 		}
+	// 	case bincVdSmallInt, bincVdPosInt:
+	// 		return "uint"
+	// 	case bincVdNegInt:
+	// 		return "int"
+	// 	case bincVdFloat:
+	// 		return "float"
+	// 	case bincVdSymbol:
+	// 		return "string"
+	// 	case bincVdString:
+	// 		return "string"
+	// 	case bincVdByteArray:
+	// 		return "bytes"
+	// 	case bincVdTimestamp:
+	// 		return "time"
+	// 	case bincVdCustomExt:
+	// 		return "ext"
+	// 	case bincVdArray:
+	// 		return "array"
+	// 	case bincVdMap:
+	// 		return "map"
+	// 	default:
+	// 		return "unknown"
+	// 	}
 }
 
 type bincEncDriver struct {
@@ -417,12 +454,12 @@ func (d *bincDecDriver) readNextBd() {
 	d.bdRead = true
 }
 
-func (d *bincDecDriver) uncacheRead() {
-	if d.bdRead {
-		d.d.decRd.unreadn1()
-		d.bdRead = false
-	}
-}
+// func (d *bincDecDriver) uncacheRead() {
+// 	if d.bdRead {
+// 		d.d.decRd.unreadn1()
+// 		d.bdRead = false
+// 	}
+// }
 
 func (d *bincDecDriver) advanceNil() (null bool) {
 	d.fnil = false
@@ -437,9 +474,9 @@ func (d *bincDecDriver) advanceNil() (null bool) {
 	return
 }
 
-func (d *bincDecDriver) Nil() bool {
-	return d.fnil
-}
+// func (d *bincDecDriver) Nil() bool {
+// 	return d.fnil
+// }
 
 func (d *bincDecDriver) TryNil() bool {
 	return d.advanceNil()
@@ -706,7 +743,7 @@ func (d *bincDecDriver) decStringBytes(bs []byte, zerocopy bool) (bs2 []byte) {
 		slen = d.decLen()
 		if zerocopy {
 			if d.d.bytes {
-				bs2 = d.d.decRd.readx(uint(slen))
+				bs2 = d.d.decRd.rb.readx(uint(slen))
 			} else if len(bs) == 0 {
 				bs2 = decByteSlice(d.d.r(), slen, d.d.h.MaxInitLen, d.d.b[:])
 			} else {
@@ -792,12 +829,11 @@ func (d *bincDecDriver) DecodeBytes(bs []byte, zerocopy bool) (bsOut []byte) {
 		return
 	}
 	d.bdRead = false
-	if zerocopy {
-		if d.d.bytes {
-			return d.d.decRd.readx(uint(clen))
-		} else if len(bs) == 0 {
-			bs = d.d.b[:]
-		}
+	if d.d.bytes && (zerocopy || d.h.ZeroCopy) {
+		return d.d.decRd.rb.readx(uint(clen))
+	}
+	if zerocopy && len(bs) == 0 {
+		bs = d.d.b[:]
 	}
 	return decByteSlice(d.d.r(), clen, d.d.h.MaxInitLen, bs)
 }
@@ -832,7 +868,7 @@ func (d *bincDecDriver) decodeExtV(verifyTag bool, tag byte) (xtag byte, xbs []b
 			return
 		}
 		if d.d.bytes {
-			xbs = d.d.decRd.readx(uint(l))
+			xbs = d.d.decRd.rb.readx(uint(l))
 		} else {
 			xbs = decByteSlice(d.d.r(), l, d.d.h.MaxInitLen, d.d.b[:])
 		}
@@ -909,7 +945,7 @@ func (d *bincDecDriver) DecodeNaked() {
 		n.v = valueTypeString
 		n.s = string(d.DecodeStringAsBytes())
 	case bincVdByteArray:
-		decNakedReadRawBytes(d, &d.d, n, d.h.RawToString)
+		fauxUnionReadRawBytes(d, &d.d, n, d.h.RawToString)
 	case bincVdTimestamp:
 		n.v = valueTypeTime
 		tt, err := bincDecodeTime(d.d.decRd.readx(uint(d.vs)))
@@ -922,7 +958,7 @@ func (d *bincDecDriver) DecodeNaked() {
 		l := d.decLen()
 		n.u = uint64(d.d.decRd.readn1())
 		if d.d.bytes {
-			n.l = d.d.decRd.readx(uint(l))
+			n.l = d.d.decRd.rb.readx(uint(l))
 		} else {
 			n.l = decByteSlice(d.d.r(), l, d.d.h.MaxInitLen, d.d.b[:])
 		}

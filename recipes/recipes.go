@@ -36,7 +36,7 @@ type Ingredients struct {
 	//Name of the ingredient
 	Name string `json:"name"`
 	//Amount needed in a recipe of an ingredient
-	Amount int `json:"amount"`
+	Amount float64 `json:"amount"`
 	//Unit of the Amount
 	Unit string `json:"unit"`
 }
@@ -77,6 +77,7 @@ type Recipe struct {
 	Ingredients []Ingredients `json:"components"`
 	Description string        `json:"description"`
 	PictureLink []string      `json:"pictureLink"`
+	Portions    int8          `json:"portions"`
 }
 
 //RecipePicture model
@@ -131,6 +132,7 @@ func NewRecipe(id RecipeID) *Recipe {
 		Ingredients: make([]Ingredients, 0),
 		Description: "",
 		PictureLink: make([]string, 0),
+		Portions:    1,
 	}
 }
 
@@ -147,4 +149,17 @@ func (r *Recipe) JSON() []byte {
 //String (JSON) representation of the recipe
 func (r *Recipe) String() string {
 	return string(r.JSON())
+}
+
+//ScaleBy a factor all portions of the recipe
+func (r *Recipe) ScaleBy(factor float64) {
+	for i := range r.Ingredients {
+		r.Ingredients[i].Amount *= factor
+	}
+}
+
+//ScaleTo a desired number of portions
+func (r *Recipe) ScaleTo(portions int) {
+	factor := float64(portions) / float64(r.Portions)
+	r.ScaleBy(factor)
 }

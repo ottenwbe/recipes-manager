@@ -123,40 +123,91 @@ var mpTimeExtTagU = uint8(mpTimeExtTag)
 // 	mpNegFixNumMax: "NegFixNumMax",
 // }
 
-func mpdesc(bd byte) string {
-	switch bd {
-	case mpNil:
-		return "nil"
-	case mpFalse:
-		return "false"
-	case mpTrue:
-		return "true"
-	case mpFloat, mpDouble:
-		return "float"
-	case mpUint8, mpUint16, mpUint32, mpUint64:
-		return "uint"
-	case mpInt8, mpInt16, mpInt32, mpInt64:
-		return "int"
-	default:
+var mpdescNames = map[byte]string{
+	mpNil:    "nil",
+	mpFalse:  "false",
+	mpTrue:   "true",
+	mpFloat:  "float",
+	mpDouble: "float",
+	mpUint8:  "uuint",
+	mpUint16: "uint",
+	mpUint32: "uint",
+	mpUint64: "uint",
+	mpInt8:   "int",
+	mpInt16:  "int",
+	mpInt32:  "int",
+	mpInt64:  "int",
+
+	mpStr8:  "string|bytes",
+	mpStr16: "string|bytes",
+	mpStr32: "string|bytes",
+
+	mpBin8:  "bytes",
+	mpBin16: "bytes",
+	mpBin32: "bytes",
+
+	mpArray16: "array",
+	mpArray32: "array",
+
+	mpMap16: "map",
+	mpMap32: "map",
+}
+
+func mpdesc(bd byte) (s string) {
+	s = mpdescNames[bd]
+	if s == "" {
 		switch {
-		case bd >= mpPosFixNumMin && bd <= mpPosFixNumMax:
-			return "int"
-		case bd >= mpNegFixNumMin && bd <= mpNegFixNumMax:
-			return "int"
-		case bd == mpStr8, bd == mpStr16, bd == mpStr32, bd >= mpFixStrMin && bd <= mpFixStrMax:
-			return "string|bytes"
-		case bd == mpBin8, bd == mpBin16, bd == mpBin32:
-			return "bytes"
-		case bd == mpArray16, bd == mpArray32, bd >= mpFixArrayMin && bd <= mpFixArrayMax:
-			return "array"
-		case bd == mpMap16, bd == mpMap32, bd >= mpFixMapMin && bd <= mpFixMapMax:
-			return "map"
-		case bd >= mpFixExt1 && bd <= mpFixExt16, bd >= mpExt8 && bd <= mpExt32:
-			return "ext"
+		case bd >= mpPosFixNumMin && bd <= mpPosFixNumMax,
+			bd >= mpNegFixNumMin && bd <= mpNegFixNumMax:
+			s = "int"
+		case bd >= mpFixStrMin && bd <= mpFixStrMax:
+			s = "string|bytes"
+		case bd >= mpFixArrayMin && bd <= mpFixArrayMax:
+			s = "array"
+		case bd >= mpFixMapMin && bd <= mpFixMapMax:
+			s = "map"
+		case bd >= mpFixExt1 && bd <= mpFixExt16,
+			bd >= mpExt8 && bd <= mpExt32:
+			s = "ext"
 		default:
-			return "unknown"
+			s = "unknown"
 		}
 	}
+	return
+
+	// switch bd {
+	// case mpNil:
+	// 	return "nil"
+	// case mpFalse:
+	// 	return "false"
+	// case mpTrue:
+	// 	return "true"
+	// case mpFloat, mpDouble:
+	// 	return "float"
+	// case mpUint8, mpUint16, mpUint32, mpUint64:
+	// 	return "uint"
+	// case mpInt8, mpInt16, mpInt32, mpInt64:
+	// 	return "int"
+	// default:
+	// 	switch {
+	// 	case bd >= mpPosFixNumMin && bd <= mpPosFixNumMax:
+	// 		return "int"
+	// 	case bd >= mpNegFixNumMin && bd <= mpNegFixNumMax:
+	// 		return "int"
+	// 	case bd == mpStr8, bd == mpStr16, bd == mpStr32, bd >= mpFixStrMin && bd <= mpFixStrMax:
+	// 		return "string|bytes"
+	// 	case bd == mpBin8, bd == mpBin16, bd == mpBin32:
+	// 		return "bytes"
+	// 	case bd == mpArray16, bd == mpArray32, bd >= mpFixArrayMin && bd <= mpFixArrayMax:
+	// 		return "array"
+	// 	case bd == mpMap16, bd == mpMap32, bd >= mpFixMapMin && bd <= mpFixMapMax:
+	// 		return "map"
+	// 	case bd >= mpFixExt1 && bd <= mpFixExt16, bd >= mpExt8 && bd <= mpExt32:
+	// 		return "ext"
+	// 	default:
+	// 		return "unknown"
+	// 	}
+	// }
 }
 
 // MsgpackSpecRpcMultiArgs is a special type which signifies to the MsgpackSpecRpcCodec
@@ -520,7 +571,7 @@ func (d *msgpackDecDriver) DecodeNaked() {
 				n.l = d.DecodeBytes(nil, false)
 			}
 		case bd == mpBin8, bd == mpBin16, bd == mpBin32:
-			decNakedReadRawBytes(d, &d.d, n, d.h.RawToString)
+			fauxUnionReadRawBytes(d, &d.d, n, d.h.RawToString)
 		case bd == mpArray16, bd == mpArray32, bd >= mpFixArrayMin && bd <= mpFixArrayMax:
 			n.v = valueTypeArray
 			decodeFurther = true
@@ -535,7 +586,7 @@ func (d *msgpackDecDriver) DecodeNaked() {
 				n.v = valueTypeTime
 				n.t = d.decodeTime(clen)
 			} else if d.d.bytes {
-				n.l = d.d.decRd.readx(uint(clen))
+				n.l = d.d.decRd.rb.readx(uint(clen))
 			} else {
 				n.l = decByteSlice(d.d.r(), clen, d.d.h.MaxInitLen, d.d.b[:])
 			}
@@ -711,12 +762,11 @@ func (d *msgpackDecDriver) DecodeBytes(bs []byte, zerocopy bool) (bsOut []byte) 
 	}
 
 	d.bdRead = false
-	if zerocopy {
-		if d.d.bytes {
-			return d.d.decRd.readx(uint(clen))
-		} else if len(bs) == 0 {
-			bs = d.d.b[:]
-		}
+	if d.d.bytes && (zerocopy || d.h.ZeroCopy) {
+		return d.d.decRd.rb.readx(uint(clen))
+	}
+	if zerocopy && len(bs) == 0 {
+		bs = d.d.b[:]
 	}
 	return decByteSlice(d.d.r(), clen, d.h.MaxInitLen, bs)
 }
@@ -730,12 +780,12 @@ func (d *msgpackDecDriver) readNextBd() {
 	d.bdRead = true
 }
 
-func (d *msgpackDecDriver) uncacheRead() {
-	if d.bdRead {
-		d.d.decRd.unreadn1()
-		d.bdRead = false
-	}
-}
+// func (d *msgpackDecDriver) uncacheRead() {
+// 	if d.bdRead {
+// 		d.d.decRd.unreadn1()
+// 		d.bdRead = false
+// 	}
+// }
 
 func (d *msgpackDecDriver) advanceNil() (null bool) {
 	d.fnil = false
@@ -750,9 +800,9 @@ func (d *msgpackDecDriver) advanceNil() (null bool) {
 	return
 }
 
-func (d *msgpackDecDriver) Nil() bool {
-	return d.fnil
-}
+// func (d *msgpackDecDriver) Nil() bool {
+// 	return d.fnil
+// }
 
 func (d *msgpackDecDriver) ContainerType() (vt valueType) {
 	if !d.bdRead {
@@ -927,7 +977,7 @@ func (d *msgpackDecDriver) decodeExtV(verifyTag bool, tag byte) (xtag byte, xbs 
 			return
 		}
 		if d.d.bytes {
-			xbs = d.d.decRd.readx(uint(clen))
+			xbs = d.d.decRd.rb.readx(uint(clen))
 		} else {
 			xbs = decByteSlice(d.d.r(), clen, d.d.h.MaxInitLen, d.d.b[:])
 		}
