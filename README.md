@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/ottenwbe/go-cook.svg?branch=master)](https://travis-ci.org/ottenwbe/go-cook)
 
-Backend service to manage recipes in a database.
+Backend service to manage recipes. Go-Cook supports managing the recipes via API and persistence of the recipes in a database.
 
 ## Development Dependencies
 
@@ -60,6 +60,8 @@ make docker-arm
     ```
  
  ## API Documentation
+ 
+ Note: Incomplete
  
  ### Generate the Documentation 
  

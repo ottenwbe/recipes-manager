@@ -33,6 +33,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const SERVINGS = "servings"
+const RECIPE = "recipe"
+const NAME = "name"
+
 //API for recipes
 type API struct {
 	handler core.Handler
@@ -90,8 +94,8 @@ func (rAPI *API) prepareV1API() {
 
 	//GET a specific recipe's picture
 	v1.GET("/recipes/r/:recipe/pictures/:name", func(c *core.APICallContext) {
-		recipeID := NewRecipeIDFromString(c.Param("recipe"))
-		name := c.Param("name")
+		recipeID := NewRecipeIDFromString(c.Param(RECIPE))
+		name := c.Param(NAME)
 		picture := rAPI.recipes.Picture(recipeID, name)
 		if picture.ID == InvalidRecipeID() {
 			c.String(404, "No such picture")
@@ -105,13 +109,17 @@ func (rAPI *API) prepareV1API() {
 func (rAPI *API) getRecipe(c *core.APICallContext) {
 
 	query := c.Request.URL.Query()
-	portions := extractPortions(query)
 
-	recipeIDS := c.Param("recipe")
+	recipeIDS := c.Param(RECIPE)
 	recipeID := NewRecipeIDFromString(recipeIDS)
 
+	servings := extractServings(query)
+
 	recipe := rAPI.recipes.Get(recipeID)
-	recipe.ScaleTo(portions)
+
+	if servings > 0 {
+		recipe.ScaleTo(servings)
+	}
 
 	if recipe.ID == InvalidRecipeID() {
 		c.String(404, "No such recipe: %v", recipeIDS)
@@ -120,12 +128,14 @@ func (rAPI *API) getRecipe(c *core.APICallContext) {
 	}
 }
 
-func extractPortions(query url.Values) int {
-	portions := 1
-	if len(query["portions"]) > 0 {
-		portionsS := query["portions"][0]
-		if num, err := strconv.Atoi(portionsS); err != nil {
+func extractServings(query url.Values) int {
+	portions := -1
+	if len(query[SERVINGS]) > 0 {
+		portionsS := query[SERVINGS][0]
+		if num, err := strconv.Atoi(portionsS); err == nil {
 			portions = num
+		} else {
+			log.WithError(err).Error("Could not convert the amount of servings requested" )
 		}
 	}
 	return portions

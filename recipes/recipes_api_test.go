@@ -81,8 +81,29 @@ var _ = Describe("recipesAPI", func() {
 
 			var recipe Recipe
 			err = json.NewDecoder(resp.Body).Decode(&recipe)
+		})
 
+		It("can retrieve an recipe by id and scale the recipe", func() {
+			id := NewRecipeID()
+			expectedRecipe := NewRecipe(id)
+			expectedRecipe.Name = "retrieve recipe"
+			expectedRecipe.Ingredients = make([]Ingredients, 0)
+			expectedRecipe.Portions = 1
+			expectedRecipe.Ingredients = append(expectedRecipe.Ingredients,
+				Ingredients{Amount: 100,
+					Unit: "g",
+					Name: "Test"})
+			recipes.Insert(expectedRecipe)
 
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes/r/" + id.String() + "?servings=2")
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(200))
+
+			var recipe Recipe
+			err = json.NewDecoder(resp.Body).Decode(&recipe)
+			Expect(len(recipe.Ingredients)).ToNot(Equal(0))
+			Expect(recipe.Ingredients[0].Amount).To(Equal(200.0))
 		})
 	})
 
@@ -134,13 +155,15 @@ func createRandomRecipes(num int, recipes RecipeDB) ([]*Recipe, []RecipeID) {
 	randomRecipes := make([]*Recipe, num)
 	randomIds := make([]RecipeID, num)
 
-	for id := 0; id < num ; id++ {
+	for id := 0; id < num; id++ {
 		randomIds[id] = NewRecipeID()
 		randomRecipes[id] = NewRecipe(randomIds[id])
 	}
 
 	for _, id := range randomRecipes {
-		_ = recipes.Insert(id)
+		if err := recipes.Insert(id); err != nil {
+			Fail(err.Error())
+		}
 	}
 
 	return randomRecipes, randomIds

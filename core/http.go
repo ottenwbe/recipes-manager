@@ -231,7 +231,7 @@ func NewServer() Server {
 	return NewServerA(defaultAddress, NewHandler())
 }
 
-//Run the server for the api
+//Run the server for the API
 func (s Server) Run() *sync.WaitGroup {
 	s.stopWaitGroup.Add(1)
 	go func() {
