@@ -129,14 +129,14 @@ func (rAPI *API) getRecipe(c *core.APICallContext) {
 }
 
 func extractServings(query url.Values) int {
-	portions := -1
+	servings := -1
 	if len(query[SERVINGS]) > 0 {
-		portionsS := query[SERVINGS][0]
-		if num, err := strconv.Atoi(portionsS); err == nil {
-			portions = num
+		servingsS := query[SERVINGS][0]
+		if num, err := strconv.Atoi(servingsS); err == nil {
+			servings = num
 		} else {
 			log.WithError(err).Error("Could not convert the amount of servings requested" )
 		}
 	}
-	return portions
+	return servings
 }
