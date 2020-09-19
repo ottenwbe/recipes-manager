@@ -78,6 +78,10 @@ func cacheDriveRecipesFromFiles(driveService *drive.Service, fileList *drive.Fil
 	return resultRecipes, resultPictures
 }
 
+func (r *driveRecipes) Update(id recipes.RecipeID, recipe *recipes.Recipe) error {
+	panic("Not yet supported")
+}
+
 func appendPictures(pictures map[string]*recipes.RecipePicture, resultPictures map[recipes.RecipeID]map[string]*recipes.RecipePicture, id recipes.RecipeID) map[recipes.RecipeID]map[string]*recipes.RecipePicture {
 	for name, pic := range pictures {
 		if _, ok := resultPictures[id]; !ok {

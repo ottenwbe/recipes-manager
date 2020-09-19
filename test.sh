@@ -7,7 +7,7 @@ echo "Prepare tests..."
 # remove existing test container
 # or ignore the error if the container does not exist
 docker stop test-db | true
-docker rm test-db | true
+docker rm -v test-db | true
 # run a mongo-db
 docker run -d --name=test-db -p 27018:27017 mongo:3
 
@@ -35,5 +35,10 @@ for d in $(go list -f '{{.Dir}}' ./...); do
     mv $d/*junit.xml test/results
     mv $d/*coverprofile test/coverage
 done
+
+# remove existing test container
+# or ignore the error if the container does not exist
+docker stop test-db | true
+docker rm -v test-db | true
 
 echo "Cleanup..."

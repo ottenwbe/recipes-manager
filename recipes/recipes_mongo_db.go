@@ -197,7 +197,7 @@ func (m *MongoRecipeDB) AddPicture(pic *RecipePicture) error {
 
 	recipe.PictureLink = utils.UniqueSlice(append(recipe.PictureLink, pic.Name))
 
-	err := m.Update(recipe)
+	err := m.Update(recipe.ID, recipe)
 	if err != nil {
 		log.WithError(err).Error("Could not insert picture")
 		return err
@@ -235,11 +235,11 @@ func (m *MongoRecipeDB) Random() *Recipe {
 }
 
 //Update a recipe with a given recipe id
-func (m *MongoRecipeDB) Update(recipe *Recipe) error {
+func (m *MongoRecipeDB) Update(id RecipeID, recipe *Recipe) error {
 
 	collection := m.getRecipesCollection()
 
-	_, err := collection.ReplaceOne(ctx(), bson.M{"name": recipe.Name}, recipe)
+	_, err := collection.ReplaceOne(ctx(), bson.M{"id": id}, recipe)
 	if err != nil {
 		log.WithError(err).Error("Could not update recipe")
 		return err

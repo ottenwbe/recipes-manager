@@ -73,13 +73,13 @@ var _ = Describe("recipes", func() {
 
 	Context("conversion", func() {
 		It("should be able to convert a recipe to a string", func() {
-			expected := "{\"id\":\"\",\"name\":\"\",\"components\":null,\"description\":\"\",\"pictureLink\":null,\"portions\":0}"
+			expected := "{\"id\":\"\",\"name\":\"\",\"components\":null,\"description\":\"\",\"pictureLink\":null,\"servings\":0}"
 			retrieved := &Recipe{}
 			Expect(retrieved.String()).To(Equal(expected))
 		})
 
 		It("should be able to convert a recipe to a json byte string", func() {
-			expected := []byte("{\"id\":\"\",\"name\":\"\",\"components\":null,\"description\":\"\",\"pictureLink\":null,\"portions\":0}")
+			expected := []byte("{\"id\":\"\",\"name\":\"\",\"components\":null,\"description\":\"\",\"pictureLink\":null,\"servings\":0}")
 			r := &Recipe{}
 			Expect(r.JSON()).To(Equal(expected))
 		})
@@ -88,7 +88,7 @@ var _ = Describe("recipes", func() {
 	Context("scale", func() {
 		It("should be able to scale up", func() {
 			recipe := Recipe{
-				Portions: 1,
+				Servings: 1,
 				Ingredients: []Ingredients{
 					{Amount: 1, Name: "test1", Unit: "g"},
 					{Amount: 2, Name: "test2", Unit: "l"},
@@ -100,7 +100,7 @@ var _ = Describe("recipes", func() {
 		})
 		It("should be able to scale down", func() {
 			recipe := Recipe{
-				Portions: 1,
+				Servings: 1,
 				Ingredients: []Ingredients{
 					{Amount: 1, Name: "test1", Unit: "g"},
 					{Amount: 2, Name: "test2", Unit: "l"},
@@ -112,7 +112,7 @@ var _ = Describe("recipes", func() {
 		})
 		It("should be able to scale up to specific number of portions", func() {
 			recipe := Recipe{
-				Portions: 2,
+				Servings: 2,
 				Ingredients: []Ingredients{
 					{Amount: 1, Name: "test1", Unit: "g"},
 					{Amount: 2, Name: "test2", Unit: "l"},
@@ -124,7 +124,7 @@ var _ = Describe("recipes", func() {
 		})
 		It("should be able to scale down to specific number of portions", func() {
 			recipe := Recipe{
-				Portions: 2,
+				Servings: 2,
 				Ingredients: []Ingredients{
 					{Amount: 1, Name: "test1", Unit: "g"},
 					{Amount: 2, Name: "test2", Unit: "l"},
