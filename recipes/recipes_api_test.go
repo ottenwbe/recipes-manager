@@ -131,10 +131,49 @@ var _ = Describe("recipesAPI", func() {
 			Expect(recipe.ID).To(BeElementOf(expectedRecipesIDs))
 		})
 
+		It("can retrieve a random recipe and scale the recipe", func() {
+			recipes.Clear()
+
+			id := NewRecipeID()
+			expectedRecipe := NewRecipe(id)
+			expectedRecipe.Name = "retrieve recipe"
+			expectedRecipe.Ingredients = make([]Ingredients, 0)
+			expectedRecipe.Portions = 1
+			expectedRecipe.Ingredients = append(expectedRecipe.Ingredients,
+				Ingredients{Amount: 100,
+					Unit: "g",
+					Name: "Test"})
+			_ = recipes.Insert(expectedRecipe)
+
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes/rand?servings=2")
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(200))
+
+			var recipe Recipe
+			err = json.NewDecoder(resp.Body).Decode(&recipe)
+			Expect(len(recipe.Ingredients)).ToNot(Equal(0))
+			Expect(recipe.Ingredients[0].Amount).To(Equal(200.0))
+		})
 	})
 
 	Context("Counting Recipes", func() {
-		It("returns 0 when the db is empty", func() {
+		It("returns 0 when no recipes are persisted", func() {
+			recipes.Clear()
+
+			_,_ = createRandomRecipes(10, recipes)
+
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes/num")
+			Expect(err).ToNot(HaveOccurred())
+
+			result, err := ioutil.ReadAll(resp.Body)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(200))
+			Expect(string(result)).To(Equal("10"))
+		})
+
+		It("returns the amount of persisted recipes", func() {
 			recipes.Clear()
 
 			resp, err := http.Get("http://localhost:8080/api/v1/recipes/num")
