@@ -25,7 +25,9 @@
 package recipes
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/ottenwbe/go-cook/core"
 	"io/ioutil"
 	"net/http"
@@ -84,18 +86,9 @@ var _ = Describe("recipesAPI", func() {
 		})
 
 		It("can retrieve an recipe by id and scale the recipe", func() {
-			id := NewRecipeID()
-			expectedRecipe := NewRecipe(id)
-			expectedRecipe.Name = "retrieve recipe"
-			expectedRecipe.Ingredients = make([]Ingredients, 0)
-			expectedRecipe.Portions = 1
-			expectedRecipe.Ingredients = append(expectedRecipe.Ingredients,
-				Ingredients{Amount: 100,
-					Unit: "g",
-					Name: "Test"})
-			recipes.Insert(expectedRecipe)
+			id := createDefaultRecipe(recipes)
 
-			resp, err := http.Get("http://localhost:8080/api/v1/recipes/r/" + id.String() + "?servings=2")
+			resp, err := http.Get(fmt.Sprintf("http://localhost:8080/api/v1/recipes/r/%v?servings=2", id.String()))
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(resp.StatusCode).To(Equal(200))
@@ -131,10 +124,40 @@ var _ = Describe("recipesAPI", func() {
 			Expect(recipe.ID).To(BeElementOf(expectedRecipesIDs))
 		})
 
+		It("can retrieve a random recipe and scale the recipe", func() {
+			recipes.Clear()
+
+			_ = createDefaultRecipe(recipes)
+
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes/rand?servings=2")
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(200))
+
+			var recipe Recipe
+			err = json.NewDecoder(resp.Body).Decode(&recipe)
+			Expect(len(recipe.Ingredients)).ToNot(Equal(0))
+			Expect(recipe.Ingredients[0].Amount).To(Equal(200.0))
+		})
 	})
 
 	Context("Counting Recipes", func() {
-		It("returns 0 when the db is empty", func() {
+		It("returns 0 when no recipes are persisted", func() {
+			recipes.Clear()
+
+			_, _ = createRandomRecipes(10, recipes)
+
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes/num")
+			Expect(err).ToNot(HaveOccurred())
+
+			result, err := ioutil.ReadAll(resp.Body)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(200))
+			Expect(string(result)).To(Equal("10"))
+		})
+
+		It("returns the amount of persisted recipes", func() {
 			recipes.Clear()
 
 			resp, err := http.Get("http://localhost:8080/api/v1/recipes/num")
@@ -148,7 +171,90 @@ var _ = Describe("recipesAPI", func() {
 		})
 	})
 
+	Context("Posting Recipes", func() {
+		It("is not possible with malformed documents", func() {
+			recipes.Clear()
+
+			resp, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(nil))
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(400))
+		})
+
+		It("persists a new recipe", func() {
+			recipes.Clear()
+
+			const POSTTEST = "PostTest"
+			const POSTDESCRIPTION = "Test \n 123"
+
+			recipe := Recipe{Servings: 2, Name: POSTTEST, Description: POSTDESCRIPTION}
+			recipeJson, _ := json.Marshal(recipe)
+
+			resp, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(recipeJson))
+			Expect(err).ToNot(HaveOccurred())
+
+			retrievedRecipe, err := recipes.GetByName(POSTTEST)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(200))
+			Expect(retrievedRecipe.Servings).To(Equal(recipe.Servings))
+			Expect(retrievedRecipe.Description).To(Equal(recipe.Description))
+		})
+	})
+
+	Context("PUT Recipes", func() {
+
+		It("persists a change to a recipe", func() {
+			recipes.Clear()
+
+			const POSTTEST = "PostTest"
+			const POSTDESCRIPTION = "Test \n 123"
+
+			recipe := Recipe{Servings: 2, Name: POSTTEST, Description: POSTDESCRIPTION}
+			recipeJson, _ := json.Marshal(recipe)
+
+			_, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(recipeJson))
+			Expect(err).ToNot(HaveOccurred())
+
+			// update recipe
+			recipe.Servings = 3
+			recipe.Description = "updated"
+
+			// post updated recipe
+			client := &http.Client{}
+			recipeJson, _ = json.Marshal(recipe)
+			retrievedRecipe, _ := recipes.GetByName(POSTTEST)
+			request, err := http.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/recipes/r/"+retrievedRecipe.ID.String(), bytes.NewBuffer(recipeJson))
+			request.Header.Set("Content-Type", "application/json")
+			resp, err := client.Do(request)
+			Expect(err).ToNot(HaveOccurred())
+
+			retrievedRecipe, err = recipes.GetByName(POSTTEST)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(204))
+			Expect(retrievedRecipe.Servings).To(Equal(recipe.Servings))
+			Expect(retrievedRecipe.Description).To(Equal(recipe.Description))
+		})
+	})
+
 })
+
+func createDefaultRecipe(recipes RecipeDB) RecipeID {
+	id := NewRecipeID()
+
+	expectedRecipe := NewRecipe(id)
+	expectedRecipe.Name = "retrieve recipe"
+	expectedRecipe.Ingredients = make([]Ingredients, 0)
+	expectedRecipe.Servings = 1
+	expectedRecipe.Ingredients = append(expectedRecipe.Ingredients,
+		Ingredients{Amount: 100,
+			Unit: "g",
+			Name: "Test"})
+	recipes.Insert(expectedRecipe)
+
+	return id
+}
 
 func createRandomRecipes(num int, recipes RecipeDB) ([]*Recipe, []RecipeID) {
 

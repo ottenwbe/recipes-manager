@@ -77,7 +77,7 @@ type Recipe struct {
 	Ingredients []Ingredients `json:"components"`
 	Description string        `json:"description"`
 	PictureLink []string      `json:"pictureLink"`
-	Portions    int8          `json:"portions"`
+	Servings    int8          `json:"servings"`
 }
 
 //RecipePicture model
@@ -106,6 +106,7 @@ type Recipes interface {
 	Pictures(id RecipeID) map[string]*RecipePicture
 	Random() *Recipe
 	Insert(recipe *Recipe) error
+	Update(id RecipeID, recipe *Recipe) error
 	AddPicture(pic *RecipePicture) error
 	Remove(name string) error
 	GetByName(name string) (*Recipe, error)
@@ -132,7 +133,7 @@ func NewRecipe(id RecipeID) *Recipe {
 		Ingredients: make([]Ingredients, 0),
 		Description: "",
 		PictureLink: make([]string, 0),
-		Portions:    1,
+		Servings:    1,
 	}
 }
 
@@ -160,6 +161,6 @@ func (r *Recipe) ScaleBy(factor float64) {
 
 //ScaleTo a desired number of portions
 func (r *Recipe) ScaleTo(portions int) {
-	factor := float64(portions) / float64(r.Portions)
+	factor := float64(portions) / float64(r.Servings)
 	r.ScaleBy(factor)
 }
