@@ -37,6 +37,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
 
+	// based on swagger documentation
 	_ "github.com/ottenwbe/go-cook/docs"
 
 	"github.com/ottenwbe/go-cook/utils"

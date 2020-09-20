@@ -60,6 +60,7 @@ type MongoRecipeDB struct {
 	mtx sync.Mutex
 }
 
+// Clear drops all collections
 func (m *MongoRecipeDB) Clear() {
 	c := m.getRecipesCollection()
 	if err := c.Drop(ctx()); err != nil {

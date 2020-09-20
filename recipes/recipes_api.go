@@ -35,8 +35,11 @@ import (
 )
 
 const (
+	// SERVINGS keyword used as part of the url
 	SERVINGS = "servings"
+	// RECIPE keyword used as part of the url
 	RECIPE   = "recipe"
+	// NAME keyword used as part of the url
 	NAME     = "name"
 )
 
@@ -50,7 +53,7 @@ var (
 	api *API
 )
 
-//NewRecipesAPI constructs an API for recipes
+// AddRecipesAPIToHandler constructs an API for recipes
 func AddRecipesAPIToHandler(handler core.Handler, recipes RecipeDB) {
 	api = &API{
 		handler,
@@ -73,7 +76,7 @@ func (rAPI *API) prepareV1API() {
 	}
 
 	if rAPI.recipes == nil {
-		log.WithField("Component","Recipes API").Fatal("No persistence defined")
+		log.WithField("Component", "Recipes API").Fatal("No persistence defined")
 		return
 	}
 

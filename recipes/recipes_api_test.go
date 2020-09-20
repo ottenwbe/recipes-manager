@@ -188,9 +188,9 @@ var _ = Describe("recipesAPI", func() {
 			const POSTDESCRIPTION = "Test \n 123"
 
 			recipe := Recipe{Servings: 2, Name: POSTTEST, Description: POSTDESCRIPTION}
-			recipeJson, _ := json.Marshal(recipe)
+			recipeJSON, _ := json.Marshal(recipe)
 
-			resp, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(recipeJson))
+			resp, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(recipeJSON))
 			Expect(err).ToNot(HaveOccurred())
 
 			retrievedRecipe, err := recipes.GetByName(POSTTEST)
@@ -211,9 +211,9 @@ var _ = Describe("recipesAPI", func() {
 			const POSTDESCRIPTION = "Test \n 123"
 
 			recipe := Recipe{Servings: 2, Name: POSTTEST, Description: POSTDESCRIPTION}
-			recipeJson, _ := json.Marshal(recipe)
+			recipeJSON, _ := json.Marshal(recipe)
 
-			_, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(recipeJson))
+			_, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(recipeJSON))
 			Expect(err).ToNot(HaveOccurred())
 
 			// update recipe
@@ -222,9 +222,9 @@ var _ = Describe("recipesAPI", func() {
 
 			// post updated recipe
 			client := &http.Client{}
-			recipeJson, _ = json.Marshal(recipe)
+			recipeJSON, _ = json.Marshal(recipe)
 			retrievedRecipe, _ := recipes.GetByName(POSTTEST)
-			request, err := http.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/recipes/r/"+retrievedRecipe.ID.String(), bytes.NewBuffer(recipeJson))
+			request, err := http.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/recipes/r/"+retrievedRecipe.ID.String(), bytes.NewBuffer(recipeJSON))
 			request.Header.Set("Content-Type", "application/json")
 			resp, err := client.Do(request)
 			Expect(err).ToNot(HaveOccurred())

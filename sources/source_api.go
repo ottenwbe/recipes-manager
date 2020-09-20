@@ -69,7 +69,7 @@ func NewSourceAPI(sources Sources, recipes recipes.RecipeDB) API {
 	return API{sources, recipes}
 }
 
-//prepareAPI registers all api endpoints
+// PrepareAPI registers all api endpoints
 func (s API) PrepareAPI(router core.Handler, sources Sources, recipes recipes.RecipeDB) {
 	s.prepareV1API(router, sources, recipes)
 }
