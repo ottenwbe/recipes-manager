@@ -86,7 +86,7 @@ var _ = Describe("recipesAPI", func() {
 		})
 
 		It("can retrieve an recipe by id and scale the recipe", func() {
-			id := createDefaultRecipe(recipes)
+			id := createAndPersistDefaultRecipe(recipes)
 
 			resp, err := http.Get(fmt.Sprintf("http://localhost:8080/api/v1/recipes/r/%v?servings=2", id.String()))
 			Expect(err).ToNot(HaveOccurred())
@@ -127,7 +127,7 @@ var _ = Describe("recipesAPI", func() {
 		It("can retrieve a random recipe and scale the recipe", func() {
 			recipes.Clear()
 
-			_ = createDefaultRecipe(recipes)
+			_ = createAndPersistDefaultRecipe(recipes)
 
 			resp, err := http.Get("http://localhost:8080/api/v1/recipes/rand?servings=2")
 			Expect(err).ToNot(HaveOccurred())
@@ -202,6 +202,18 @@ var _ = Describe("recipesAPI", func() {
 		})
 	})
 
+	Context("DELETE Recipes", func() {
+
+		It("removes a persisted recipe", func() {
+			id := createAndPersistDefaultRecipe(recipes)
+			client := &http.Client{}
+			request, err := http.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/recipes/r/"+id.String(), bytes.NewBuffer(nil))
+			response, err := client.Do(request)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(response.StatusCode).To(Equal(http.StatusOK))
+		})
+	})
+
 	Context("PUT Recipes", func() {
 
 		It("persists a change to a recipe", func() {
@@ -240,7 +252,7 @@ var _ = Describe("recipesAPI", func() {
 
 })
 
-func createDefaultRecipe(recipes RecipeDB) RecipeID {
+func createAndPersistDefaultRecipe(recipes RecipeDB) RecipeID {
 	id := NewRecipeID()
 
 	expectedRecipe := NewRecipe(id)
