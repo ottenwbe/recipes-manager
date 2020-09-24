@@ -109,6 +109,7 @@ type Recipes interface {
 	Update(id RecipeID, recipe *Recipe) error
 	AddPicture(pic *RecipePicture) error
 	Remove(name string) error
+	RemoveByID(id RecipeID) error
 	GetByName(name string) (*Recipe, error)
 }
 

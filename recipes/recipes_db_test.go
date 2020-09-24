@@ -180,7 +180,25 @@ var _ = Describe("recipes db", func() {
 			Expect(recipe).To(Equal(expectedResult))
 		})
 
-		It("can remove a Recipe", func() {
+		It("can remove a Recipe by id", func() {
+			testInput := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "removeIDTestRecipe",
+				Ingredients: []Ingredients{},
+				Description: "describes the remove test recipe",
+				PictureLink: []string{},
+			}
+			err = db.Insert(testInput)
+			Expect(err).To(BeNil())
+			err := db.RemoveByID(testInput.ID)
+
+			// Try to find it after it has been removed ...
+			recipe, err := db.GetByName(testInput.Name)
+			Expect(err).ToNot(BeNil())
+			Expect(recipe).ToNot(Equal(testInput))
+		})
+
+		It("can remove a Recipe by name", func() {
 			testInput := &Recipe{
 				ID:          NewRecipeID(),
 				Name:        "removeTestRecipe",

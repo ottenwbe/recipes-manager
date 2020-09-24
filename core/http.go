@@ -37,6 +37,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
 
+	// based on swagger documentation
 	_ "github.com/ottenwbe/go-cook/docs"
 
 	"github.com/ottenwbe/go-cook/utils"
@@ -77,6 +78,8 @@ type Routes interface {
 	POST(string, func(c *APICallContext))
 	//PUT endpoint is added to the routes set and registers a corresponding handler
 	PUT(string, func(c *APICallContext))
+	//DELETE endpoint is added to the routes set and registers a corresponding handler
+	DELETE(string, func(c *APICallContext))
 }
 
 //Handler is a facade for a HTTP handler and can be implemented by a concrete handler like gin.
@@ -177,6 +180,11 @@ func (g *ginRoutes) GET(path string, handler func(c *APICallContext)) {
 //PUT endpoint for a specific path and a corresponding handler
 func (g *ginRoutes) PUT(path string, handler func(c *APICallContext)) {
 	g.rg.PUT(path, handler)
+}
+
+//DELETE endpoint for a specific path and a corresponding handler
+func (g *ginRoutes) DELETE(path string, handler func(c *APICallContext)) {
+	g.rg.DELETE(path, handler)
 }
 
 //PATCH endpoint for a specific path and a corresponding handler

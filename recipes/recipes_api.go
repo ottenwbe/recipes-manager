@@ -35,9 +35,12 @@ import (
 )
 
 const (
+	// SERVINGS keyword used as part of the url
 	SERVINGS = "servings"
-	RECIPE   = "recipe"
-	NAME     = "name"
+	// RECIPE keyword used as part of the url
+	RECIPE = "recipe"
+	// NAME keyword used as part of the url
+	NAME = "name"
 )
 
 //API for recipes
@@ -50,7 +53,7 @@ var (
 	api *API
 )
 
-//NewRecipesAPI constructs an API for recipes
+// AddRecipesAPIToHandler constructs an API for recipes
 func AddRecipesAPIToHandler(handler core.Handler, recipes RecipeDB) {
 	api = &API{
 		handler,
@@ -73,7 +76,7 @@ func (rAPI *API) prepareV1API() {
 	}
 
 	if rAPI.recipes == nil {
-		log.WithField("Component","Recipes API").Fatal("No persistence defined")
+		log.WithField("Component", "Recipes API").Fatal("No persistence defined")
 		return
 	}
 
@@ -96,6 +99,9 @@ func (rAPI *API) prepareV1API() {
 
 	//PUT updates a specific recipe
 	v1.PUT("/recipes/r/:recipe", rAPI.putRecipe)
+
+	//PUT updates a specific recipe
+	v1.DELETE("/recipes/r/:recipe", rAPI.deleteRecipe)
 
 	//GET a specific recipe's picture
 	v1.GET("/recipes/r/:recipe/pictures/:name", rAPI.getRecipePicture)
@@ -195,6 +201,17 @@ func (rAPI *API) postRecipes(c *core.APICallContext) {
 		} else {
 			c.Status(http.StatusOK)
 		}
+	}
+}
+
+func (rAPI *API) deleteRecipe(c *core.APICallContext) {
+	recipeIDS := c.Param(RECIPE)
+	recipeID := NewRecipeIDFromString(recipeIDS)
+	if err := rAPI.recipes.RemoveByID(recipeID); err != nil {
+		c.String(http.StatusNotFound, "Recipe not found")
+		log.WithError(err).Debug("Could not Delete Recipe")
+	} else {
+		c.Status(http.StatusOK)
 	}
 }
 

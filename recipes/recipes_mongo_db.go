@@ -60,6 +60,7 @@ type MongoRecipeDB struct {
 	mtx sync.Mutex
 }
 
+// Clear drops all collections
 func (m *MongoRecipeDB) Clear() {
 	c := m.getRecipesCollection()
 	if err := c.Drop(ctx()); err != nil {
@@ -167,6 +168,15 @@ func (m *MongoRecipeDB) Pictures(id RecipeID) map[string]*RecipePicture {
 	}
 
 	return result
+}
+
+//Remove a recipe by id
+func (m *MongoRecipeDB) RemoveByID(id RecipeID) error {
+	c := m.getRecipesCollection()
+
+	_, err := c.DeleteOne(ctx(), bson.M{"id": id})
+
+	return err
 }
 
 //Picture returns a specific picture with a specific name for a specific recipe

@@ -86,7 +86,7 @@ var _ = Describe("recipesAPI", func() {
 		})
 
 		It("can retrieve an recipe by id and scale the recipe", func() {
-			id := createDefaultRecipe(recipes)
+			id := createAndPersistDefaultRecipe(recipes)
 
 			resp, err := http.Get(fmt.Sprintf("http://localhost:8080/api/v1/recipes/r/%v?servings=2", id.String()))
 			Expect(err).ToNot(HaveOccurred())
@@ -127,7 +127,7 @@ var _ = Describe("recipesAPI", func() {
 		It("can retrieve a random recipe and scale the recipe", func() {
 			recipes.Clear()
 
-			_ = createDefaultRecipe(recipes)
+			_ = createAndPersistDefaultRecipe(recipes)
 
 			resp, err := http.Get("http://localhost:8080/api/v1/recipes/rand?servings=2")
 			Expect(err).ToNot(HaveOccurred())
@@ -188,9 +188,9 @@ var _ = Describe("recipesAPI", func() {
 			const POSTDESCRIPTION = "Test \n 123"
 
 			recipe := Recipe{Servings: 2, Name: POSTTEST, Description: POSTDESCRIPTION}
-			recipeJson, _ := json.Marshal(recipe)
+			recipeJSON, _ := json.Marshal(recipe)
 
-			resp, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(recipeJson))
+			resp, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(recipeJSON))
 			Expect(err).ToNot(HaveOccurred())
 
 			retrievedRecipe, err := recipes.GetByName(POSTTEST)
@@ -199,6 +199,18 @@ var _ = Describe("recipesAPI", func() {
 			Expect(resp.StatusCode).To(Equal(200))
 			Expect(retrievedRecipe.Servings).To(Equal(recipe.Servings))
 			Expect(retrievedRecipe.Description).To(Equal(recipe.Description))
+		})
+	})
+
+	Context("DELETE Recipes", func() {
+
+		It("removes a persisted recipe", func() {
+			id := createAndPersistDefaultRecipe(recipes)
+			client := &http.Client{}
+			request, err := http.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/recipes/r/"+id.String(), bytes.NewBuffer(nil))
+			response, err := client.Do(request)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(response.StatusCode).To(Equal(http.StatusOK))
 		})
 	})
 
@@ -211,9 +223,9 @@ var _ = Describe("recipesAPI", func() {
 			const POSTDESCRIPTION = "Test \n 123"
 
 			recipe := Recipe{Servings: 2, Name: POSTTEST, Description: POSTDESCRIPTION}
-			recipeJson, _ := json.Marshal(recipe)
+			recipeJSON, _ := json.Marshal(recipe)
 
-			_, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(recipeJson))
+			_, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(recipeJSON))
 			Expect(err).ToNot(HaveOccurred())
 
 			// update recipe
@@ -222,9 +234,9 @@ var _ = Describe("recipesAPI", func() {
 
 			// post updated recipe
 			client := &http.Client{}
-			recipeJson, _ = json.Marshal(recipe)
+			recipeJSON, _ = json.Marshal(recipe)
 			retrievedRecipe, _ := recipes.GetByName(POSTTEST)
-			request, err := http.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/recipes/r/"+retrievedRecipe.ID.String(), bytes.NewBuffer(recipeJson))
+			request, err := http.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/recipes/r/"+retrievedRecipe.ID.String(), bytes.NewBuffer(recipeJSON))
 			request.Header.Set("Content-Type", "application/json")
 			resp, err := client.Do(request)
 			Expect(err).ToNot(HaveOccurred())
@@ -240,7 +252,7 @@ var _ = Describe("recipesAPI", func() {
 
 })
 
-func createDefaultRecipe(recipes RecipeDB) RecipeID {
+func createAndPersistDefaultRecipe(recipes RecipeDB) RecipeID {
 	id := NewRecipeID()
 
 	expectedRecipe := NewRecipe(id)
