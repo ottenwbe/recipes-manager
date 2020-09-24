@@ -170,6 +170,15 @@ func (m *MongoRecipeDB) Pictures(id RecipeID) map[string]*RecipePicture {
 	return result
 }
 
+//Remove a recipe by id
+func (m *MongoRecipeDB) RemoveByID(id RecipeID) error {
+	c := m.getRecipesCollection()
+
+	_, err := c.DeleteOne(ctx(), bson.M{"id": id})
+
+	return err
+}
+
 //Picture returns a specific picture with a specific name for a specific recipe
 func (m *MongoRecipeDB) Picture(id RecipeID, name string) *RecipePicture {
 

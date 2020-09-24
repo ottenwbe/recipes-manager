@@ -102,6 +102,10 @@ func (r *driveRecipes) Remove(name string) error {
 	return errors.New(recipes.NotSupportedError)
 }
 
+func (r *driveRecipes) RemoveByID(id recipes.RecipeID) error {
+	return errors.New(recipes.NotSupportedError)
+}
+
 //Picture by ID and name
 func (r *driveRecipes) Picture(id recipes.RecipeID, name string) *recipes.RecipePicture {
 	r.ensureCache()

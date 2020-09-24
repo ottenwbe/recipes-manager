@@ -38,9 +38,9 @@ const (
 	// SERVINGS keyword used as part of the url
 	SERVINGS = "servings"
 	// RECIPE keyword used as part of the url
-	RECIPE   = "recipe"
+	RECIPE = "recipe"
 	// NAME keyword used as part of the url
-	NAME     = "name"
+	NAME = "name"
 )
 
 //API for recipes
@@ -99,6 +99,9 @@ func (rAPI *API) prepareV1API() {
 
 	//PUT updates a specific recipe
 	v1.PUT("/recipes/r/:recipe", rAPI.putRecipe)
+
+	//PUT updates a specific recipe
+	v1.DELETE("/recipes/r/:recipe", rAPI.deleteRecipe)
 
 	//GET a specific recipe's picture
 	v1.GET("/recipes/r/:recipe/pictures/:name", rAPI.getRecipePicture)
@@ -198,6 +201,17 @@ func (rAPI *API) postRecipes(c *core.APICallContext) {
 		} else {
 			c.Status(http.StatusOK)
 		}
+	}
+}
+
+func (rAPI *API) deleteRecipe(c *core.APICallContext) {
+	recipeIDS := c.Param(RECIPE)
+	recipeID := NewRecipeIDFromString(recipeIDS)
+	if err := rAPI.recipes.RemoveByID(recipeID); err != nil {
+		c.String(http.StatusNotFound, "Recipe not found")
+		log.WithError(err).Debug("Could not Delete Recipe")
+	} else {
+		c.Status(http.StatusOK)
 	}
 }
 
