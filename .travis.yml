@@ -7,7 +7,7 @@ arch:
   - amd64
   - arm64
 env:
-  - DOCKER_PREFIX=ottenwbe
+  - DOCKER_PREFIX=ottenwbe/
 
 install:
   - go get -u github.com/onsi/ginkgo/ginkgo
