@@ -6,7 +6,8 @@ go:
 arch:
   - amd64
   - arm64
-  - arm32
+env:
+  - DOCKER_PREFIX=ottenwbe
 
 install:
   - go get -u github.com/onsi/ginkgo/ginkgo
@@ -20,3 +21,9 @@ script:
   - make test
   - make release
   - make docker
+
+deploy:
+  provider: script
+  script: make docker-push
+  #on:
+  #  tags: true
