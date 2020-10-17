@@ -75,9 +75,10 @@ endif
 .PHONY: docker
 docker: ## Create docker image
 ifndef BUILD_DOCKER_HOST
-	docker build --label "version=${VERSION}" --build-arg "APP=$(APP)-$(VERSION)"  --label "build_date=${DATE}"  --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile .
+	echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin; \
+	docker build --label "version=$(VERSION)" --build-arg "APP=$(APP)-$(VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile .
 else
-	docker -H $(BUILD_DOCKER_HOST) build --build-arg "APP=$(APP)-$(VERSION)"  --label "version=${VERSION}" --label "build_date=${DATE}"  --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile .
+	docker -H $(BUILD_DOCKER_HOST) build --build-arg "APP=$(APP)-$(VERSION)"  --label "version=$(VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile .
 endif
 
 .PHONY: docker-push
