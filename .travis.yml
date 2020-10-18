@@ -17,9 +17,7 @@ install:
 script:
   - make build
   - make release
-  - make vet
-  - make lint
-  - make test
+  - make verify
   - git checkout go.mod go.sum
   - make docker
 

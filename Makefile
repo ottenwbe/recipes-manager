@@ -42,6 +42,14 @@ start: fmt ; $(info $(M) running the app locally…) @ ## Run program's snapshot
 
 # Quality and Testing
 
+.PHONY: verify
+verify: fmt mod-verify vet lint test; $(info $(M) QA steps…) @ ## Run all QA steps
+	@echo "End of QA steps..."
+
+.PHONY: mod-verify
+mod-verify: ; $(info $(M) verifying modules…) @ ## Run go mod verify
+	@$(GO) mod verify
+
 .PHONY: vet
 vet: ; $(info $(M) running vet…) @ ## Run go vet
 	@for d in $$($(GO) list ./...); do \
