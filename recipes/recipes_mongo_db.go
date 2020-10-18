@@ -170,7 +170,7 @@ func (m *MongoRecipeDB) Pictures(id RecipeID) map[string]*RecipePicture {
 	return result
 }
 
-//Remove a recipe by id
+//RemoveByID removes a recipe by id
 func (m *MongoRecipeDB) RemoveByID(id RecipeID) error {
 	c := m.getRecipesCollection()
 
