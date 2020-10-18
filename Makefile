@@ -29,6 +29,7 @@ release: ; $(info $(M) building executable…) @ ## Build the app's binary relea
 build:  ; $(info $(M) building snapshot…) @ ## Build the app's snapshot version
 	@$(GO) build \
 		-o $(SNAPSHOT) \
+		-mod=vendor \
 		-ldflags "-X $(VERSIONPKG)=$(VERSION)" \
 		*.go
 

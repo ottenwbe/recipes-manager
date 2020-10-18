@@ -15,11 +15,12 @@ install:
   - go get -u golang.org/x/lint/golint
 
 script:
-  - make release
   - make vet
   - make lint
   - make build
   - make test
+  - git checkout go.mod go.sum
+  - make release
   - make docker
 
 deploy:
