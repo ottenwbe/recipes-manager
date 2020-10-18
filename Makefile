@@ -96,7 +96,6 @@ help:
 .PHONY: version
 version:
 	@echo $(VERSION)
-
 .PHONY: date
 date:
 	@echo $(DATE)
