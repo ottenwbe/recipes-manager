@@ -20,8 +20,8 @@ script:
   - make build
   - make test
   - make release
-  - git checkout -f
   - make docker
+  - git checkout -f
 
 deploy:
   provider: script
