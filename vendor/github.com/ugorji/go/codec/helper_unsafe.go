@@ -2,7 +2,7 @@
 // +build !appengine
 // +build go1.7
 
-// Copyright (c) 2012-2018 Ugorji Nwoke. All rights reserved.
+// Copyright (c) 2012-2020 Ugorji Nwoke. All rights reserved.
 // Use of this source code is governed by a MIT license found in the LICENSE file.
 
 package codec
@@ -15,7 +15,7 @@ import (
 )
 
 // This file has unsafe variants of some helper methods.
-// NOTE: See helper_not_unsafe.go for the usage information.
+// MARKER: See helper_not_unsafe.go for the usage information.
 
 // For reflect.Value code, we decided to do the following:
 //    - if we know the kind, we can elide conditional checks for
@@ -27,8 +27,12 @@ import (
 
 const safeMode = false
 
-// keep in sync with GO_ROOT/src/reflect/value.go
+var unsafeZeroArr [256]byte
+
+// MARKER: keep in sync with GO_ROOT/src/reflect/value.go
 const (
+	unsafeFlagStickyRO = 1 << 5
+	unsafeFlagEmbedRO  = 1 << 6
 	unsafeFlagIndir    = 1 << 7
 	unsafeFlagAddr     = 1 << 8
 	unsafeFlagKindMask = (1 << 5) - 1 // 5 bits for 27 kinds (up to 31)
@@ -73,21 +77,6 @@ func bytesView(v string) []byte {
 	return *(*[]byte)(unsafe.Pointer(&unsafeSlice{sx.Data, sx.Len, sx.Len}))
 }
 
-// // isNilRef says whether the interface is a nil reference or not.
-// //
-// // A reference here is a pointer-sized reference i.e. map, ptr, chan, func, unsafepointer.
-// // It is optional to extend this to also check if slices or interfaces are nil also.
-// //
-// // NOTE: There is no global way of checking if an interface is nil.
-// // For true references (map, ptr, func, chan), you can just look
-// // at the word of the interface.
-// // However, for slices, you have to dereference
-// // the word, and get a pointer to the 3-word interface value.
-// func isNilRef(v interface{}) (rv reflect.Value, isnil bool) {
-// 	isnil = ((*unsafeIntf)(unsafe.Pointer(&v))).word == nil
-// 	return
-// }
-
 func isNil(v interface{}) (rv reflect.Value, isnil bool) {
 	var ui = (*unsafeIntf)(unsafe.Pointer(&v))
 	if ui.word == nil {
@@ -126,6 +115,11 @@ func rv2i(rv reflect.Value) interface{} {
 	return *(*interface{})(unsafe.Pointer(&unsafeIntf{typ: urv.typ, word: rv2ptr(urv)}))
 }
 
+func rvType(rv reflect.Value) reflect.Type {
+	return rvPtrToType(((*unsafeReflectValue)(unsafe.Pointer(&rv))).typ)
+	// return rv.Type()
+}
+
 func rvIsNil(rv reflect.Value) bool {
 	urv := (*unsafeReflectValue)(unsafe.Pointer(&rv))
 	if urv.flag&unsafeFlagIndir != 0 {
@@ -145,6 +139,29 @@ func rvZeroAddrK(t reflect.Type, k reflect.Kind) (rv reflect.Value) {
 	urv.typ = ((*unsafeIntf)(unsafe.Pointer(&t))).word
 	urv.ptr = unsafe_New(urv.typ)
 	return
+}
+
+func rvZeroAddr(t reflect.Type) reflect.Value {
+	return rvZeroAddrK(t, t.Kind())
+}
+
+func rvZeroK(t reflect.Type, k reflect.Kind) (rv reflect.Value) {
+	urv := (*unsafeReflectValue)(unsafe.Pointer(&rv))
+	urv.typ = ((*unsafeIntf)(unsafe.Pointer(&t))).word
+	if refBitset.isset(byte(k)) {
+		urv.flag = uintptr(k)
+	} else if (k == reflect.Struct || k == reflect.Array) && t.Size() > uintptr(len(unsafeZeroArr)) {
+		urv.flag = uintptr(k) | unsafeFlagIndir | unsafeFlagAddr
+		urv.ptr = unsafe_New(urv.typ)
+	} else {
+		urv.flag = uintptr(k) | unsafeFlagIndir
+		urv.ptr = unsafe.Pointer(&unsafeZeroArr[0])
+	}
+	return
+}
+
+func rvZero(t reflect.Type) reflect.Value {
+	return rvZeroK(t, t.Kind())
 }
 
 func rvConvert(v reflect.Value, t reflect.Type) (rv reflect.Value) {
@@ -244,7 +261,7 @@ func isEmptyValue(v reflect.Value, tinfos *TypeInfos, deref, checkStruct bool) b
 // ----------------------
 type atomicTypeInfoSlice struct {
 	v unsafe.Pointer // *[]rtid2ti
-	_ uint64         // padding (atomicXXX expected to be 2 words)
+	// _ uint64         // padding (atomicXXX expected to be 2 words)
 }
 
 func (x *atomicTypeInfoSlice) load() (s []rtid2ti) {
@@ -259,10 +276,13 @@ func (x *atomicTypeInfoSlice) store(p []rtid2ti) {
 	atomic.StorePointer(&x.v, unsafe.Pointer(&p))
 }
 
+// MARKER: in safe mode, atomicXXX are atomic.Value, which contains an interface{}.
+// This is 2 words.
+// consider padding atomicXXX here with a uintptr, so they fit into 2 words also.
+
 // --------------------------
 type atomicRtidFnSlice struct {
 	v unsafe.Pointer // *[]codecRtidFn
-	_ uint64         // padding (atomicXXX expected to be 2 words) (make 1 word so JsonHandle fits)
 }
 
 func (x *atomicRtidFnSlice) load() (s []codecRtidFn) {
@@ -280,7 +300,6 @@ func (x *atomicRtidFnSlice) store(p []codecRtidFn) {
 // --------------------------
 type atomicClsErr struct {
 	v unsafe.Pointer // *clsErr
-	_ uint64         // padding (atomicXXX expected to be 2 words)
 }
 
 func (x *atomicClsErr) load() (e clsErr) {
@@ -456,9 +475,16 @@ func rvSetDirect(rv reflect.Value, v reflect.Value) {
 	uv := (*unsafeReflectValue)(unsafe.Pointer(&v))
 	if uv.flag&unsafeFlagIndir == 0 {
 		*(*unsafe.Pointer)(urv.ptr) = uv.ptr
+	} else if uv.ptr == unsafe.Pointer(&unsafeZeroArr[0]) {
+		typedmemclr(urv.typ, urv.ptr)
 	} else {
 		typedmemmove(urv.typ, urv.ptr, uv.ptr)
 	}
+}
+
+func rvSetDirectZero(rv reflect.Value) {
+	urv := (*unsafeReflectValue)(unsafe.Pointer(&rv))
+	typedmemclr(urv.typ, urv.ptr)
 }
 
 // rvSlice returns a slice of the slice of lenth
@@ -478,7 +504,7 @@ func rvSlice(rv reflect.Value, length int) (v reflect.Value) {
 func rvSliceIndex(rv reflect.Value, i int, ti *typeInfo) (v reflect.Value) {
 	urv := (*unsafeReflectValue)(unsafe.Pointer(&rv))
 	uv := (*unsafeReflectValue)(unsafe.Pointer(&v))
-	uv.ptr = unsafe.Pointer(uintptr(((*unsafeSlice)(urv.ptr)).Data) + (ti.elemsize * uintptr(i)))
+	uv.ptr = unsafe.Pointer(uintptr(((*unsafeSlice)(urv.ptr)).Data) + uintptr(ti.elemsize*uint32(i)))
 	uv.typ = ((*unsafeIntf)(unsafe.Pointer(&ti.elem))).word
 	uv.flag = uintptr(ti.elemkind) | unsafeFlagIndir | unsafeFlagAddr
 	return
@@ -512,7 +538,7 @@ func rvGetArray4Slice(rv reflect.Value) (v reflect.Value) {
 	//
 	// Consequently, we use rvGetSliceLen, not rvGetSliceCap.
 
-	t := reflectArrayOf(rvGetSliceLen(rv), rv.Type().Elem())
+	t := reflectArrayOf(rvGetSliceLen(rv), rvType(rv).Elem())
 	// v = rvZeroAddrK(t, reflect.Array)
 
 	uv := (*unsafeReflectValue)(unsafe.Pointer(&v))
@@ -542,7 +568,7 @@ func rvGetSlice4Array(rv reflect.Value, tslice reflect.Type) (v reflect.Value) {
 }
 
 func rvCopySlice(dest, src reflect.Value) {
-	t := dest.Type().Elem()
+	t := rvType(dest).Elem()
 	urv := (*unsafeReflectValue)(unsafe.Pointer(&dest))
 	destPtr := urv.ptr
 	urv = (*unsafeReflectValue)(unsafe.Pointer(&src))
@@ -673,7 +699,6 @@ type unsafeMapIter struct {
 	mapvalues        bool
 	done             bool
 	started          bool
-	// _ [2]uint64 // padding (cache-aligned)
 }
 
 func (t *unsafeMapIter) ValidKV() (r bool) {
@@ -797,8 +822,7 @@ func mapSet(m, k, v reflect.Value) {
 // return an addressable reflect value that can be used in mapRange and mapGet operations.
 //
 // all calls to mapGet or mapRange will call here to get an addressable reflect.Value.
-func mapAddressableRV(t reflect.Type, k reflect.Kind) (r reflect.Value) {
-	// return reflect.New(t).Elem()
+func mapAddrLoopvarRV(t reflect.Type, k reflect.Kind) (r reflect.Value) {
 	return rvZeroAddrK(t, k)
 }
 
@@ -826,6 +850,10 @@ func mapdelete(typ unsafe.Pointer, m unsafe.Pointer, key unsafe.Pointer)
 //go:noescape
 func typedmemmove(typ unsafe.Pointer, dst, src unsafe.Pointer)
 
+//go:linkname typedmemclr reflect.typedmemclr
+//go:noescape
+func typedmemclr(typ unsafe.Pointer, dst unsafe.Pointer)
+
 //go:linkname unsafe_New reflect.unsafe_New
 //go:noescape
 func unsafe_New(typ unsafe.Pointer) unsafe.Pointer
@@ -833,6 +861,10 @@ func unsafe_New(typ unsafe.Pointer) unsafe.Pointer
 //go:linkname typedslicecopy reflect.typedslicecopy
 //go:noescape
 func typedslicecopy(elemType unsafe.Pointer, dst, src unsafeSlice) int
+
+//go:linkname rvPtrToType reflect.toType
+//go:noescape
+func rvPtrToType(typ unsafe.Pointer) reflect.Type
 
 // ---------- ENCODER optimized ---------------
 
@@ -843,7 +875,7 @@ func (e *Encoder) jsondriver() *jsonEncDriver {
 // ---------- DECODER optimized ---------------
 
 func (d *Decoder) checkBreak() bool {
-	// jsonDecDriver.CheckBreak() CANNOT be inlined.
+	// MARKER: jsonDecDriver.CheckBreak() costs over 80, and this isn't inlined.
 	// Consequently, there's no benefit in incurring the cost of this
 	// wrapping function checkBreak.
 	//
@@ -862,6 +894,15 @@ func (d *Decoder) jsondriver() *jsonDecDriver {
 	return (*jsonDecDriver)((*unsafeIntf)(unsafe.Pointer(&d.d)).word)
 }
 
-// func (d *Decoder) cbordriver() *cborDecDriver {
-// 	return (*cborDecDriver)((*unsafeIntf)(unsafe.Pointer(&d.d)).word)
-// }
+// ---------- structFieldInfo optimized ---------------
+
+func (n *structFieldInfoPathNode) rvField(v reflect.Value) (rv reflect.Value) {
+	// we already know this is exported, and maybe embedded (based on what si says)
+	uv := (*unsafeReflectValue)(unsafe.Pointer(&v))
+	urv := (*unsafeReflectValue)(unsafe.Pointer(&rv))
+	// clear flagEmbedRO if necessary, and inherit permission bits from v
+	urv.flag = uv.flag&(unsafeFlagStickyRO|unsafeFlagIndir|unsafeFlagAddr) | uintptr(n.kind)
+	urv.typ = ((*unsafeIntf)(unsafe.Pointer(&n.typ))).word
+	urv.ptr = unsafe.Pointer(uintptr(uv.ptr) + uintptr(n.offset))
+	return
+}

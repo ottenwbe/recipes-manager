@@ -1,6 +1,6 @@
 // +build !go1.7 safe appengine
 
-// Copyright (c) 2012-2018 Ugorji Nwoke. All rights reserved.
+// Copyright (c) 2012-2020 Ugorji Nwoke. All rights reserved.
 // Use of this source code is governed by a MIT license found in the LICENSE file.
 
 package codec
@@ -52,6 +52,10 @@ func rv2i(rv reflect.Value) interface{} {
 	return rv.Interface()
 }
 
+func rvType(rv reflect.Value) reflect.Type {
+	return rv.Type()
+}
+
 func rvIsNil(rv reflect.Value) bool {
 	return rv.IsNil()
 }
@@ -62,6 +66,18 @@ func rvSetSliceLen(rv reflect.Value, length int) {
 
 func rvZeroAddrK(t reflect.Type, k reflect.Kind) reflect.Value {
 	return reflect.New(t).Elem()
+}
+
+func rvZeroAddr(t reflect.Type) reflect.Value {
+	return reflect.New(t).Elem()
+}
+
+func rvZeroK(t reflect.Type, k reflect.Kind) reflect.Value {
+	return reflect.Zero(t)
+}
+
+func rvZero(t reflect.Type) reflect.Value {
+	return reflect.Zero(t)
 }
 
 func rvConvert(v reflect.Value, t reflect.Type) (rv reflect.Value) {
@@ -123,7 +139,7 @@ func (x *atomicClsErr) store(p clsErr) {
 }
 
 // --------------------------
-type atomicTypeInfoSlice struct { // expected to be 2 words
+type atomicTypeInfoSlice struct {
 	v atomic.Value
 }
 
@@ -139,7 +155,7 @@ func (x *atomicTypeInfoSlice) store(p []rtid2ti) {
 }
 
 // --------------------------
-type atomicRtidFnSlice struct { // expected to be 2 words
+type atomicRtidFnSlice struct {
 	v atomic.Value
 }
 
@@ -253,6 +269,10 @@ func rvSetDirect(rv reflect.Value, v reflect.Value) {
 	rv.Set(v)
 }
 
+func rvSetDirectZero(rv reflect.Value) {
+	rv.Set(reflect.Zero(rv.Type()))
+}
+
 // rvSlice returns a slice of the slice of lenth
 func rvSlice(rv reflect.Value, length int) reflect.Value {
 	return rv.Slice(0, length)
@@ -288,7 +308,7 @@ func rvGetArrayBytesRO(rv reflect.Value, scratch []byte) (bs []byte) {
 }
 
 func rvGetArray4Slice(rv reflect.Value) (v reflect.Value) {
-	v = rvZeroAddrK(reflectArrayOf(rvGetSliceLen(rv), rv.Type().Elem()), reflect.Array)
+	v = rvZeroAddrK(reflectArrayOf(rvGetSliceLen(rv), rvType(rv).Elem()), reflect.Array)
 	reflect.Copy(v, rv)
 	return
 }
@@ -381,14 +401,14 @@ func mapSet(m, k, v reflect.Value) {
 	m.SetMapIndex(k, v)
 }
 
-func mapDelete(m, k reflect.Value) {
-	m.SetMapIndex(k, reflect.Value{})
-}
+// func mapDelete(m, k reflect.Value) {
+// 	m.SetMapIndex(k, reflect.Value{})
+// }
 
 // return an addressable reflect value that can be used in mapRange and mapGet operations.
 //
 // all calls to mapGet or mapRange will call here to get an addressable reflect.Value.
-func mapAddressableRV(t reflect.Type, k reflect.Kind) (r reflect.Value) {
+func mapAddrLoopvarRV(t reflect.Type, k reflect.Kind) (r reflect.Value) {
 	return // reflect.New(t).Elem()
 }
 
@@ -406,4 +426,10 @@ func (d *Decoder) checkBreak() bool {
 
 func (d *Decoder) jsondriver() *jsonDecDriver {
 	return d.d.(*jsonDecDriver)
+}
+
+// ---------- structFieldInfo optimized ---------------
+
+func (n *structFieldInfoPathNode) rvField(v reflect.Value) reflect.Value {
+	return v.Field(int(n.index))
 }
