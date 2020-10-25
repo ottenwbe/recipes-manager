@@ -38,7 +38,7 @@ require (
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/swaggo/swag v1.6.9
-	github.com/ugorji/go/codec v1.1.13 // indirect
+	github.com/ugorji/go v1.1.13 // indirect
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
 	github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc
 	go.mongodb.org/mongo-driver v1.4.2

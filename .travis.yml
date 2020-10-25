@@ -10,16 +10,16 @@ env:
   - DOCKER_PREFIX=ottenwbe/
 
 install:
-  - go get -u github.com/onsi/ginkgo/ginkgo
-  - go get -u github.com/onsi/gomega/...
   - go get -u golang.org/x/lint/golint
 
 script:
   - make build
   - make release
+  - make docker
+  - go get -u github.com/onsi/ginkgo/ginkgo
+  - go get -u github.com/onsi/gomega/...
   - make verify
   - git checkout go.mod go.sum
-  - make docker
 
 deploy:
   provider: script
