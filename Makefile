@@ -2,7 +2,7 @@ APP      = go-cook
 TMPAPP   = $(APP)-tmp
 SNAPSHOT = $(APP)-snapshot
 DATE     = $(shell date +%F_%T)
-VERSION  = $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || echo v0.0.0)
+VERSION  = $(shell git describe --tags --always --match=v* 2> /dev/null || echo v0.0.0)
 
 MAINTAINER ?= Beate Ottenwaelder <ottenwbe.public@gmail.com>
 
