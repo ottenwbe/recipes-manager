@@ -25,5 +25,4 @@ deploy:
   provider: script
   script: make docker-push
   on:
-    all_branches: true
-  #  tags: true
+    tags: true

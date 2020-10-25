@@ -15,8 +15,19 @@ GOLINT  = golint
 
 M = $(shell printf "\033[34;1m▶\033[0m")
 
+.PHONY: release-build
+release: build verify; $(info $(M) building executable…) @ ## Build the app's binary release version
+	@$(GO) build \
+		-tags release \
+		-mod=vendor \
+		-ldflags "-s -w" \
+		-ldflags "-X $(VERSIONPKG)=$(VERSION)" \
+		-o $(APP)-$(VERSION) \
+		*.go
+
+
 .PHONY: release
-release: ; $(info $(M) building executable…) @ ## Build the app's binary release version
+release: build verify; $(info $(M) building executable…) @ ## Build the app's binary release version
 	@$(GO) build \
 		-tags release \
 		-mod=vendor \
