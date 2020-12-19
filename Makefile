@@ -75,26 +75,26 @@ test: ; $(info $(M) running tests…) @ ## Run tests
 .PHONY: docker-arm
 docker-arm: ## Create docker image for arm
 ifndef BUILD_DOCKER_HOST
-	docker build --label "version=${VERSION}" --build-arg "APP=$(APP)-$(VERSION)"  --label "build_date=${DATE}" --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile.armhf .
+	docker build --label "version=${VERSION}" --build-arg "APP=$(APP)-$(VERSION)"  --label "build_date=${DATE}" --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(VERSION) -f Dockerfile.armhf .
 else
-	docker -H $(BUILD_DOCKER_HOST)  build --build-arg "APP=$(APP)-$(VERSION)"  --label "version=${VERSION}" --label "build_date=${DATE}" --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile.armhf .
+	docker -H $(BUILD_DOCKER_HOST)  build --build-arg "APP=$(APP)-$(VERSION)"  --label "version=${VERSION}" --label "build_date=${DATE}" --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(VERSION) -f Dockerfile.armhf .
 endif
 
 .PHONY: docker
 docker: ## Create docker image
 ifndef BUILD_DOCKER_HOST
-	docker build --label "version=$(VERSION)" --build-arg "APP=$(APP)-$(VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile .
+	docker build --label "version=$(VERSION)" --build-arg "APP=$(APP)-$(VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(VERSION) -f Dockerfile .
 else
-	docker -H $(BUILD_DOCKER_HOST) build --build-arg "APP=$(APP)-$(VERSION)"  --label "version=$(VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(VERSION) -f Dockerfile .
+	docker -H $(BUILD_DOCKER_HOST) build --build-arg "APP=$(APP)-$(VERSION)"  --label "version=$(VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(MAINTAINER)" -t $(DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(VERSION) -f Dockerfile .
 endif
 
 .PHONY: docker-push
 docker-push: ## Push docker image
 ifndef BUILD_DOCKER_HOST
 	echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin; \
-	docker push $(DOCKER_PREFIX)go-cook:$(VERSION)
+	docker push $(DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(VERSION)
 else
-	docker -H $(BUILD_DOCKER_HOST) push $(DOCKER_PREFIX)go-cook:$(VERSION)
+	docker -H $(BUILD_DOCKER_HOST) push $(DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(VERSION)
 endif
 
 .PHONY: help

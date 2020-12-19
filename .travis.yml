@@ -7,21 +7,23 @@ arch:
   - amd64
   - arm64
 env:
-  - DOCKER_PREFIX=ottenwbe/
+  global:
+    - DOCKER_PREFIX=ottenwbe/ 
 
 install:
   - go get -u golang.org/x/lint/golint
 
 script:
-  - make build
   - go get -u github.com/onsi/ginkgo/ginkgo
   - go get -u github.com/onsi/gomega/...
-  - make verify
+  - make build  
+  - make verify  
   - make release
-  - make docker
+  - GO_COOK_ARCH=$TRAVIS_CPU_ARCH make docker
 
 deploy:
   provider: script
-  script: make docker-push
+  script: GO_COOK_ARCH=$TRAVIS_CPU_ARCH make docker-push
   on:
     all_branches: true
+    go: 1.15
