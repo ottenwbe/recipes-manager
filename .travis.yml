@@ -14,15 +14,13 @@ install:
 
 script:
   - make build
-  - make release
-  - make docker
   - go get -u github.com/onsi/ginkgo/ginkgo
   - go get -u github.com/onsi/gomega/...
   - make verify
-  - git checkout go.mod go.sum
+  - make release
+  - make docker  
 
 deploy:
   provider: script
   script: make docker-push
-  on:
-    tags: true
+ 
