@@ -18,9 +18,10 @@ script:
   - go get -u github.com/onsi/gomega/...
   - make verify
   - make release
-  - make docker  
+  - make docker
 
 deploy:
   provider: script
   script: make docker-push
- 
+  on:
+    all_branches: true
