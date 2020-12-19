@@ -8,7 +8,7 @@ arch:
   - arm64
 env:
   global:
-    - DOCKER_PREFIX=ottenwbe/ 
+    - GO_COOK_DOCKER_PREFIX=ottenwbe/ 
 
 install:
   - go get -u golang.org/x/lint/golint
