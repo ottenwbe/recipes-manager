@@ -5,7 +5,7 @@ DATE     		= $(shell date +%F_%T)
 GO_COOK_VERSION	= $(shell git describe --tags --always --match=v* 2> /dev/null || echo v0.0.0)
 GO_COOK_ARCH	?= default
 
-MAINTAINER ?= Beate Ottenwaelder <ottenwbe.public@gmail.com>
+GO_COOK_MAINTAINER ?= Beate Ottenwaelder <ottenwbe.public@gmail.com>
 
 VERSIONPKG = "github.com/ottenwbe/go-life/core.appVersionString"
 
@@ -76,17 +76,17 @@ test: ; $(info $(M) running tests…) @ ## Run tests
 .PHONY: docker-arm
 docker-arm: ## Create docker image for arm
 ifndef GO_COOK_BUILD_DOCKER_HOST
-	docker build --label "version=${GO_COOK_VERSION}" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=${DATE}" --label "maintaner=$(MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION) -f Dockerfile.armhf .
+	docker build --label "version=${GO_COOK_VERSION}" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=${DATE}" --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION) -f Dockerfile.armhf .
 else
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST)  build --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "version=${GO_COOK_VERSION}" --label "build_date=${DATE}" --label "maintaner=$(MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION) -f Dockerfile.armhf .
+	docker -H $(GO_COOK_BUILD_DOCKER_HOST)  build --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "version=${GO_COOK_VERSION}" --label "build_date=${DATE}" --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION) -f Dockerfile.armhf .
 endif
 
 .PHONY: docker
 docker: ## Create docker image
 ifndef GO_COOK_BUILD_DOCKER_HOST
-	docker build --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION) -f Dockerfile .
+	docker build --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION) -f Dockerfile .
 else
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST) build --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "version=$(GO_COOK_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION) -f Dockerfile .
+	docker -H $(GO_COOK_BUILD_DOCKER_HOST) build --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "version=$(GO_COOK_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION) -f Dockerfile .
 endif
 
 .PHONY: docker-push
