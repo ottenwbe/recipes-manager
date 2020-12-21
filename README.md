@@ -5,6 +5,12 @@
 Backend service to manage recipes. 
 Go-Cook supports managing the recipes via API and persistence of the recipes in a database.
 
+## Related projects
+
+|  |   |
+|---|---|
+| Web Frontend  |  https://github.com/ottenwbe/go-cook-ui |
+|  |  |
 
 ## Development 
 
@@ -25,7 +31,7 @@ Go-Cook supports managing the recipes via API and persistence of the recipes in 
 
 ## Builds
 
-A Makefile supports the build process.
+A Makefile supports the build process. This includes building a development and release version of the app. Furthermore, it includes building docker images.
 
 ### Build Snapshot
 
@@ -38,6 +44,7 @@ make build
 ```
 make release
 ```
+
 
 ### Docker builds
 
@@ -63,7 +70,11 @@ make docker-arm
     docker rm -v $(docker ps -a -q)      
     ```
  
- ## API Documentation
+## Deployment
+
+### File-based Configuration 
+
+## API Documentation
  
  Note: Incomplete
  
