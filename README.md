@@ -7,10 +7,9 @@ Go-Cook supports managing the recipes via API and persistence of the recipes in 
 
 ## Related projects
 
-|  |   |
+
 |---|---|
 | Web Frontend  |  https://github.com/ottenwbe/go-cook-ui |
-|  |  |
 
 ## Development 
 
