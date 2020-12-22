@@ -77,30 +77,30 @@ test: ; $(info $(M) running tests…) @ ## Run tests
 docker-arm: ## Create docker image for arm
 ifndef GO_COOK_BUILD_DOCKER_HOST
 	echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin; \
-	docker build --label "version=${GO_COOK_VERSION}" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=${DATE}" --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION) -f Dockerfile.armhf .
+	docker build --label "version=${GO_COOK_VERSION}" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=${DATE}" --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_VERSION)-$(GO_COOK_ARCH) -f Dockerfile.armhf .
 else
 	echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin; \
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST)  build --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "version=${GO_COOK_VERSION}" --label "build_date=${DATE}" --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION) -f Dockerfile.armhf .
+	docker -H $(GO_COOK_BUILD_DOCKER_HOST)  build --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "version=${GO_COOK_VERSION}" --label "build_date=${DATE}" --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_VERSION)-$(GO_COOK_ARCH) -f Dockerfile.armhf .
 endif
 
 .PHONY: docker
 docker: ## Create docker image
 ifndef GO_COOK_BUILD_DOCKER_HOST
 	echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin; \	
-	docker build --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION) -f Dockerfile .
+	docker build --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_VERSION)-$(GO_COOK_ARCH) -f Dockerfile .
 else
 	echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin; \
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST) build --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "version=$(GO_COOK_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION) -f Dockerfile .
+	docker -H $(GO_COOK_BUILD_DOCKER_HOST) build --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "version=$(GO_COOK_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_VERSION)-$(GO_COOK_ARCH) -f Dockerfile .
 endif
 
 .PHONY: docker-push
 docker-push: ## Push docker image
 ifndef GO_COOK_BUILD_DOCKER_HOST
 	echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin; \
-	docker push $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION)
+	docker push $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_VERSION)-$(GO_COOK_ARCH)
 else
 	echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin; \
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST) push $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_ARCH)-$(GO_COOK_VERSION)
+	docker -H $(GO_COOK_BUILD_DOCKER_HOST) push $(GO_COOK_DOCKER_PREFIX)go-cook:$(GO_COOK_VERSION)-$(GO_COOK_ARCH)
 endif
 
 .PHONY: help
