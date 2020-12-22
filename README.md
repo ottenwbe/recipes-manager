@@ -28,9 +28,9 @@ Go-Cook supports managing the recipes via API and persistence of the recipes in 
     go get github.com/onsi/gomega/...
     ```
 
-## Builds
+## Building Go-Cook
 
-A Makefile supports the build process. This includes building a development and release version of the app. Furthermore, it includes building docker images.
+A Makefile supports the build process. This includes building a development and release version of the go-cook service. Furthermore, it includes building docker images to easily deploy the go-cook service.
 
 ### Build Snapshot
 
@@ -38,12 +38,15 @@ A Makefile supports the build process. This includes building a development and 
 make build 
 ```
 
+Builds a fully functioning binary named ```go-cook-snapshot```. In contrast to the release version, there is still debugging informaiton included.
+
 ### Build Release Version
 
 ```
 make release
 ```
 
+Builds a fully functioning binary named ```go-cook```. 
 
 ### Docker builds
 
@@ -69,9 +72,36 @@ make docker-arm
     docker rm -v $(docker ps -a -q)      
     ```
  
-## Deployment
+## Configuration
 
 ### File-based Configuration 
+
+Configuraiton files are expected at ```~/.go-cook/go-cook-config.yml```.
+
+```yaml
+recipeDB:
+  host: <db host>
+
+html:
+  address: <server listens on this address>
+  cors:
+    origin: <Access-Control-Allow-Origin>
+
+drive:
+  connection:
+    secret:
+      file: <location of secret>
+  recipes:
+    folder: <folder name in drive>
+
+sourceClient:
+  host: <source host>
+```
+
+
+### Environment-based Configuration
+
+By prepending all variables (see file-based configuration) with ```GO_COOK_``` the configuration can be set in the environment.
 
 ## API Documentation
  
