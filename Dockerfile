@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM docker.io/ubuntu:latest
 
 ARG APP=go-cook
 ENV GIN_MODE release
