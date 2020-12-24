@@ -109,15 +109,11 @@ func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 		}
 
 		code := query["code"][0]
-		_, err = sourceDescription(sourceID, c, sources)
-		if err != nil {
-			c.String(404, "Invalid Source tried to connect")
-			return
-		}
 
 		err = src.ConnectOAuth(code)
 		if err != nil {
 			c.String(400, "Cannot connect to Source")
+			log.Error(err)
 			return
 		}
 
