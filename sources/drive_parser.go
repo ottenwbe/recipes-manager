@@ -235,8 +235,8 @@ func (p *driveRecipeParser) handleParsingError(recipe *recipes.Recipe, err error
 }
 
 const (
-	driveParserIngredientsTitle  = "drive.connection.secret.file"
-	driveRecipeInstructionsTitle = "drive.recipes.folder"
+	driveParserIngredientsTitle  = "drive.recipes.ingredients"
+	driveRecipeInstructionsTitle = "drive.recipes.instructions"
 )
 
 var (

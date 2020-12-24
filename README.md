@@ -93,9 +93,11 @@ drive:
       file: <location of secret>
   recipes:
     folder: <folder name in drive>
+    ingredients: Zutaten
+	  instructions: Zubereitung
 
-sourceClient:
-  host: <source host>
+source:
+  host: <source host, i.e., aka host of ui>
 ```
 
 

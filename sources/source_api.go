@@ -26,6 +26,7 @@ package sources
 
 import (
 	"encoding/json"
+	"net/url"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -117,7 +118,7 @@ func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 			return
 		}
 
-		c.Redirect(301, "http://"+host+"/#!/src")
+		c.Redirect(301, host)
 	}
 }
 
@@ -125,6 +126,9 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sourceID := c.Param("source")
 		log.Infof("Exchange Token with Source %v", sourceID)
+
+		query := c.Request.URL.Query()
+		host = extractSourceRedirectOrDefault(query)
 
 		src, err := sourceClient(sourceID, sources)
 		if err != nil {
@@ -227,9 +231,19 @@ func sourceDescription(sourceID string, c *core.APICallContext, sources Sources)
 	return src, err
 }
 
+func extractSourceRedirectOrDefault(query url.Values) string {
+	if len(query[REDIRECT]) > 0 {
+		log.Debugf("Got Redirect to %v", query[REDIRECT][0])
+		return query[REDIRECT][0]
+	}
+	return host
+}
+
 const (
-	//sourceHost represents the host address configuration name
-	sourceHost = "sourceClient.host"
+	//SOURCEREDIRECT represents the host address configuration name
+	SOURCEREDIRECT = "source.redirect"
+	//REDIRECT represents a query parameter that can be set to change source.redirect
+	REDIRECT = "redirect"
 )
 
 var (
@@ -237,6 +251,6 @@ var (
 )
 
 func init() {
-	utils.Config.SetDefault(sourceHost, "localhost:8080")
-	host = utils.Config.GetString(sourceHost)
+	utils.Config.SetDefault(SOURCEREDIRECT, "http://localhost:8080/#!/src")
+	host = utils.Config.GetString(SOURCEREDIRECT)
 }

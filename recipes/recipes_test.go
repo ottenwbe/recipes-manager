@@ -134,5 +134,17 @@ var _ = Describe("recipes", func() {
 			Expect(recipe.Ingredients[0].Amount).To(Equal(0.5))
 			Expect(recipe.Ingredients[1].Amount).To(Equal(1.0))
 		})
+		It("shouldignore invalid amounts", func() {
+			recipe := Recipe{
+				Servings: 2,
+				Ingredients: []Ingredients{
+					{Amount: -1, Name: "test1", Unit: "g"},
+					{Amount: 2, Name: "test2", Unit: "l"},
+				},
+			}
+			recipe.ScaleTo(1)
+			Expect(recipe.Ingredients[0].Amount).To(Equal(-1.0))
+			Expect(recipe.Ingredients[1].Amount).To(Equal(1.0))
+		})
 	})
 })
