@@ -29,7 +29,7 @@ We briefly describe two deployment options. First, a Kubernetes-based deployment
 
     1. Run the container
         
-            docker run -p 8080:8080 --name=backend-go-cook -v <local-config>:/etc/go-cook/go-cook-config.yml ottenwbe/go-cook:0.1.0-amd64
+            docker run -p 8080:8080 --name=backend-go-cook -v <local-config>:/etc/go-cook/go-cook-config.yml ottenwbe/go-cook:0.2.0-amd64
     
     1. Check if everything is running:
 
