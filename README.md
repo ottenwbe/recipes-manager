@@ -31,10 +31,9 @@ The two main options to run the app are either Kubernetes-based or as a standalo
 
             curl localhost:8080/api/v1/recipes
 
-    1. Details about the API:
+    1. Details about the API can be checked in a browser:
 
-            <your-path-to-go-cook>/swagger/swagger_index.html
-            <your-path-to-go-cook>/swagger/doc.json
+            localhost:8080/swagger/swagger_index.html            
 
 ### File-based Configuration 
 
@@ -58,7 +57,7 @@ drive:
   recipes:
     folder: <folder name in drive>
     ingredients: <name of ingredients section in the drive file>
-	  instructions: <name of the instructions section in the drive file>
+    instructions: <name of the instructions section in the drive file>
 
 source:
   host: <source host, i.e., aka host of ui>
