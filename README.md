@@ -3,13 +3,67 @@
 [![Build Status](https://travis-ci.org/ottenwbe/go-cook.svg?branch=master)](https://travis-ci.org/ottenwbe/go-cook)
 
 Backend service to manage recipes. 
-Go-Cook supports managing the recipes via API and persistence of the recipes in a database.
+Go-cook supports managing the recipes via API and persistence of the recipes in a database.
 
 ## Related projects
 
 |Tool|URL|
 |---|---|
 | Web Frontend  |  https://github.com/ottenwbe/go-cook-ui |
+| Deployment    |  https://github.com/ottenwbe/go-cook-deployment |
+
+## How to Use?
+
+### Deployment
+
+The two main options to run the app are either Kubernetes-based or as a standalone service:
+
+1. See https://github.com/ottenwbe/go-cook-deployment how to run the whole suite of micro-services on a Kubernetes cluster, including the frontend and database.
+
+2. To run go-cook as standalone service (either amd64 or arm64). Assumption is that a MongoDB is already running:
+
+    1. Prepare a configuraiton file (see next section).
+    1. Run the container
+        
+            docker run -p 8080:8080 -v <local-config>:/etc/go-cook/go-cook-config.yml ottenwbe/go-cook:0.1.0-amd64
+    
+    1. Check if everything is running:
+
+            curl localhost:8080/api/v1/recipes
+
+
+### File-based Configuration 
+
+Configuraiton files are expected at ```~/.go-cook/go-cook-config.yml``` or ```/etc/go-cook/go-cook-config.yml```.
+
+```yaml
+# Mandatory Configuration
+recipeDB:
+  host: <db host>
+
+# Optional Configuration
+html:
+  address: <server listens on this address>
+  cors:
+    origin: <Access-Control-Allow-Origin>
+
+drive:
+  connection:
+    secret:
+      file: <location of secret>
+  recipes:
+    folder: <folder name in drive>
+    ingredients: <name of ingredients section in the drive file>
+	  instructions: <name of the instructions section in the drive file>
+
+source:
+  host: <source host, i.e., aka host of ui>
+```
+
+#### Configuration with Environment Variables
+
+By prepending all variables (see file-based configuration) with ```GO_COOK_``` the configuration can be set in the environment.
+
 
 ## Development 
 
@@ -70,40 +124,7 @@ make docker-arm
 * Remove all container and their volumes
     ```    
     docker rm -v $(docker ps -a -q)      
-    ```
- 
-## Configuration
-
-### File-based Configuration 
-
-Configuraiton files are expected at ```~/.go-cook/go-cook-config.yml```.
-
-```yaml
-recipeDB:
-  host: <db host>
-
-html:
-  address: <server listens on this address>
-  cors:
-    origin: <Access-Control-Allow-Origin>
-
-drive:
-  connection:
-    secret:
-      file: <location of secret>
-  recipes:
-    folder: <folder name in drive>
-    ingredients: Zutaten
-	  instructions: Zubereitung
-
-source:
-  host: <source host, i.e., aka host of ui>
-```
-
-
-### Environment-based Configuration
-
-By prepending all variables (see file-based configuration) with ```GO_COOK_``` the configuration can be set in the environment.
+    ``` 
 
 ## API Documentation
  
@@ -113,7 +134,7 @@ By prepending all variables (see file-based configuration) with ```GO_COOK_``` t
  
 The Swagger API documentation is based on [gin-swagger](https://github.com/swaggo/gin-swagger):
  
-    swag init -d ./core -g http.go --parseInternal
+    swag init --exclude vendor
  
  ### Disclaimer
  

@@ -24,32 +24,18 @@
 
 package core
 
-import (
-	"sync"
-)
-
-var (
-	versionGuard     sync.Once
-	appVersionString string
-	apiVersion       = "v1"
-	appVersion       *Version
-)
-
-// Version of the application and the exposed api
-type Version struct {
-	// APP is the version of the current app
-	App string `json:"app"`
-	// API is the MAJOR API Version supported by the app
-	API string `json:"api"`
+// AddCoreAPIToHandler constructs an API for recipes
+func AddCoreAPIToHandler(handler Handler) {
+	v1 := handler.API(1)
+	v1.GET("/version", prepareVersionRoutes)
 }
 
-// AppVersion returns the current major version of the API as well as the applications version
-func AppVersion() *Version {
-	versionGuard.Do(func() {
-		appVersion = &Version{
-			App: appVersionString,
-			API: apiVersion,
-		}
-	})
-	return appVersion
+// Version example
+// @Summary Get the curent version
+// @Description get the current version
+// @Produce  json
+// @Success 200 {object} Version
+// @Router /version [get]
+func prepareVersionRoutes(c *APICallContext) {
+	c.JSON(200, AppVersion())
 }

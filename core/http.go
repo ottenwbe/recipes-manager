@@ -98,7 +98,6 @@ func NewHandler() Handler {
 		make(map[string]Routes),
 	}
 	handler.configure()
-	handler.prepareDefaultRoutes()
 	return handler
 }
 
@@ -156,12 +155,6 @@ func (g *ginHandler) configure() {
 	g.handler.Use(g.corsMiddleware())
 	// Return 500 if there was a panic.
 	g.handler.Use(gin.Recovery())
-}
-
-func (g *ginHandler) prepareDefaultRoutes() {
-	g.handler.GET("/version", func(c *gin.Context) {
-		c.JSON(200, AppVersion())
-	})
 }
 
 type ginRoutes struct {

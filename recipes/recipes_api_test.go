@@ -28,10 +28,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/ottenwbe/go-cook/core"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/ottenwbe/go-cook/core"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -196,7 +197,7 @@ var _ = Describe("recipesAPI", func() {
 			retrievedRecipe, err := recipes.GetByName(POSTTEST)
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(resp.StatusCode).To(Equal(200))
+			Expect(resp.StatusCode).To(Equal(201))
 			Expect(retrievedRecipe.Servings).To(Equal(recipe.Servings))
 			Expect(retrievedRecipe.Description).To(Equal(recipe.Description))
 		})

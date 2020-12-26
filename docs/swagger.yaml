@@ -1,5 +1,226 @@
+basePath: /api/v1
+definitions:
+  core.Version:
+    properties:
+      api:
+        description: API is the MAJOR API Version supported by the app
+        type: string
+      app:
+        description: APP is the version of the current app
+        type: string
+    type: object
+  recipes.Ingredients:
+    properties:
+      amount:
+        description: Amount needed in a recipe of an ingredient
+        type: number
+      name:
+        description: Name of the ingredient
+        type: string
+      unit:
+        description: Unit of the Amount
+        type: string
+    type: object
+  recipes.Recipe:
+    properties:
+      components:
+        items:
+          $ref: '#/definitions/recipes.Ingredients'
+        type: array
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      pictureLink:
+        items:
+          type: string
+        type: array
+      servings:
+        type: integer
+    type: object
+  recipes.RecipePicture:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      picture:
+        type: string
+    type: object
 info:
   contact: {}
-  license: {}
-paths: {}
+  description: This is the API documentaiton for go-cook.
+  license:
+    name: MIT
+    url: https://github.com/ottenwbe/go-cook/blob/master/LICENSE
+  title: Swagger API for go-cook
+  version: "1.0"
+paths:
+  /recipes:
+    get:
+      description: A list of ids of recipes is returned
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+      summary: Get Recipes
+      tags:
+      - Recipes
+    post:
+      consumes:
+      - application/json
+      description: Adds a new recipe, the id will automatically overriden by the backend
+      parameters:
+      - description: Recipe
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/recipes.Recipe'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: ""
+      summary: Add a new Recipe
+      tags:
+      - Recipes
+  /recipes/num:
+    get:
+      description: The number of recipes is returned that is managed by the service.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      summary: Get the number of recipes
+      tags:
+      - Recipes
+  /recipes/r/{recipe}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a recipe by id
+      parameters:
+      - description: Recipe ID
+        in: path
+        name: recipe
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Delete a Recipe
+      tags:
+      - Recipes
+    get:
+      description: A specific recipe is returned
+      parameters:
+      - description: Number of Servings
+        in: query
+        name: servings
+        type: integer
+      - description: Recipe ID
+        in: path
+        name: recipe
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/recipes.Recipe'
+      summary: Get a specific Recipe
+      tags:
+      - Recipes
+    put:
+      consumes:
+      - application/json
+      description: A specific recipe is updates
+      parameters:
+      - description: Recipe ID
+        in: path
+        name: recipe
+        required: true
+        type: string
+      - description: Recipe
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/recipes.Recipe'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Update a specific Recipe
+      tags:
+      - Recipes
+  /recipes/r/{recipe}/pictures/{name}:
+    get:
+      description: A specific picture of a specific recipe is returned
+      parameters:
+      - description: Recipe ID
+        in: path
+        name: recipe
+        required: true
+        type: string
+      - description: Name of Picture
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/recipes.RecipePicture'
+      summary: Get a picture of a
+      tags:
+      - Recipes
+  /recipes/rand:
+    get:
+      description: A specific picture of a specific recipe is returned
+      parameters:
+      - description: Number of Servings
+        in: query
+        name: servings
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/recipes.Recipe'
+      summary: Get a Random Recipe
+      tags:
+      - Recipes
+  /version:
+    get:
+      description: get the current version
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core.Version'
+      summary: Get the curent version
 swagger: "2.0"
