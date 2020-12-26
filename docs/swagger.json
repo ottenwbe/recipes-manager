@@ -246,6 +246,113 @@
                 }
             }
         },
+        "/sources": {
+            "get": {
+                "description": "List sources",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sources"
+                ],
+                "summary": "List sources",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/sources.SourceResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/{source}/connect": {
+            "get": {
+                "description": "Trigger the oauth process",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sources"
+                ],
+                "summary": "Trigger the oauth process",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Source ID",
+                        "name": "source",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/sources.SourceOAuthConnectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/{source}/oauth": {
+            "get": {
+                "description": "Handles Tokens. Typically not directly called.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sources"
+                ],
+                "summary": "Handles Tokens",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Source ID",
+                        "name": "source",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "301": {
+                        "description": "Moved Permanently",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/{source}/recipes": {
+            "get": {
+                "description": "Download recipes from a source",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sources"
+                ],
+                "summary": "Download Recipes from a Source",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Source ID",
+                        "name": "source",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/version": {
             "get": {
                 "description": "get the current version",
@@ -334,6 +441,34 @@
                     "type": "string"
                 },
                 "picture": {
+                    "type": "string"
+                }
+            }
+        },
+        "sources.SourceOAuthConnectResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "oAuthURL": {
+                    "type": "string"
+                }
+            }
+        },
+        "sources.SourceResponse": {
+            "type": "object",
+            "properties": {
+                "connected": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "version": {
                     "type": "string"
                 }
             }

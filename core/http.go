@@ -148,7 +148,7 @@ func (g *ginHandler) route(route string) Routes {
 // configure the default middleware with a logger and recovery (crash-free) middleware
 func (g *ginHandler) configure() {
 
-	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json") // The url pointing to API definition
+	url := ginSwagger.URL("doc.json") // The url pointing to API definition
 	g.handler.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	g.handler.Use(ginrus.Ginrus(log.StandardLogger(), time.RFC3339, true))

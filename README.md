@@ -31,6 +31,10 @@ The two main options to run the app are either Kubernetes-based or as a standalo
 
             curl localhost:8080/api/v1/recipes
 
+    1. Details about the API:
+
+            <your-path-to-go-cook>/swagger/swagger_index.html
+            <your-path-to-go-cook>/swagger/doc.json
 
 ### File-based Configuration 
 
@@ -127,9 +131,7 @@ make docker-arm
     ``` 
 
 ## API Documentation
- 
- Note: Incomplete
- 
+
  ### Generate the Documentation 
  
 The Swagger API documentation is based on [gin-swagger](https://github.com/swaggo/gin-swagger):

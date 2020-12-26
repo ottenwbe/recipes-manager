@@ -49,6 +49,24 @@ definitions:
       picture:
         type: string
     type: object
+  sources.SourceOAuthConnectResponse:
+    properties:
+      id:
+        type: string
+      oAuthURL:
+        type: string
+    type: object
+  sources.SourceResponse:
+    properties:
+      connected:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      version:
+        type: string
+    type: object
 info:
   contact: {}
   description: This is the API documentaiton for go-cook.
@@ -212,6 +230,76 @@ paths:
       summary: Get a Random Recipe
       tags:
       - Recipes
+  /sources:
+    get:
+      description: List sources
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/sources.SourceResponse'
+            type: object
+      summary: List sources
+      tags:
+      - Sources
+  /sources/{source}/connect:
+    get:
+      description: Trigger the oauth process
+      parameters:
+      - description: Source ID
+        in: path
+        name: source
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sources.SourceOAuthConnectResponse'
+      summary: Trigger the oauth process
+      tags:
+      - Sources
+  /sources/{source}/oauth:
+    get:
+      description: Handles Tokens. Typically not directly called.
+      parameters:
+      - description: Source ID
+        in: path
+        name: source
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "301":
+          description: Moved Permanently
+          schema:
+            type: string
+      summary: Handles Tokens
+      tags:
+      - Sources
+  /sources/{source}/recipes:
+    get:
+      description: Download recipes from a source
+      parameters:
+      - description: Source ID
+        in: path
+        name: source
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Download Recipes from a Source
+      tags:
+      - Sources
   /version:
     get:
       description: get the current version

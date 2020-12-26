@@ -92,6 +92,14 @@ func (s API) prepareV1API(router core.Handler, sources Sources, recipes recipes.
 	v1.PATCH("/sources/:source/recipes", synchronizeSourceRecipes(sources, recipes))
 }
 
+// oAuthHandler example
+// @Summary Handles Tokens
+// @Description Handles Tokens. Typically not directly called.
+// @Tags Sources
+// @Produce json
+// @Param source path string true "Source ID"
+// @Success 301 {string} redirect
+// @Router /sources/{source}/oauth [get]
 func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sourceID := c.Param("source")
@@ -122,6 +130,14 @@ func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 	}
 }
 
+// oAuthHandler example
+// @Summary Trigger the oauth process
+// @Description Trigger the oauth process
+// @Tags Sources
+// @Produce json
+// @Param source path string true "Source ID"
+// @Success 200 {object} SourceOAuthConnectResponse
+// @Router /sources/{source}/connect [get]
 func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sourceID := c.Param("source")
@@ -157,6 +173,13 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 	}
 }
 
+// listSources example
+// @Summary List sources
+// @Description List sources
+// @Tags Sources
+// @Produce json
+// @Success 200 {object} map[string]SourceResponse
+// @Router /sources [get]
 func listSources(sources Sources) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sources, err := sources.List()
@@ -173,10 +196,18 @@ func listSources(sources Sources) func(c *core.APICallContext) {
 			c.String(400, "Sources could not be converted to JSON")
 			return
 		}
-		c.String(200, string(s))
+		c.JSON(200, s)
 	}
 }
 
+// synchronizeSourceRecipes example
+// @Summary Download Recipes from a Source
+// @Description Download recipes from a source
+// @Tags Sources
+// @Produce json
+// @Param source path string true "Source ID"
+// @Success 200
+// @Router /sources/{source}/recipes [get]
 func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sourceID := c.Param("source")
