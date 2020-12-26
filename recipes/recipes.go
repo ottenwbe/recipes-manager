@@ -156,7 +156,9 @@ func (r *Recipe) String() string {
 //ScaleBy a factor all portions of the recipe
 func (r *Recipe) ScaleBy(factor float64) {
 	for i := range r.Ingredients {
-		r.Ingredients[i].Amount *= factor
+		if r.Ingredients[i].Amount > 0 {
+			r.Ingredients[i].Amount *= factor
+		}
 	}
 }
 

@@ -98,7 +98,6 @@ func NewHandler() Handler {
 		make(map[string]Routes),
 	}
 	handler.configure()
-	handler.prepareDefaultRoutes()
 	return handler
 }
 
@@ -149,19 +148,13 @@ func (g *ginHandler) route(route string) Routes {
 // configure the default middleware with a logger and recovery (crash-free) middleware
 func (g *ginHandler) configure() {
 
-	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json") // The url pointing to API definition
+	url := ginSwagger.URL("doc.json") // The url pointing to API definition
 	g.handler.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	g.handler.Use(ginrus.Ginrus(log.StandardLogger(), time.RFC3339, true))
 	g.handler.Use(g.corsMiddleware())
 	// Return 500 if there was a panic.
 	g.handler.Use(gin.Recovery())
-}
-
-func (g *ginHandler) prepareDefaultRoutes() {
-	g.handler.GET("/version", func(c *gin.Context) {
-		c.JSON(200, AppVersion())
-	})
 }
 
 type ginRoutes struct {

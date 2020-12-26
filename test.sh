@@ -9,7 +9,7 @@ echo "Prepare tests..."
 docker stop test-db | true
 docker rm -v test-db | true
 # run a mongo-db
-docker run -d --name=test-db -p 27018:27017 mongo:3
+docker run -d --name=test-db -p 27018:27017 mongo:4
 
 mkdir -p ~/.go-cook
 

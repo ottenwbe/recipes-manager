@@ -91,7 +91,7 @@ func (rAPI *API) prepareV1API() {
 	//GET a random recipe
 	v1.GET("/recipes/rand", rAPI.getRandomRecipe)
 
-	//GET a random recipe
+	//GET the number of recipe
 	v1.GET("/recipes/num", rAPI.getNumberOfRecipes)
 
 	//GET a specific recipe
@@ -108,12 +108,28 @@ func (rAPI *API) prepareV1API() {
 
 }
 
+// getNumberOfRecipes example
+// @Summary Get the number of recipes
+// @Description The number of recipes is returned that is managed by the service.
+// @Tags Recipes
+// @Produce json
+// @Success 200 {integer} number
+// @Router /recipes/num [get]
 func (rAPI *API) getNumberOfRecipes(c *core.APICallContext) {
 	num := rAPI.recipes.Num()
 	log.Debugf("Number of Recipes %v", num)
 	c.String(http.StatusOK, fmt.Sprintf("%v", num))
 }
 
+// getRecipePicture example
+// @Summary Get a picture of a
+// @Tags Recipes
+// @Description A specific picture of a specific recipe is returned
+// @Param recipe path string true "Recipe ID"
+// @Param name path string true "Name of Picture"
+// @Produce json
+// @Success 200 {object} RecipePicture
+// @Router /recipes/r/{recipe}/pictures/{name} [get]
 func (rAPI *API) getRecipePicture(c *core.APICallContext) {
 	recipeID := NewRecipeIDFromString(c.Param(RECIPE))
 	name := c.Param(NAME)
@@ -125,6 +141,14 @@ func (rAPI *API) getRecipePicture(c *core.APICallContext) {
 	}
 }
 
+// getRandomRecipe example
+// @Summary Get a Random Recipe
+// @Description A specific picture of a specific recipe is returned
+// @Tags Recipes
+// @Param servings query int false "Number of Servings"
+// @Produce json
+// @Success 200 {object} Recipe
+// @Router /recipes/rand [get]
 func (rAPI *API) getRandomRecipe(c *core.APICallContext) {
 	query := c.Request.URL.Query()
 	servings := extractServings(query)
@@ -142,10 +166,26 @@ func (rAPI *API) getRandomRecipe(c *core.APICallContext) {
 	}
 }
 
+// getRecipes example
+// @Summary Get Recipes
+// @Description A list of ids of recipes is returned
+// @Tags Recipes
+// @Produce json
+// @Success 200 {object} []string
+// @Router /recipes [get]
 func (rAPI *API) getRecipes(c *core.APICallContext) {
 	c.JSON(http.StatusOK, rAPI.recipes.IDs())
 }
 
+// getRecipe example
+// @Summary Get a specific Recipe
+// @Description A specific recipe is returned
+// @Tags Recipes
+// @Param servings query int false "Number of Servings"
+// @Param recipe path string true "Recipe ID"
+// @Produce json
+// @Success 200 {object} Recipe
+// @Router /recipes/r/{recipe} [get]
 func (rAPI *API) getRecipe(c *core.APICallContext) {
 	recipeIDS := c.Param(RECIPE)
 	recipeID := NewRecipeIDFromString(recipeIDS)
@@ -166,6 +206,16 @@ func (rAPI *API) getRecipe(c *core.APICallContext) {
 	}
 }
 
+// putRecipe example
+// @Summary Update a specific Recipe
+// @Description A specific recipe is updates
+// @Tags Recipes
+// @Param recipe path string true "Recipe ID"
+// @Param message body Recipe true "Recipe"
+// @Accept json
+// @Produce json
+// @Success 200
+// @Router /recipes/r/{recipe} [put]
 func (rAPI *API) putRecipe(c *core.APICallContext) {
 
 	recipeIDS := c.Param(RECIPE)
@@ -188,6 +238,15 @@ func (rAPI *API) putRecipe(c *core.APICallContext) {
 	}
 }
 
+// postRecipes example
+// @Summary Add a new Recipe
+// @Description Adds a new recipe, the id will automatically overriden by the backend
+// @Tags Recipes
+// @Param message body Recipe true "Recipe"
+// @Accept json
+// @Produce json
+// @Success 201
+// @Router /recipes [post]
 func (rAPI *API) postRecipes(c *core.APICallContext) {
 	var recipe Recipe
 	err := c.BindJSON(&recipe)
@@ -199,11 +258,20 @@ func (rAPI *API) postRecipes(c *core.APICallContext) {
 		if err != nil {
 			c.String(http.StatusInternalServerError, "Could not persist Recipe")
 		} else {
-			c.Status(http.StatusOK)
+			c.Status(http.StatusCreated)
 		}
 	}
 }
 
+// deleteRecipe example
+// @Summary Delete a Recipe
+// @Description Deletes a recipe by id
+// @Tags Recipes
+// @Param recipe path string true "Recipe ID"
+// @Accept json
+// @Produce json
+// @Success 200
+// @Router /recipes/r/{recipe} [delete]
 func (rAPI *API) deleteRecipe(c *core.APICallContext) {
 	recipeIDS := c.Param(RECIPE)
 	recipeID := NewRecipeIDFromString(recipeIDS)

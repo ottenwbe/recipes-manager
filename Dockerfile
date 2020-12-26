@@ -1,7 +1,9 @@
-FROM ubuntu:latest
+FROM docker.io/ubuntu:latest
 
 ARG APP=go-cook
 ENV GIN_MODE release
+
+RUN apt-get update && apt-get install -y ca-certificates
 
 RUN mkdir -p /app; mkdir -p /etc/go-cook
 

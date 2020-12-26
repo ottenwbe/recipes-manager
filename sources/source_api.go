@@ -26,6 +26,7 @@ package sources
 
 import (
 	"encoding/json"
+	"net/url"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -91,6 +92,14 @@ func (s API) prepareV1API(router core.Handler, sources Sources, recipes recipes.
 	v1.PATCH("/sources/:source/recipes", synchronizeSourceRecipes(sources, recipes))
 }
 
+// oAuthHandler example
+// @Summary Handles Tokens
+// @Description Handles Tokens. Typically not directly called.
+// @Tags Sources
+// @Produce json
+// @Param source path string true "Source ID"
+// @Success 301 {string} redirect
+// @Router /sources/{source}/oauth [get]
 func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sourceID := c.Param("source")
@@ -109,26 +118,33 @@ func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 		}
 
 		code := query["code"][0]
-		_, err = sourceDescription(sourceID, c, sources)
-		if err != nil {
-			c.String(404, "Invalid Source tried to connect")
-			return
-		}
 
 		err = src.ConnectOAuth(code)
 		if err != nil {
 			c.String(400, "Cannot connect to Source")
+			log.Error(err)
 			return
 		}
 
-		c.Redirect(301, "http://"+host+"/#!/src")
+		c.Redirect(301, host)
 	}
 }
 
+// oAuthHandler example
+// @Summary Trigger the oauth process
+// @Description Trigger the oauth process
+// @Tags Sources
+// @Produce json
+// @Param source path string true "Source ID"
+// @Success 200 {object} SourceOAuthConnectResponse
+// @Router /sources/{source}/connect [get]
 func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sourceID := c.Param("source")
 		log.Infof("Exchange Token with Source %v", sourceID)
+
+		query := c.Request.URL.Query()
+		host = extractSourceRedirectOrDefault(query)
 
 		src, err := sourceClient(sourceID, sources)
 		if err != nil {
@@ -157,6 +173,13 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 	}
 }
 
+// listSources example
+// @Summary List sources
+// @Description List sources
+// @Tags Sources
+// @Produce json
+// @Success 200 {object} map[string]SourceResponse
+// @Router /sources [get]
 func listSources(sources Sources) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sources, err := sources.List()
@@ -173,10 +196,18 @@ func listSources(sources Sources) func(c *core.APICallContext) {
 			c.String(400, "Sources could not be converted to JSON")
 			return
 		}
-		c.String(200, string(s))
+		c.JSON(200, s)
 	}
 }
 
+// synchronizeSourceRecipes example
+// @Summary Download Recipes from a Source
+// @Description Download recipes from a source
+// @Tags Sources
+// @Produce json
+// @Param source path string true "Source ID"
+// @Success 200
+// @Router /sources/{source}/recipes [get]
 func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sourceID := c.Param("source")
@@ -231,9 +262,19 @@ func sourceDescription(sourceID string, c *core.APICallContext, sources Sources)
 	return src, err
 }
 
+func extractSourceRedirectOrDefault(query url.Values) string {
+	if len(query[REDIRECT]) > 0 {
+		log.Debugf("Got Redirect to %v", query[REDIRECT][0])
+		return query[REDIRECT][0]
+	}
+	return host
+}
+
 const (
-	//sourceHost represents the host address configuration name
-	sourceHost = "sourceClient.host"
+	//SOURCEREDIRECT represents the host address configuration name
+	SOURCEREDIRECT = "source.redirect"
+	//REDIRECT represents a query parameter that can be set to change source.redirect
+	REDIRECT = "redirect"
 )
 
 var (
@@ -241,6 +282,6 @@ var (
 )
 
 func init() {
-	utils.Config.SetDefault(sourceHost, "localhost:8080")
-	host = utils.Config.GetString(sourceHost)
+	utils.Config.SetDefault(SOURCEREDIRECT, "http://localhost:8080/#!/src")
+	host = utils.Config.GetString(SOURCEREDIRECT)
 }

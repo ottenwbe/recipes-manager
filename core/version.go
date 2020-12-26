@@ -24,7 +24,9 @@
 
 package core
 
-import "sync"
+import (
+	"sync"
+)
 
 var (
 	versionGuard     sync.Once
