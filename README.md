@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/ottenwbe/go-cook.svg?branch=master)](https://travis-ci.org/ottenwbe/go-cook)
 
 Backend service to manage recipes. 
-Go-cook supports managing the recipes via API and persistence of the recipes in a database.
+Go-cook supports managing recipes via API while persisting them in a database.
 
 ## Related projects
 
@@ -16,22 +16,26 @@ Go-cook supports managing the recipes via API and persistence of the recipes in 
 
 ### Deployment
 
-The two main options to run the app are either Kubernetes-based or as a standalone service:
+We briefly describe two deployment options. First, a Kubernetes-based deployment, including the deployment of all other go-cook tools. Secondly, a stand-alone deployment:
 
-1. See https://github.com/ottenwbe/go-cook-deployment how to run the whole suite of micro-services on a Kubernetes cluster, including the frontend and database.
+1. See https://github.com/ottenwbe/go-cook-deployment for how to run the whole suite of micro-services on a Kubernetes cluster, including the frontend and a database.
 
-2. To run go-cook as standalone service (either amd64 or arm64). Assumption is that a MongoDB is already running:
+2. To run go-cook as standalone service (either amd64 or arm64): 
 
     1. Prepare a configuraiton file (see next section).
+    1. Start a database
+
+            docker run -d --name=db-go-cook -p 27018:27017 mongo:4
+
     1. Run the container
         
-            docker run -p 8080:8080 -v <local-config>:/etc/go-cook/go-cook-config.yml ottenwbe/go-cook:0.1.0-amd64
+            docker run -p 8080:8080 --name=backend-go-cook -v <local-config>:/etc/go-cook/go-cook-config.yml ottenwbe/go-cook:0.1.0-amd64
     
     1. Check if everything is running:
 
             curl localhost:8080/api/v1/recipes
 
-    1. Details about the API can be checked in a browser:
+    1. Details about the API can then be checked in a browser:
 
             localhost:8080/swagger/swagger_index.html            
 
@@ -50,14 +54,14 @@ html:
   cors:
     origin: <Access-Control-Allow-Origin>
 
-drive:
+drive: # To fetch recipes from Goolge Drive
   connection:
     secret:
       file: <location of secret>
   recipes:
     folder: <folder name in drive>
-    ingredients: <name of ingredients section in the drive file>
-    instructions: <name of the instructions section in the drive file>
+    ingredients: <name of ingredients section in the drive files>
+    instructions: <name of the instructions section in the drive files>
 
 source:
   host: <source host, i.e., aka host of ui>
@@ -66,7 +70,6 @@ source:
 #### Configuration with Environment Variables
 
 By prepending all variables (see file-based configuration) with ```GO_COOK_``` the configuration can be set in the environment.
-
 
 ## Development 
 
