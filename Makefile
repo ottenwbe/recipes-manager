@@ -7,7 +7,7 @@ GO_COOK_ARCH	?= default
 
 GO_COOK_MAINTAINER ?= Beate Ottenwaelder <ottenwbe.public@gmail.com>
 
-VERSIONPKG = "github.com/ottenwbe/go-life/core.appVersionString"
+VERSIONPKG = "github.com/ottenwbe/go-cook/core.appVersionString"
 
 DOCKER_REGISTRY ?= docker.io
 
@@ -122,6 +122,10 @@ ifndef GO_COOK_BUILD_DOCKER_HOST
 else
 	docker -H $(GO_COOK_BUILD_DOCKER_HOST) push $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION)-$(GO_COOK_ARCH)
 endif
+
+.PHONY: api-docu
+api-docu: ## Create the API documentation
+	@swag init --exclude vendor
 
 .PHONY: help
 help:
