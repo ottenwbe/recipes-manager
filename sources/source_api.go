@@ -26,6 +26,7 @@ package sources
 
 import (
 	"encoding/json"
+	"net/http"
 	"net/url"
 
 	log "github.com/sirupsen/logrus"
@@ -169,7 +170,7 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 			return
 		}
 
-		c.String(200, string(response))
+		c.String(http.StatusOK, string(response))
 	}
 }
 
@@ -184,19 +185,19 @@ func listSources(sources Sources) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sources, err := sources.List()
 		if err != nil {
-			c.String(400, "Sources could not be listed")
+			c.String(http.StatusBadRequest, "Sources could not be listed")
 			return
 		}
 		result := map[string]*SourceResponse{}
 		for srcID, source := range sources {
 			result[srcID.String()] = newSourceResponse(source)
 		}
-		s, err := json.Marshal(result)
+		/*s, err := json.Marshal(result)
 		if err != nil {
 			c.String(400, "Sources could not be converted to JSON")
 			return
-		}
-		c.JSON(200, s)
+		}*/
+		c.JSON(http.StatusOK, result)
 	}
 }
 

@@ -75,12 +75,12 @@ func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) core.S
 	handler := core.NewHandler()
 	server := core.NewServerH(handler)
 
-	addAPIstoServer(handler, recipesDB, srcRepository)
+	addAPIsToServer(handler, recipesDB, srcRepository)
 
 	return server
 }
 
-func addAPIstoServer(handler core.Handler, recipesDB recipes.RecipeDB, srcRepository sources.Sources) {
+func addAPIsToServer(handler core.Handler, recipesDB recipes.RecipeDB, srcRepository sources.Sources) {
 	recipes.AddRecipesAPIToHandler(handler, recipesDB)
 	sourcesAPI := sources.NewSourceAPI(srcRepository, recipesDB)
 	sourcesAPI.PrepareAPI(handler, srcRepository, recipesDB)
