@@ -352,11 +352,11 @@ func (m *MongoRecipeDB) connectToDB() (err error) {
 		return
 	}
 
-	m.ensureRecipeIndex()
-	/*if err != nil {
+	err = m.ensureRecipeIndex()
+	if err != nil {
 		log.WithError(err).Info("Could not create mongo db index")
 		return
-	}*/
+	}
 	m.ensurePictureIndex()
 	/*if err != nil {
 		log.WithError(err).Info("Could not create mongo db index")
@@ -370,18 +370,42 @@ func (m *MongoRecipeDB) ensureRecipeIndex() error {
 
 	c := m.getRecipesCollection()
 
-	index := mongo.IndexModel{
-		Keys: bson.M{
-			"name": 1, // index in ascending order
-		},
-		Options: options.Index().SetUnique(true).SetBackground(true).SetSparse(true),
+	err := m.createTextIndex(c)
+	if err != nil {
+		return err
 	}
-	_, err := c.Indexes().CreateOne(ctx(), index)
+
+	err = m.createDefaultRecipeIndex(c)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (m *MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
+	index := mongo.IndexModel{
+		Keys: bson.M{
+			"name": 1, // index in ascending order
+		},
+		Options: options.Index().SetUnique(true).SetSparse(true),
+	}
+
+	_, err := c.Indexes().CreateOne(ctx(), index)
+	return err
+}
+
+func (m *MongoRecipeDB) createTextIndex(c *mongo.Collection) error {
+	textIndex := mongo.IndexModel{
+		Keys: bson.M{
+			"description": "text",
+			"name":        "text",
+		},
+		Options: options.Index().SetUnique(false),
+	}
+
+	_, err := c.Indexes().CreateOne(ctx(), textIndex)
+	return err
 }
 
 func (m *MongoRecipeDB) ensurePictureIndex() error {

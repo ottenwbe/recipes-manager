@@ -205,7 +205,7 @@ func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c 
 
 		src, err := sourceClient(sourceID, sources)
 		if err != nil {
-			c.String(400, "Source could not be found")
+			c.String(http.StatusBadRequest, "Source could not be found")
 			return
 		}
 

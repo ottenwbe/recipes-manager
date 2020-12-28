@@ -163,8 +163,8 @@ func (r *Recipe) ScaleBy(factor float64) {
 }
 
 //ScaleTo a desired number of portions
-func (r *Recipe) ScaleTo(portions int) {
-	factor := float64(portions) / float64(r.Servings)
-	r.Servings = int8(portions)
+func (r *Recipe) ScaleTo(servings int) {
+	factor := float64(servings) / float64(r.Servings)
+	r.Servings = int8(servings)
 	r.ScaleBy(factor)
 }

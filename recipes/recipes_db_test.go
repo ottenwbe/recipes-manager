@@ -27,6 +27,8 @@ package recipes
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 var _ = Describe("recipes db", func() {
@@ -280,6 +282,30 @@ var _ = Describe("recipes db", func() {
 			names := db.IDs()
 
 			Expect(names).To(ContainElement(expectedResult.ID.String()))
+		})
+
+		It("list all indexes", func() {
+			expectedResult := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "testRecipe",
+				Ingredients: []Ingredients{},
+				Description: "describes the test recipe",
+				PictureLink: []string{},
+			}
+			db.Insert(expectedResult)
+			defer db.Remove(expectedResult.Name)
+
+			c := db.(*MongoRecipeDB).getRecipesCollection()
+
+			cursor, _ := c.Indexes().List(ctx())
+
+			for cursor.Next(ctx()) {
+				var episode bson.M
+				if err = cursor.Decode(&episode); err != nil {
+					logrus.Error("no decode")
+				}
+				logrus.Info(episode)
+			}
 		})
 
 	})
