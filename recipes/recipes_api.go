@@ -25,6 +25,7 @@
 package recipes
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -41,6 +42,10 @@ const (
 	RECIPE = "recipe"
 	// NAME keyword used as part of the url
 	NAME = "name"
+	// INGREDIENT keyword used as part of the url
+	INGREDIENT = "ingredient"
+	// DESCRIPTION keyword used as part of the url
+	DESCRIPTION = "description"
 )
 
 //API for recipes
@@ -170,11 +175,22 @@ func (rAPI *API) getRandomRecipe(c *core.APICallContext) {
 // @Summary Get Recipes
 // @Description A list of ids of recipes is returned
 // @Tags Recipes
+// @Param name query string false "Search for a specific name"
+// @Param description query string false "Search for a specific term in a description"
+// @Param ingredient query string false "Search for a specific ingredient"
 // @Produce json
 // @Success 200 {object} []string
 // @Router /recipes [get]
 func (rAPI *API) getRecipes(c *core.APICallContext) {
-	c.JSON(http.StatusOK, rAPI.recipes.IDs())
+
+	query := c.Request.URL.Query()
+
+	searchQuery := extractSearchQuery(query)
+
+	searchQueryS, _ := json.Marshal(searchQuery)
+	log.WithField("json", string(searchQueryS)).Debug("Get Recipes")
+
+	c.JSON(http.StatusOK, rAPI.recipes.IDs(searchQuery))
 }
 
 // getRecipe example
@@ -294,4 +310,26 @@ func extractServings(query url.Values) int {
 		}
 	}
 	return servings
+}
+
+func extractSearchString(query url.Values, param string) string {
+	var result = ""
+
+	if len(query[param]) > 0 {
+		result = query[param][0]
+	}
+
+	return result
+}
+
+func extractIngredientSearchArray(query url.Values) []string {
+	return query[INGREDIENT]
+}
+
+func extractSearchQuery(query url.Values) *RecipeSearchFilter {
+	return &RecipeSearchFilter{
+		Ingredient:  extractIngredientSearchArray(query),
+		Name:        extractSearchString(query, NAME),
+		Description: extractSearchString(query, DESCRIPTION),
+	}
 }

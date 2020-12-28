@@ -96,11 +96,18 @@ func NewInvalidRecipePicture() *RecipePicture {
 	}
 }
 
+//RecipeSearchFilter models a search query to filter recipes
+type RecipeSearchFilter struct {
+	Name        string   `json:"name"`
+	Ingredient  []string `json:"ingredients"`
+	Description string   `json:"description"`
+}
+
 //Recipes interface is an abstraction for the provider of a collection of recipes, i.e., a data-base or a cache
 type Recipes interface {
 	List() []*Recipe
 	Num() int64
-	IDs() []string
+	IDs(filterQuery *RecipeSearchFilter) []string
 	Get(id RecipeID) *Recipe
 	Picture(id RecipeID, name string) *RecipePicture
 	Pictures(id RecipeID) map[string]*RecipePicture
@@ -111,6 +118,7 @@ type Recipes interface {
 	Remove(name string) error
 	RemoveByID(id RecipeID) error
 	GetByName(name string) (*Recipe, error)
+	Find(search string) (recipes []*Recipe, err error)
 }
 
 const (

@@ -26,7 +26,10 @@ package recipes
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -58,6 +61,26 @@ type MongoRecipeDB struct {
 	mongoClient *mongo.Client
 	//mtx avoids race conditions while connecting to the database and while closing the connection
 	mtx sync.Mutex
+}
+
+func (m *MongoRecipeDB) Find(search string) ([]*Recipe, error) {
+	c := m.getRecipesCollection()
+
+	recipes := make([]*Recipe, 0)
+	cursor, err := c.Find(ctx(),
+		bson.M{"$or": []bson.M{
+			{"name": bson.M{"$regex": search}},
+			{"description": bson.M{"$regex": search}}}})
+	if err != nil {
+		return recipes, err
+	}
+
+	err = cursor.All(ctx(), &recipes)
+	if err != nil {
+		return recipes, err
+	}
+
+	return recipes, err
 }
 
 // Clear drops all collections
@@ -105,20 +128,56 @@ func (m *MongoRecipeDB) Num() int64 {
 	return num
 }
 
+func RecipeToBsonM(searchQuery *RecipeSearchFilter) bson.M {
+	query := bson.M{}
+
+	var queryPart = make([]bson.M, 0)
+
+	if searchQuery.Name != "" {
+		queryPart = append(queryPart, bson.M{"name": bson.M{"$regex": searchQuery.Name}})
+	}
+	if searchQuery.Description != "" {
+		queryPart = append(queryPart, bson.M{"description": bson.M{"$regex": searchQuery.Description}})
+	}
+	if searchQuery.Ingredient != nil && len(searchQuery.Ingredient) > 0 {
+		rgx := fmt.Sprintf("(%v)", strings.Join(searchQuery.Ingredient, "|"))
+		queryPart = append(queryPart, bson.M{"description": bson.M{"$regex": rgx}})
+	}
+
+	if len(queryPart) > 1 {
+		query["$or"] = queryPart
+	} else if len(queryPart) == 1 {
+		query = queryPart[0]
+	}
+
+	return query
+}
+
 //IDs lists all ids of all recipes
-func (m *MongoRecipeDB) IDs() []string {
+func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) []string {
 
 	collection := m.getRecipesCollection()
 
 	recipes := make([]*Recipe, 0)
 	result := make([]string, 0)
 
-	cursor, err := collection.Find(ctx(), bson.M{})
+	dbSearch := RecipeToBsonM(searchQuery)
+
+	findOptions := options.Find()
+	findOptions.SetProjection(bson.M{"id": 1}) //only get id field
+
+	bsonS, _ := json.Marshal(dbSearch)
+	log.WithField("json", string(bsonS)).Debug("Query for IDs")
+
+	cursor, err := collection.Find(ctx(), dbSearch, findOptions)
 	if err != nil {
 		log.WithError(err).Info("Error while finding recipe")
 	}
 	defer func() { _ = cursor.Close(ctx()) }()
 	err = cursor.All(ctx(), &recipes)
+
+	log.Debugf("Found %v recipes", len(recipes))
+
 	for _, recipe := range recipes {
 		result = append(result, recipe.ID.String())
 	}
@@ -309,6 +368,7 @@ func (m *MongoRecipeDB) StartDB() error {
 	defer m.mtx.Unlock()
 
 	if m.mongoClient == nil {
+
 		err := m.connectToDB()
 		if err != nil {
 			log.WithError(err).Error("Database is not connected")

@@ -38,6 +38,26 @@ var doc = `{
                     "Recipes"
                 ],
                 "summary": "Get Recipes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search for a specific name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search for a specific term in a description",
+                        "name": "description",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search for a specific ingredient",
+                        "name": "ingredient",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -507,8 +527,8 @@ var SwaggerInfo = swaggerInfo{
 	Host:        "",
 	BasePath:    "/api/v1",
 	Schemes:     []string{},
-	Title:       "Swagger API for go-cook",
-	Description: "This is the API documentaiton for go-cook.",
+	Title:       "Swagger API documentation for go-cook",
+	Description: "This is the API documentation for go-cook.",
 }
 
 type s struct{}

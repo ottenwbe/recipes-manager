@@ -27,11 +27,35 @@ package recipes
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 var _ = Describe("recipes db", func() {
+
+	Context("helper", func() {
+		It("can transform Recipe Query to BSON", func() {
+			expectedResult := bson.M{}
+			result := RecipeToBsonM(&RecipeSearchFilter{})
+
+			Expect(expectedResult).To(Equal(result))
+		})
+
+		It("can transform Recipe Query with 1 search parameter to BSON", func() {
+			expectedResult := bson.M{"name": bson.M{"$regex": "hi"}}
+			result := RecipeToBsonM(&RecipeSearchFilter{Name: "hi"})
+
+			Expect(expectedResult).To(Equal(result))
+		})
+
+		It("can transform Recipe Query with 2 search parameter to BSON", func() {
+			expectedResult := bson.M{"$or": []bson.M{
+				{"name": bson.M{"$regex": "hi"}},
+				{"description": bson.M{"$regex": "there"}}}}
+			result := RecipeToBsonM(&RecipeSearchFilter{Name: "hi", Description: "there"})
+
+			Expect(expectedResult).To(Equal(result))
+		})
+	})
 
 	Context("connection", func() {
 		var (
@@ -41,10 +65,16 @@ var _ = Describe("recipes db", func() {
 
 		BeforeEach(func() {
 			db, err = NewDatabaseClient()
+			if err != nil {
+				Fail(err.Error())
+			}
 		})
 
 		AfterEach(func() {
-			db.Close()
+			err = db.Close()
+			if err != nil {
+				Fail(err.Error())
+			}
 		})
 
 		It("can be established", func() {
@@ -158,12 +188,49 @@ var _ = Describe("recipes db", func() {
 
 		BeforeEach(func() {
 			db, err = NewDatabaseClient()
-			// clean db for testing
-			db.(*MongoRecipeDB).mongoClient.Database("go-cook").Collection("recipes").Drop(ctx())
 		})
 
 		AfterEach(func() {
+			// clean db for testing
+			db.(*MongoRecipeDB).mongoClient.Database("go-cook").Collection("recipes").Drop(ctx())
+
 			db.Close()
+		})
+
+		It("can find a description", func() {
+			expectedResult := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "testRecipe",
+				Ingredients: []Ingredients{},
+				Description: "describes the test recipe",
+				PictureLink: []string{},
+			}
+			db.Insert(expectedResult)
+			defer db.Remove(expectedResult.Name)
+
+			recipes, err := db.Find("describes")
+
+			Expect(err).To(BeNil())
+			Expect(recipes).To(Equal([]*Recipe{expectedResult}))
+
+		})
+
+		It("can find a name", func() {
+			expectedResult := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "my testRecipe",
+				Ingredients: []Ingredients{},
+				Description: "describes the test recipe",
+				PictureLink: []string{},
+			}
+			db.Insert(expectedResult)
+			defer db.Remove(expectedResult.Name)
+
+			recipes, err := db.Find("my")
+
+			Expect(err).To(BeNil())
+			Expect(recipes).To(Equal([]*Recipe{expectedResult}))
+
 		})
 
 		It("can insert a Recipe and then read it", func() {
@@ -216,6 +283,23 @@ var _ = Describe("recipes db", func() {
 			recipe, err := db.GetByName(testInput.Name)
 			Expect(err).ToNot(BeNil())
 			Expect(recipe).ToNot(Equal(testInput))
+		})
+
+		It("can list all Recipes and filter them by name", func() {
+			expectedResult := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "testRecipe",
+				Ingredients: []Ingredients{},
+				Description: "describes the test recipe",
+				PictureLink: []string{},
+			}
+			db.Insert(expectedResult)
+			defer db.Remove(expectedResult.Name)
+
+			recipes := db.IDs(&RecipeSearchFilter{Name: "test"})
+
+			Expect(err).To(BeNil())
+			Expect(recipes).To(ContainElement(expectedResult.ID.String()))
 		})
 
 		It("can list all Recipes", func() {
@@ -279,33 +363,9 @@ var _ = Describe("recipes db", func() {
 			db.Insert(expectedResult)
 			defer db.Remove(expectedResult.Name)
 
-			names := db.IDs()
+			names := db.IDs(&RecipeSearchFilter{})
 
 			Expect(names).To(ContainElement(expectedResult.ID.String()))
-		})
-
-		It("list all indexes", func() {
-			expectedResult := &Recipe{
-				ID:          NewRecipeID(),
-				Name:        "testRecipe",
-				Ingredients: []Ingredients{},
-				Description: "describes the test recipe",
-				PictureLink: []string{},
-			}
-			db.Insert(expectedResult)
-			defer db.Remove(expectedResult.Name)
-
-			c := db.(*MongoRecipeDB).getRecipesCollection()
-
-			cursor, _ := c.Indexes().List(ctx())
-
-			for cursor.Next(ctx()) {
-				var episode bson.M
-				if err = cursor.Decode(&episode); err != nil {
-					logrus.Error("no decode")
-				}
-				logrus.Info(episode)
-			}
 		})
 
 	})

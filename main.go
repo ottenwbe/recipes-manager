@@ -36,9 +36,9 @@ func init() {
 	log.Infof("Initializing cooking application version=%v API=%v", core.AppVersion().App, core.AppVersion().API)
 }
 
-// @title Swagger API for go-cook
+// @title Swagger API documentation for go-cook
 // @version 1.0
-// @description This is the API documentaiton for go-cook.
+// @description This is the API documentation for go-cook.
 
 // @license.name MIT
 // @license.url https://github.com/ottenwbe/go-cook/blob/master/LICENSE
