@@ -243,6 +243,59 @@ var _ = Describe("recipes db", func() {
 			Expect(recipe).ToNot(Equal(testInput))
 		})
 
+		It("can list all Recipes and filter them by name and description", func() {
+			expectedResult := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "testRecipe",
+				Ingredients: []Ingredients{},
+				Description: "describes the test recipe",
+				PictureLink: []string{},
+			}
+			db.Insert(expectedResult)
+			defer db.RemoveByName(expectedResult.Name)
+			expectedResult2 := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "something",
+				Ingredients: []Ingredients{},
+				Description: "to find",
+				PictureLink: []string{},
+			}
+			db.Insert(expectedResult2)
+			defer db.RemoveByName(expectedResult2.Name)
+
+			recipes := db.IDs(&RecipeSearchFilter{Name: "something", Description: "describes"})
+
+			Expect(err).To(BeNil())
+			Expect(recipes).To(ContainElement(expectedResult.ID.String()))
+			Expect(recipes).To(ContainElement(expectedResult2.ID.String()))
+		})
+
+		It("can list all Recipes and filter them by description", func() {
+			expectedResult := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "testRecipe",
+				Ingredients: []Ingredients{},
+				Description: "describes the test recipe",
+				PictureLink: []string{},
+			}
+			db.Insert(expectedResult)
+			defer db.RemoveByName(expectedResult.Name)
+			unExpectedResult := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "noValidTestRecipe",
+				Ingredients: []Ingredients{},
+				Description: "none",
+				PictureLink: []string{},
+			}
+			db.Insert(unExpectedResult)
+			defer db.RemoveByName(unExpectedResult.Name)
+
+			recipes := db.IDs(&RecipeSearchFilter{Description: "describes"})
+
+			Expect(err).To(BeNil())
+			Expect(recipes).To(ContainElement(expectedResult.ID.String()))
+		})
+
 		It("can list all Recipes and filter them by name", func() {
 			expectedResult := &Recipe{
 				ID:          NewRecipeID(),
