@@ -38,7 +38,7 @@ done
 
 # remove existing test container
 # or ignore the error if the container does not exist
-docker stop test-db | true
-docker rm -v test-db | true
+#docker stop test-db | true
+#docker rm -v test-db | true
 
 echo "Cleanup..."

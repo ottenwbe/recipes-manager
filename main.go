@@ -36,9 +36,9 @@ func init() {
 	log.Infof("Initializing cooking application version=%v API=%v", core.AppVersion().App, core.AppVersion().API)
 }
 
-// @title Swagger API for go-cook
+// @title Swagger API documentation for go-cook
 // @version 1.0
-// @description This is the API documentaiton for go-cook.
+// @description This is the API documentation for go-cook.
 
 // @license.name MIT
 // @license.url https://github.com/ottenwbe/go-cook/blob/master/LICENSE
@@ -75,12 +75,12 @@ func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) core.S
 	handler := core.NewHandler()
 	server := core.NewServerH(handler)
 
-	addAPIstoServer(handler, recipesDB, srcRepository)
+	addAPIsToServer(handler, recipesDB, srcRepository)
 
 	return server
 }
 
-func addAPIstoServer(handler core.Handler, recipesDB recipes.RecipeDB, srcRepository sources.Sources) {
+func addAPIsToServer(handler core.Handler, recipesDB recipes.RecipeDB, srcRepository sources.Sources) {
 	recipes.AddRecipesAPIToHandler(handler, recipesDB)
 	sourcesAPI := sources.NewSourceAPI(srcRepository, recipesDB)
 	sourcesAPI.PrepareAPI(handler, srcRepository, recipesDB)

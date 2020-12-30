@@ -25,7 +25,7 @@
 package sources
 
 import (
-	"encoding/json"
+	"net/http"
 	"net/url"
 
 	log "github.com/sirupsen/logrus"
@@ -107,13 +107,13 @@ func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 		query := c.Request.URL.Query()
 		state := query["state"][0]
 		if state != sourceID {
-			c.String(404, "Invalid source tried to connect")
+			c.String(http.StatusNotFound, "Invalid source tried to connect")
 			return
 		}
 
 		src, err := sourceClient(sourceID, sources)
 		if err != nil {
-			c.String(404, "Invalid Source tried to connect")
+			c.String(http.StatusNotFound, "Invalid Source tried to connect")
 			return
 		}
 
@@ -121,12 +121,12 @@ func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 
 		err = src.ConnectOAuth(code)
 		if err != nil {
-			c.String(400, "Cannot connect to Source")
+			c.String(http.StatusBadRequest, "Cannot connect to Source")
 			log.Error(err)
 			return
 		}
 
-		c.Redirect(301, host)
+		c.Redirect(http.StatusMovedPermanently, host)
 	}
 }
 
@@ -148,13 +148,13 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 
 		src, err := sourceClient(sourceID, sources)
 		if err != nil {
-			c.JSON(400, err.Error())
+			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
 
 		config, err := src.OAuthLoginConfig()
 		if err != nil {
-			c.JSON(400, err.Error())
+			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -163,13 +163,7 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 			OAuthURL: config.AuthCodeURL(sourceID, oauth2.AccessTypeOffline),
 		}
 
-		response, err := json.Marshal(oAuthResponse)
-		if err != nil {
-			c.JSON(400, err.Error())
-			return
-		}
-
-		c.String(200, string(response))
+		c.JSON(http.StatusOK, oAuthResponse)
 	}
 }
 
@@ -184,19 +178,15 @@ func listSources(sources Sources) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sources, err := sources.List()
 		if err != nil {
-			c.String(400, "Sources could not be listed")
+			c.String(http.StatusBadRequest, "Sources could not be listed")
 			return
 		}
 		result := map[string]*SourceResponse{}
 		for srcID, source := range sources {
 			result[srcID.String()] = newSourceResponse(source)
 		}
-		s, err := json.Marshal(result)
-		if err != nil {
-			c.String(400, "Sources could not be converted to JSON")
-			return
-		}
-		c.JSON(200, s)
+
+		c.JSON(http.StatusOK, result)
 	}
 }
 
@@ -215,7 +205,7 @@ func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c 
 
 		src, err := sourceClient(sourceID, sources)
 		if err != nil {
-			c.String(400, "Source could not be found")
+			c.String(http.StatusBadRequest, "Source could not be found")
 			return
 		}
 
@@ -234,7 +224,7 @@ func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c 
 			}
 		}
 
-		c.String(200, "")
+		c.String(http.StatusOK, "")
 	}
 }
 

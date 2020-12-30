@@ -25,6 +25,7 @@
 package recipes
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -41,6 +42,10 @@ const (
 	RECIPE = "recipe"
 	// NAME keyword used as part of the url
 	NAME = "name"
+	// INGREDIENT keyword used as part of the url
+	INGREDIENT = "ingredient"
+	// DESCRIPTION keyword used as part of the url
+	DESCRIPTION = "description"
 )
 
 //API for recipes
@@ -170,14 +175,25 @@ func (rAPI *API) getRandomRecipe(c *core.APICallContext) {
 // @Summary Get Recipes
 // @Description A list of ids of recipes is returned
 // @Tags Recipes
+// @Param name query string false "Search for a specific name"
+// @Param description query string false "Search for a specific term in a description"
+// @Param ingredient query string false "Search for a specific ingredient"
 // @Produce json
 // @Success 200 {object} []string
 // @Router /recipes [get]
 func (rAPI *API) getRecipes(c *core.APICallContext) {
-	c.JSON(http.StatusOK, rAPI.recipes.IDs())
+
+	query := c.Request.URL.Query()
+
+	searchFilter := extractSearchFilter(query)
+
+	debugFilterJSON, _ := json.Marshal(searchFilter)
+	log.WithField("json", string(debugFilterJSON)).Debug("Get Recipes")
+
+	c.JSON(http.StatusOK, rAPI.recipes.IDs(searchFilter))
 }
 
-// getRecipe example
+// getRecipe documentation
 // @Summary Get a specific Recipe
 // @Description A specific recipe is returned
 // @Tags Recipes
@@ -275,7 +291,7 @@ func (rAPI *API) postRecipes(c *core.APICallContext) {
 func (rAPI *API) deleteRecipe(c *core.APICallContext) {
 	recipeIDS := c.Param(RECIPE)
 	recipeID := NewRecipeIDFromString(recipeIDS)
-	if err := rAPI.recipes.RemoveByID(recipeID); err != nil {
+	if err := rAPI.recipes.Remove(recipeID); err != nil {
 		c.String(http.StatusNotFound, "Recipe not found")
 		log.WithError(err).Debug("Could not Delete Recipe")
 	} else {
@@ -283,15 +299,37 @@ func (rAPI *API) deleteRecipe(c *core.APICallContext) {
 	}
 }
 
-func extractServings(query url.Values) int {
-	servings := -1
+func extractServings(query url.Values) int8 {
+	var servings int64 = -1
 	if len(query[SERVINGS]) > 0 {
 		servingsS := query[SERVINGS][0]
-		if num, err := strconv.Atoi(servingsS); err == nil {
+		if num, err := strconv.ParseInt(servingsS, 10, 8); err == nil {
 			servings = num
 		} else {
 			log.WithError(err).Error("Could not convert the amount of servings requested")
 		}
 	}
-	return servings
+	return int8(servings)
+}
+
+func extractSearchString(query url.Values, param string) string {
+	var result = ""
+
+	if len(query[param]) > 0 {
+		result = query[param][0]
+	}
+
+	return result
+}
+
+func extractIngredientSearchArray(query url.Values) []string {
+	return query[INGREDIENT]
+}
+
+func extractSearchFilter(query url.Values) *RecipeSearchFilter {
+	return &RecipeSearchFilter{
+		Ingredient:  extractIngredientSearchArray(query),
+		Name:        extractSearchString(query, NAME),
+		Description: extractSearchString(query, DESCRIPTION),
+	}
 }

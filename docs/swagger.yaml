@@ -69,16 +69,29 @@ definitions:
     type: object
 info:
   contact: {}
-  description: This is the API documentaiton for go-cook.
+  description: This is the API documentation for go-cook.
   license:
     name: MIT
     url: https://github.com/ottenwbe/go-cook/blob/master/LICENSE
-  title: Swagger API for go-cook
+  title: Swagger API documentation for go-cook
   version: "1.0"
 paths:
   /recipes:
     get:
       description: A list of ids of recipes is returned
+      parameters:
+      - description: Search for a specific name
+        in: query
+        name: name
+        type: string
+      - description: Search for a specific term in a description
+        in: query
+        name: description
+        type: string
+      - description: Search for a specific ingredient
+        in: query
+        name: ingredient
+        type: string
       produces:
       - application/json
       responses:

@@ -26,7 +26,10 @@ package recipes
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -105,20 +108,57 @@ func (m *MongoRecipeDB) Num() int64 {
 	return num
 }
 
+//RecipeToBsonM converts a RecipeSearchFilter to a search query (bson.M)
+func RecipeToBsonM(searchQuery *RecipeSearchFilter) bson.M {
+	query := bson.M{}
+
+	var queryPart = make([]bson.M, 0)
+
+	if searchQuery.Name != "" {
+		queryPart = append(queryPart, bson.M{"name": bson.M{"$regex": searchQuery.Name}})
+	}
+	if searchQuery.Description != "" {
+		queryPart = append(queryPart, bson.M{"description": bson.M{"$regex": searchQuery.Description}})
+	}
+	if searchQuery.Ingredient != nil && len(searchQuery.Ingredient) > 0 {
+		rgx := fmt.Sprintf("(%v)", strings.Join(searchQuery.Ingredient, "|"))
+		queryPart = append(queryPart, bson.M{"description": bson.M{"$regex": rgx}})
+	}
+
+	if len(queryPart) > 1 {
+		query["$or"] = queryPart
+	} else if len(queryPart) == 1 {
+		query = queryPart[0]
+	}
+
+	return query
+}
+
 //IDs lists all ids of all recipes
-func (m *MongoRecipeDB) IDs() []string {
+func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) []string {
 
 	collection := m.getRecipesCollection()
 
 	recipes := make([]*Recipe, 0)
 	result := make([]string, 0)
 
-	cursor, err := collection.Find(ctx(), bson.M{})
+	dbSearch := RecipeToBsonM(searchQuery)
+
+	findOptions := options.Find()
+	findOptions.SetProjection(bson.M{"id": 1}) //only get id field
+
+	bsonS, _ := json.Marshal(dbSearch)
+	log.WithField("json", string(bsonS)).Debug("Query for IDs")
+
+	cursor, err := collection.Find(ctx(), dbSearch, findOptions)
 	if err != nil {
 		log.WithError(err).Info("Error while finding recipe")
 	}
 	defer func() { _ = cursor.Close(ctx()) }()
 	err = cursor.All(ctx(), &recipes)
+
+	log.Debugf("Found %v recipes", len(recipes))
+
 	for _, recipe := range recipes {
 		result = append(result, recipe.ID.String())
 	}
@@ -170,8 +210,8 @@ func (m *MongoRecipeDB) Pictures(id RecipeID) map[string]*RecipePicture {
 	return result
 }
 
-//RemoveByID removes a recipe by id
-func (m *MongoRecipeDB) RemoveByID(id RecipeID) error {
+//Remove removes a recipe by id
+func (m *MongoRecipeDB) Remove(id RecipeID) error {
 	c := m.getRecipesCollection()
 
 	_, err := c.DeleteOne(ctx(), bson.M{"id": id})
@@ -277,8 +317,8 @@ func (m *MongoRecipeDB) Ping() error {
 	return m.mongoClient.Ping(ctx(), readpref.Primary())
 }
 
-//Remove a recipe by name
-func (m *MongoRecipeDB) Remove(name string) error {
+//RemoveByName a recipe by name
+func (m *MongoRecipeDB) RemoveByName(name string) error {
 	c := m.getRecipesCollection()
 
 	_, err := c.DeleteOne(ctx(), bson.M{"name": name})
@@ -309,6 +349,7 @@ func (m *MongoRecipeDB) StartDB() error {
 	defer m.mtx.Unlock()
 
 	if m.mongoClient == nil {
+
 		err := m.connectToDB()
 		if err != nil {
 			log.WithError(err).Error("Database is not connected")
@@ -352,16 +393,16 @@ func (m *MongoRecipeDB) connectToDB() (err error) {
 		return
 	}
 
-	m.ensureRecipeIndex()
-	/*if err != nil {
-		log.WithError(err).Info("Could not create mongo db index")
+	err = m.ensureRecipeIndex()
+	if err != nil {
+		log.WithError(err).Info("Could not create mongo db recipe index")
 		return
-	}*/
+	}
 	m.ensurePictureIndex()
-	/*if err != nil {
-		log.WithError(err).Info("Could not create mongo db index")
+	if err != nil {
+		log.WithError(err).Info("Could not create mongo db picture index")
 		return
-	}*/
+	}
 
 	return
 }
@@ -370,18 +411,44 @@ func (m *MongoRecipeDB) ensureRecipeIndex() error {
 
 	c := m.getRecipesCollection()
 
-	index := mongo.IndexModel{
-		Keys: bson.M{
-			"name": 1, // index in ascending order
-		},
-		Options: options.Index().SetUnique(true).SetBackground(true).SetSparse(true),
+	err := m.createTextIndex(c)
+	if err != nil {
+		return err
 	}
-	_, err := c.Indexes().CreateOne(ctx(), index)
+
+	err = m.createDefaultRecipeIndex(c)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (m *MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
+	index := mongo.IndexModel{
+		Keys: bson.M{ // index in ascending order
+			"name": 1,
+			"id":   1,
+		},
+		Options: options.Index().SetUnique(true).SetSparse(true),
+	}
+
+	_, err := c.Indexes().CreateOne(ctx(), index)
+	return err
+}
+
+func (m *MongoRecipeDB) createTextIndex(c *mongo.Collection) error {
+	textIndex := mongo.IndexModel{
+		Keys: bson.M{
+			"description":      "text",
+			"name":             "text",
+			"ingredients.name": "text",
+		},
+		Options: options.Index().SetUnique(false),
+	}
+
+	_, err := c.Indexes().CreateOne(ctx(), textIndex)
+	return err
 }
 
 func (m *MongoRecipeDB) ensurePictureIndex() error {

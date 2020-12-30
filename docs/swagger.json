@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is the API documentaiton for go-cook.",
-        "title": "Swagger API for go-cook",
+        "description": "This is the API documentation for go-cook.",
+        "title": "Swagger API documentation for go-cook",
         "contact": {},
         "license": {
             "name": "MIT",
@@ -22,6 +22,26 @@
                     "Recipes"
                 ],
                 "summary": "Get Recipes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search for a specific name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search for a specific term in a description",
+                        "name": "description",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search for a specific ingredient",
+                        "name": "ingredient",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

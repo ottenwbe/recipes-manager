@@ -6,13 +6,13 @@ require (
 	cloud.google.com/go v0.74.0 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-	github.com/aws/aws-sdk-go v1.36.13 // indirect
+	github.com/aws/aws-sdk-go v1.36.15 // indirect
 	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-openapi/spec v0.20.0 // indirect
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
-	github.com/gofrs/uuid v3.3.0+incompatible
+	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
@@ -45,12 +45,12 @@ require (
 	go.mongodb.org/mongo-driver v1.4.4
 	go.opencensus.io v0.22.5 // indirect
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
-	golang.org/x/net v0.0.0-20201216054612-986b41b23924
+	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a // indirect
-	golang.org/x/sys v0.0.0-20201221093633-bc327ba9c2f0 // indirect
+	golang.org/x/sys v0.0.0-20201223074533-0d417f636930 // indirect
 	golang.org/x/text v0.3.4 // indirect
-	golang.org/x/tools v0.0.0-20201221201019-196535612888 // indirect
+	golang.org/x/tools v0.0.0-20201226215659-b1c90890d22a // indirect
 	google.golang.org/api v0.36.0
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d // indirect

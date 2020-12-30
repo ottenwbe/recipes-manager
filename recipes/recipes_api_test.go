@@ -73,6 +73,88 @@ var _ = Describe("recipesAPI", func() {
 		})
 	})
 
+	Context("List Recipes", func() {
+		It("should be able to filter by name", func() {
+
+			createRandomRecipes(5, recipes)
+			expectedID := createAndPersistDefaultRecipe(recipes)
+			defer func() { //delete recently created recipe
+				recipes.Remove(expectedID)
+			}()
+
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes?name=retrieve")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode).To(Equal(200))
+
+			var recipeIDs []string
+			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
+			Expect(len(recipeIDs)).To(Equal(1))
+			Expect(expectedID.String()).To(Equal(recipeIDs[0]))
+		})
+
+		It("should be able to filter by description", func() {
+
+			createRandomRecipes(5, recipes)
+			expectedID := createAndPersistDefaultRecipe(recipes)
+			defer func() { //delete recently created recipe
+				recipes.Remove(expectedID)
+			}()
+
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes?description=details")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode).To(Equal(200))
+
+			var recipeIDs []string
+			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
+			Expect(len(recipeIDs)).To(Equal(1))
+			Expect(expectedID.String()).To(Equal(recipeIDs[0]))
+		})
+
+		It("should be able to filter by name and description", func() {
+
+			createRandomRecipes(5, recipes) //add noise
+			expectedID1 := createAndPersistNewRecipe("search", "none", Ingredients{Name: "hi"}, recipes)
+			defer func() { //delete recently created recipe
+				recipes.Remove(expectedID1)
+			}()
+			expectedID2 := createAndPersistNewRecipe("none", "find", Ingredients{Name: "hi"}, recipes)
+			defer func() { //delete recently created recipe
+				recipes.Remove(expectedID2)
+			}()
+
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes?description=find&name=search")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode).To(Equal(200))
+
+			var recipeIDs []string
+			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
+			Expect(len(recipeIDs)).To(Equal(2))
+			Expect(recipeIDs).To(ContainElement(expectedID1.String()))
+			Expect(recipeIDs).To(ContainElement(expectedID2.String()))
+		})
+
+		It("should not return elements that do not match the search query", func() {
+
+			createRandomRecipes(5, recipes) //add noise
+			expectedID := createAndPersistNewRecipe("search", "test", Ingredients{Name: "hi"}, recipes)
+			defer func() { //delete recently created recipe
+				recipes.Remove(expectedID)
+			}()
+
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes?description=find")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode).To(Equal(200))
+
+			var recipeIDs []string
+			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
+			Expect(len(recipeIDs)).To(Equal(0))
+		})
+	})
+
 	Context("Get Recipes", func() {
 		It("can retrieve an recipe by id", func() {
 			expectedRecipe, _ := createRandomRecipes(1, recipes) //recipes
@@ -84,6 +166,7 @@ var _ = Describe("recipesAPI", func() {
 
 			var recipe Recipe
 			err = json.NewDecoder(resp.Body).Decode(&recipe)
+			Expect(recipe).To(Equal(*expectedRecipe[0]))
 		})
 
 		It("can retrieve an recipe by id and scale the recipe", func() {
@@ -253,20 +336,25 @@ var _ = Describe("recipesAPI", func() {
 
 })
 
-func createAndPersistDefaultRecipe(recipes RecipeDB) RecipeID {
+func createAndPersistNewRecipe(name string, description string, ingredient Ingredients, recipes RecipeDB) RecipeID {
 	id := NewRecipeID()
 
 	expectedRecipe := NewRecipe(id)
-	expectedRecipe.Name = "retrieve recipe"
+	expectedRecipe.Name = name
 	expectedRecipe.Ingredients = make([]Ingredients, 0)
 	expectedRecipe.Servings = 1
-	expectedRecipe.Ingredients = append(expectedRecipe.Ingredients,
-		Ingredients{Amount: 100,
-			Unit: "g",
-			Name: "Test"})
+	expectedRecipe.Description = description
+	expectedRecipe.Ingredients = append(expectedRecipe.Ingredients, ingredient)
 	recipes.Insert(expectedRecipe)
 
 	return id
+}
+
+func createAndPersistDefaultRecipe(recipes RecipeDB) RecipeID {
+	ingredient := Ingredients{Amount: 100,
+		Unit: "g",
+		Name: "Test"}
+	return createAndPersistNewRecipe("retrieve recipe", "details", ingredient, recipes)
 }
 
 func createRandomRecipes(num int, recipes RecipeDB) ([]*Recipe, []RecipeID) {

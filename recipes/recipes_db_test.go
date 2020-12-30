@@ -27,9 +27,35 @@ package recipes
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 var _ = Describe("recipes db", func() {
+
+	Context("helper", func() {
+		It("can transform Recipe Query to BSON", func() {
+			expectedResult := bson.M{}
+			result := RecipeToBsonM(&RecipeSearchFilter{})
+
+			Expect(expectedResult).To(Equal(result))
+		})
+
+		It("can transform Recipe Query with 1 search parameter to BSON", func() {
+			expectedResult := bson.M{"name": bson.M{"$regex": "hi"}}
+			result := RecipeToBsonM(&RecipeSearchFilter{Name: "hi"})
+
+			Expect(expectedResult).To(Equal(result))
+		})
+
+		It("can transform Recipe Query with 2 search parameter to BSON", func() {
+			expectedResult := bson.M{"$or": []bson.M{
+				{"name": bson.M{"$regex": "hi"}},
+				{"description": bson.M{"$regex": "there"}}}}
+			result := RecipeToBsonM(&RecipeSearchFilter{Name: "hi", Description: "there"})
+
+			Expect(expectedResult).To(Equal(result))
+		})
+	})
 
 	Context("connection", func() {
 		var (
@@ -42,7 +68,7 @@ var _ = Describe("recipes db", func() {
 		})
 
 		AfterEach(func() {
-			db.Close()
+			err = db.Close()
 		})
 
 		It("can be established", func() {
@@ -156,11 +182,12 @@ var _ = Describe("recipes db", func() {
 
 		BeforeEach(func() {
 			db, err = NewDatabaseClient()
-			// clean db for testing
-			db.(*MongoRecipeDB).mongoClient.Database("go-cook").Collection("recipes").Drop(ctx())
 		})
 
 		AfterEach(func() {
+			// clean db for testing
+			db.(*MongoRecipeDB).mongoClient.Database("go-cook").Collection("recipes").Drop(ctx())
+
 			db.Close()
 		})
 
@@ -175,7 +202,7 @@ var _ = Describe("recipes db", func() {
 			err = db.Insert(expectedResult)
 			Expect(err).To(BeNil())
 			recipe, err := db.GetByName(expectedResult.Name)
-			defer db.Remove(expectedResult.Name)
+			defer db.RemoveByName(expectedResult.Name)
 			Expect(err).To(BeNil())
 			Expect(recipe).To(Equal(expectedResult))
 		})
@@ -190,7 +217,7 @@ var _ = Describe("recipes db", func() {
 			}
 			err = db.Insert(testInput)
 			Expect(err).To(BeNil())
-			err := db.RemoveByID(testInput.ID)
+			err := db.Remove(testInput.ID)
 
 			// Try to find it after it has been removed ...
 			recipe, err := db.GetByName(testInput.Name)
@@ -208,12 +235,82 @@ var _ = Describe("recipes db", func() {
 			}
 			err = db.Insert(testInput)
 			Expect(err).To(BeNil())
-			err := db.Remove(testInput.Name)
+			err := db.RemoveByName(testInput.Name)
 
 			// Try to find it after it has been removed ...
 			recipe, err := db.GetByName(testInput.Name)
 			Expect(err).ToNot(BeNil())
 			Expect(recipe).ToNot(Equal(testInput))
+		})
+
+		It("can list all Recipes and filter them by name and description", func() {
+			expectedResult := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "testRecipe",
+				Ingredients: []Ingredients{},
+				Description: "describes the test recipe",
+				PictureLink: []string{},
+			}
+			db.Insert(expectedResult)
+			defer db.RemoveByName(expectedResult.Name)
+			expectedResult2 := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "something",
+				Ingredients: []Ingredients{},
+				Description: "to find",
+				PictureLink: []string{},
+			}
+			db.Insert(expectedResult2)
+			defer db.RemoveByName(expectedResult2.Name)
+
+			recipes := db.IDs(&RecipeSearchFilter{Name: "something", Description: "describes"})
+
+			Expect(err).To(BeNil())
+			Expect(recipes).To(ContainElement(expectedResult.ID.String()))
+			Expect(recipes).To(ContainElement(expectedResult2.ID.String()))
+		})
+
+		It("can list all Recipes and filter them by description", func() {
+			expectedResult := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "testRecipe",
+				Ingredients: []Ingredients{},
+				Description: "describes the test recipe",
+				PictureLink: []string{},
+			}
+			db.Insert(expectedResult)
+			defer db.RemoveByName(expectedResult.Name)
+			unExpectedResult := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "noValidTestRecipe",
+				Ingredients: []Ingredients{},
+				Description: "none",
+				PictureLink: []string{},
+			}
+			db.Insert(unExpectedResult)
+			defer db.RemoveByName(unExpectedResult.Name)
+
+			recipes := db.IDs(&RecipeSearchFilter{Description: "describes"})
+
+			Expect(err).To(BeNil())
+			Expect(recipes).To(ContainElement(expectedResult.ID.String()))
+		})
+
+		It("can list all Recipes and filter them by name", func() {
+			expectedResult := &Recipe{
+				ID:          NewRecipeID(),
+				Name:        "testRecipe",
+				Ingredients: []Ingredients{},
+				Description: "describes the test recipe",
+				PictureLink: []string{},
+			}
+			db.Insert(expectedResult)
+			defer db.RemoveByName(expectedResult.Name)
+
+			recipes := db.IDs(&RecipeSearchFilter{Name: "test"})
+
+			Expect(err).To(BeNil())
+			Expect(recipes).To(ContainElement(expectedResult.ID.String()))
 		})
 
 		It("can list all Recipes", func() {
@@ -225,7 +322,7 @@ var _ = Describe("recipes db", func() {
 				PictureLink: []string{},
 			}
 			db.Insert(expectedResult)
-			defer db.Remove(expectedResult.Name)
+			defer db.RemoveByName(expectedResult.Name)
 
 			recipes := db.List()
 
@@ -242,7 +339,7 @@ var _ = Describe("recipes db", func() {
 				PictureLink: []string{},
 			}
 			db.Insert(expectedResult)
-			defer db.Remove(expectedResult.Name)
+			defer db.RemoveByName(expectedResult.Name)
 
 			n := db.Num()
 
@@ -258,7 +355,7 @@ var _ = Describe("recipes db", func() {
 				PictureLink: []string{},
 			}
 			db.Insert(expectedResult)
-			defer db.Remove(expectedResult.Name)
+			defer db.RemoveByName(expectedResult.Name)
 
 			r := db.Random()
 
@@ -275,9 +372,9 @@ var _ = Describe("recipes db", func() {
 				PictureLink: []string{},
 			}
 			db.Insert(expectedResult)
-			defer db.Remove(expectedResult.Name)
+			defer db.RemoveByName(expectedResult.Name)
 
-			names := db.IDs()
+			names := db.IDs(&RecipeSearchFilter{})
 
 			Expect(names).To(ContainElement(expectedResult.ID.String()))
 		})

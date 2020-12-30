@@ -197,7 +197,7 @@ func handleIngredient(p *driveRecipeParser, text string) {
 	num := validNumber.FindAllString(text, -1)
 	strs := validStrings.FindAllString(text, -1)
 
-	var amount = -1.0
+	var amount = recipes.NoAmountIngredient
 	var err error
 	if len(num) > 0 {
 		amount, err = strconv.ParseFloat(num[0], 32)

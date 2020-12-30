@@ -53,6 +53,10 @@ type driveRecipes struct {
 	initializer  sync.Once
 }
 
+func (r *driveRecipes) Find(search string) ([]*recipes.Recipe, error) {
+	panic("implement me")
+}
+
 func newDriveRecipes(driveService *drive.Service) *driveRecipes {
 	return &driveRecipes{
 		driveService: driveService,
@@ -98,11 +102,11 @@ func (r *driveRecipes) Insert(recipe *recipes.Recipe) error {
 }
 
 //Remove is not supported for Drive
-func (r *driveRecipes) Remove(name string) error {
+func (r *driveRecipes) RemoveByName(name string) error {
 	return errors.New(recipes.NotSupportedError)
 }
 
-func (r *driveRecipes) RemoveByID(id recipes.RecipeID) error {
+func (r *driveRecipes) Remove(id recipes.RecipeID) error {
 	return errors.New(recipes.NotSupportedError)
 }
 
@@ -170,7 +174,7 @@ func (r *driveRecipes) Random() *recipes.Recipe {
 }
 
 //IDs returns a list of all recipe IDs
-func (r *driveRecipes) IDs() []string {
+func (r *driveRecipes) IDs(*recipes.RecipeSearchFilter) []string {
 	r.ensureCache()
 	recipeNames := make([]string, 0)
 	for _, recipe := range r.List() {
