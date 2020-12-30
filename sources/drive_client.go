@@ -102,11 +102,11 @@ func (r *driveRecipes) Insert(recipe *recipes.Recipe) error {
 }
 
 //Remove is not supported for Drive
-func (r *driveRecipes) Remove(name string) error {
+func (r *driveRecipes) RemoveByName(name string) error {
 	return errors.New(recipes.NotSupportedError)
 }
 
-func (r *driveRecipes) RemoveByID(id recipes.RecipeID) error {
+func (r *driveRecipes) Remove(id recipes.RecipeID) error {
 	return errors.New(recipes.NotSupportedError)
 }
 

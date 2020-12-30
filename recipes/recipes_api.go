@@ -185,15 +185,15 @@ func (rAPI *API) getRecipes(c *core.APICallContext) {
 
 	query := c.Request.URL.Query()
 
-	searchQuery := extractSearchQuery(query)
+	searchFilter := extractSearchFilter(query)
 
-	searchQueryS, _ := json.Marshal(searchQuery)
-	log.WithField("json", string(searchQueryS)).Debug("Get Recipes")
+	debugFilterJSON, _ := json.Marshal(searchFilter)
+	log.WithField("json", string(debugFilterJSON)).Debug("Get Recipes")
 
-	c.JSON(http.StatusOK, rAPI.recipes.IDs(searchQuery))
+	c.JSON(http.StatusOK, rAPI.recipes.IDs(searchFilter))
 }
 
-// getRecipe example
+// getRecipe documentation
 // @Summary Get a specific Recipe
 // @Description A specific recipe is returned
 // @Tags Recipes
@@ -291,7 +291,7 @@ func (rAPI *API) postRecipes(c *core.APICallContext) {
 func (rAPI *API) deleteRecipe(c *core.APICallContext) {
 	recipeIDS := c.Param(RECIPE)
 	recipeID := NewRecipeIDFromString(recipeIDS)
-	if err := rAPI.recipes.RemoveByID(recipeID); err != nil {
+	if err := rAPI.recipes.Remove(recipeID); err != nil {
 		c.String(http.StatusNotFound, "Recipe not found")
 		log.WithError(err).Debug("Could not Delete Recipe")
 	} else {
@@ -299,17 +299,17 @@ func (rAPI *API) deleteRecipe(c *core.APICallContext) {
 	}
 }
 
-func extractServings(query url.Values) int {
-	servings := -1
+func extractServings(query url.Values) int8 {
+	var servings int64 = -1
 	if len(query[SERVINGS]) > 0 {
 		servingsS := query[SERVINGS][0]
-		if num, err := strconv.Atoi(servingsS); err == nil {
+		if num, err := strconv.ParseInt(servingsS, 10, 8); err == nil {
 			servings = num
 		} else {
 			log.WithError(err).Error("Could not convert the amount of servings requested")
 		}
 	}
-	return servings
+	return int8(servings)
 }
 
 func extractSearchString(query url.Values, param string) string {
@@ -326,7 +326,7 @@ func extractIngredientSearchArray(query url.Values) []string {
 	return query[INGREDIENT]
 }
 
-func extractSearchQuery(query url.Values) *RecipeSearchFilter {
+func extractSearchFilter(query url.Values) *RecipeSearchFilter {
 	return &RecipeSearchFilter{
 		Ingredient:  extractIngredientSearchArray(query),
 		Name:        extractSearchString(query, NAME),

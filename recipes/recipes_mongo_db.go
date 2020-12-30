@@ -63,26 +63,6 @@ type MongoRecipeDB struct {
 	mtx sync.Mutex
 }
 
-func (m *MongoRecipeDB) Find(search string) ([]*Recipe, error) {
-	c := m.getRecipesCollection()
-
-	recipes := make([]*Recipe, 0)
-	cursor, err := c.Find(ctx(),
-		bson.M{"$or": []bson.M{
-			{"name": bson.M{"$regex": search}},
-			{"description": bson.M{"$regex": search}}}})
-	if err != nil {
-		return recipes, err
-	}
-
-	err = cursor.All(ctx(), &recipes)
-	if err != nil {
-		return recipes, err
-	}
-
-	return recipes, err
-}
-
 // Clear drops all collections
 func (m *MongoRecipeDB) Clear() {
 	c := m.getRecipesCollection()
@@ -128,6 +108,7 @@ func (m *MongoRecipeDB) Num() int64 {
 	return num
 }
 
+//RecipeToBsonM converts a RecipeSearchFilter to a search query (bson.M)
 func RecipeToBsonM(searchQuery *RecipeSearchFilter) bson.M {
 	query := bson.M{}
 
@@ -229,8 +210,8 @@ func (m *MongoRecipeDB) Pictures(id RecipeID) map[string]*RecipePicture {
 	return result
 }
 
-//RemoveByID removes a recipe by id
-func (m *MongoRecipeDB) RemoveByID(id RecipeID) error {
+//Remove removes a recipe by id
+func (m *MongoRecipeDB) Remove(id RecipeID) error {
 	c := m.getRecipesCollection()
 
 	_, err := c.DeleteOne(ctx(), bson.M{"id": id})
@@ -336,8 +317,8 @@ func (m *MongoRecipeDB) Ping() error {
 	return m.mongoClient.Ping(ctx(), readpref.Primary())
 }
 
-//Remove a recipe by name
-func (m *MongoRecipeDB) Remove(name string) error {
+//RemoveByName a recipe by name
+func (m *MongoRecipeDB) RemoveByName(name string) error {
 	c := m.getRecipesCollection()
 
 	_, err := c.DeleteOne(ctx(), bson.M{"name": name})
@@ -414,14 +395,14 @@ func (m *MongoRecipeDB) connectToDB() (err error) {
 
 	err = m.ensureRecipeIndex()
 	if err != nil {
-		log.WithError(err).Info("Could not create mongo db index")
+		log.WithError(err).Info("Could not create mongo db recipe index")
 		return
 	}
 	m.ensurePictureIndex()
-	/*if err != nil {
-		log.WithError(err).Info("Could not create mongo db index")
+	if err != nil {
+		log.WithError(err).Info("Could not create mongo db picture index")
 		return
-	}*/
+	}
 
 	return
 }
@@ -445,8 +426,9 @@ func (m *MongoRecipeDB) ensureRecipeIndex() error {
 
 func (m *MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
 	index := mongo.IndexModel{
-		Keys: bson.M{
-			"name": 1, // index in ascending order
+		Keys: bson.M{ // index in ascending order
+			"name": 1,
+			"id":   1,
 		},
 		Options: options.Index().SetUnique(true).SetSparse(true),
 	}
@@ -458,8 +440,9 @@ func (m *MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
 func (m *MongoRecipeDB) createTextIndex(c *mongo.Collection) error {
 	textIndex := mongo.IndexModel{
 		Keys: bson.M{
-			"description": "text",
-			"name":        "text",
+			"description":      "text",
+			"name":             "text",
+			"ingredients.name": "text",
 		},
 		Options: options.Index().SetUnique(false),
 	}

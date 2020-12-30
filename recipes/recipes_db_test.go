@@ -65,16 +65,10 @@ var _ = Describe("recipes db", func() {
 
 		BeforeEach(func() {
 			db, err = NewDatabaseClient()
-			if err != nil {
-				Fail(err.Error())
-			}
 		})
 
 		AfterEach(func() {
 			err = db.Close()
-			if err != nil {
-				Fail(err.Error())
-			}
 		})
 
 		It("can be established", func() {
@@ -197,42 +191,6 @@ var _ = Describe("recipes db", func() {
 			db.Close()
 		})
 
-		It("can find a description", func() {
-			expectedResult := &Recipe{
-				ID:          NewRecipeID(),
-				Name:        "testRecipe",
-				Ingredients: []Ingredients{},
-				Description: "describes the test recipe",
-				PictureLink: []string{},
-			}
-			db.Insert(expectedResult)
-			defer db.Remove(expectedResult.Name)
-
-			recipes, err := db.Find("describes")
-
-			Expect(err).To(BeNil())
-			Expect(recipes).To(Equal([]*Recipe{expectedResult}))
-
-		})
-
-		It("can find a name", func() {
-			expectedResult := &Recipe{
-				ID:          NewRecipeID(),
-				Name:        "my testRecipe",
-				Ingredients: []Ingredients{},
-				Description: "describes the test recipe",
-				PictureLink: []string{},
-			}
-			db.Insert(expectedResult)
-			defer db.Remove(expectedResult.Name)
-
-			recipes, err := db.Find("my")
-
-			Expect(err).To(BeNil())
-			Expect(recipes).To(Equal([]*Recipe{expectedResult}))
-
-		})
-
 		It("can insert a Recipe and then read it", func() {
 			expectedResult := &Recipe{
 				ID:          NewRecipeID(),
@@ -244,7 +202,7 @@ var _ = Describe("recipes db", func() {
 			err = db.Insert(expectedResult)
 			Expect(err).To(BeNil())
 			recipe, err := db.GetByName(expectedResult.Name)
-			defer db.Remove(expectedResult.Name)
+			defer db.RemoveByName(expectedResult.Name)
 			Expect(err).To(BeNil())
 			Expect(recipe).To(Equal(expectedResult))
 		})
@@ -259,7 +217,7 @@ var _ = Describe("recipes db", func() {
 			}
 			err = db.Insert(testInput)
 			Expect(err).To(BeNil())
-			err := db.RemoveByID(testInput.ID)
+			err := db.Remove(testInput.ID)
 
 			// Try to find it after it has been removed ...
 			recipe, err := db.GetByName(testInput.Name)
@@ -277,7 +235,7 @@ var _ = Describe("recipes db", func() {
 			}
 			err = db.Insert(testInput)
 			Expect(err).To(BeNil())
-			err := db.Remove(testInput.Name)
+			err := db.RemoveByName(testInput.Name)
 
 			// Try to find it after it has been removed ...
 			recipe, err := db.GetByName(testInput.Name)
@@ -294,7 +252,7 @@ var _ = Describe("recipes db", func() {
 				PictureLink: []string{},
 			}
 			db.Insert(expectedResult)
-			defer db.Remove(expectedResult.Name)
+			defer db.RemoveByName(expectedResult.Name)
 
 			recipes := db.IDs(&RecipeSearchFilter{Name: "test"})
 
@@ -311,7 +269,7 @@ var _ = Describe("recipes db", func() {
 				PictureLink: []string{},
 			}
 			db.Insert(expectedResult)
-			defer db.Remove(expectedResult.Name)
+			defer db.RemoveByName(expectedResult.Name)
 
 			recipes := db.List()
 
@@ -328,7 +286,7 @@ var _ = Describe("recipes db", func() {
 				PictureLink: []string{},
 			}
 			db.Insert(expectedResult)
-			defer db.Remove(expectedResult.Name)
+			defer db.RemoveByName(expectedResult.Name)
 
 			n := db.Num()
 
@@ -344,7 +302,7 @@ var _ = Describe("recipes db", func() {
 				PictureLink: []string{},
 			}
 			db.Insert(expectedResult)
-			defer db.Remove(expectedResult.Name)
+			defer db.RemoveByName(expectedResult.Name)
 
 			r := db.Random()
 
@@ -361,7 +319,7 @@ var _ = Describe("recipes db", func() {
 				PictureLink: []string{},
 			}
 			db.Insert(expectedResult)
-			defer db.Remove(expectedResult.Name)
+			defer db.RemoveByName(expectedResult.Name)
 
 			names := db.IDs(&RecipeSearchFilter{})
 
