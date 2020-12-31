@@ -86,25 +86,25 @@ test: ; $(info $(M) running tests…) @ ## Run tests
 .PHONY: docker-arm
 docker-arm: docker-login ; $(info $(M) building arm docker image...) @  ## Create docker image for arm
 ifndef GO_COOK_BUILD_DOCKER_HOST
-	docker build --label "version=${GO_COOK_VERSION}" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=${DATE}" --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION)-$(GO_COOK_ARCH) -f Dockerfile.armhf .
+	docker build --label "version=${GO_COOK_VERSION}" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=${DATE}" --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION) -f Dockerfile.armhf .
 else
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST)  build --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "version=${GO_COOK_VERSION}" --label "build_date=${DATE}" --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION)-$(GO_COOK_ARCH) -f Dockerfile.armhf .
+	docker -H $(GO_COOK_BUILD_DOCKER_HOST)  build --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "version=${GO_COOK_VERSION}" --label "build_date=${DATE}" --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION) -f Dockerfile.armhf .
 endif
 
 .PHONY: docker
 docker: docker-login ; $(info $(M) building docker image...) @ ## Create docker image
 ifndef GO_COOK_BUILD_DOCKER_HOST
-	docker build --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION)-$(GO_COOK_ARCH) -f Dockerfile .
+	docker build --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION) -f Dockerfile .
 else
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST) build --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "version=$(GO_COOK_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION)-$(GO_COOK_ARCH) -f Dockerfile .
+	docker -H $(GO_COOK_BUILD_DOCKER_HOST) build --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "version=$(GO_COOK_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION) -f Dockerfile .
 endif
 
 .PHONY: docker-snapshot
 docker-snapshot: snapshot ; $(info $(M) building docker-snapshot image...) @ ## Create docker image of the snapshot 
 ifndef GO_COOK_BUILD_DOCKER_HOST	
-	docker build --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(SNAPSHOT)"  --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):SNAPSHOT-$(GO_COOK_ARCH) -f Dockerfile .
+	docker build --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(SNAPSHOT)"  --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):SNAPSHOT -f Dockerfile .
 else
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST) build --build-arg "APP=$(SNAPSHOT)"  --label "version=$(GO_COOK_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):SNAPSHOT-$(GO_COOK_ARCH) -f Dockerfile . 
+	docker -H $(GO_COOK_BUILD_DOCKER_HOST) build --build-arg "APP=$(SNAPSHOT)"  --label "version=$(GO_COOK_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):SNAPSHOT -f Dockerfile .
 endif
 
 .PHONY: docker-login
@@ -113,14 +113,18 @@ docker-login: ; $(info $(M) login to docker hub...) @ ## Login to Dockerhub
 
 .PHONY: docker-push-snapshot
 docker-push-snapshot: docker-snapshot docker-login ; $(info $(M) push snapshot to docker hub...) @ ## Push docker image with a development version
-	docker push $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):SNAPSHOT-$(GO_COOK_ARCH) $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):SNAPSHOT-$(GO_COOK_ARCH)
+	docker push $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):SNAPSHOT $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):SNAPSHOT
+
+.PHONY: docker-buildx
+docker-buildx: docker-login ; ## Push docker image
+	docker buildx build --push --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION) -f Dockerfile .
 
 .PHONY: docker-push
 docker-push: docker-login ; ## Push docker image
 ifndef GO_COOK_BUILD_DOCKER_HOST
-	docker push $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION)-$(GO_COOK_ARCH)
+	docker push $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION)
 else
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST) push $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION)-$(GO_COOK_ARCH)
+	docker -H $(GO_COOK_BUILD_DOCKER_HOST) push $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION)
 endif
 
 .PHONY: api-docu
