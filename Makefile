@@ -71,7 +71,7 @@ lint: ; $(info $(M) running golint…) @ ## Run golint
 .PHONY: fmt
 fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
 	@for d in $$($(GO) list -f '{{.Dir}}' ./...); do \
-		$(GOFMT) -l -w $$d/*.go  ; \
+		$(GOFMT)  -l -w $$d/*.go  ; \
 	 done
 
 .PHONY: test
