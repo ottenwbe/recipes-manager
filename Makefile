@@ -59,7 +59,7 @@ mod-verify: ; $(info $(M) verifying modules…) @ ## Run go mod verify
 .PHONY: vet
 vet: ; $(info $(M) running vet…) @ ## Run go vet
 	@for d in $$($(GO) list ./...); do \
-		$(GOVET) $${d};  \
+		$(GOVET) -mod vendor $${d};  \
 	done
 
 .PHONY: lint
