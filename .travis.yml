@@ -26,7 +26,7 @@ install:
   - go get -u github.com/onsi/ginkgo/ginkgo
   - go get -u github.com/onsi/gomega/...
   - go get -u github.com/swaggo/swag/cmd/swag
-  -
+
 script:
   - make verify # qa steps
   - make api-docu
