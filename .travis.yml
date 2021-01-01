@@ -22,10 +22,10 @@ before_install:
   - docker buildx create --use
 
 install:
-  - go get -u golang.org/x/lint/golint
-  - go get -u github.com/onsi/ginkgo/ginkgo
-  - go get -u github.com/onsi/gomega/...
-  - go get -u github.com/swaggo/swag/cmd/swag
+  - go get -mod=readonly -u golang.org/x/lint/golint
+  - go get -mod=readonly -u github.com/onsi/ginkgo/ginkgo
+  - go get -mod=readonly -u github.com/onsi/gomega/...
+  - go get -mod=readonly -u github.com/swaggo/swag/cmd/swag
 
 script:
   - make verify # qa steps

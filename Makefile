@@ -24,7 +24,7 @@ M = $(shell printf "\033[34;1m▶\033[0m")
 release: ; $(info $(M) building executable…) @ ## Build the app's binary release version
 	@$(GO) build \
 		-tags release \
-		-mod vendor \
+		-mod=vendor \
 		-ldflags "-s -w" \
 		-ldflags "-X $(VERSIONPKG)=$(GO_COOK_VERSION)" \
 		-o $(GO_COOK_APP)-$(GO_COOK_VERSION) \
@@ -34,7 +34,7 @@ release: ; $(info $(M) building executable…) @ ## Build the app's binary relea
 snapshot:  ; $(info $(M) building snapshot…) @ ## Build the app's snapshot version
 	@CGO_ENABLED=0 \
 		$(GO) build \
-		-mod vendor \
+		-mod=vendor \
 		-o $(SNAPSHOT) \
 		-ldflags "-X $(VERSIONPKG)=$(GO_COOK_VERSION)" \
 		*.go
@@ -59,7 +59,7 @@ mod-verify: ; $(info $(M) verifying modules…) @ ## Run go mod verify
 .PHONY: vet
 vet: ; $(info $(M) running vet…) @ ## Run go vet
 	@for d in $$($(GO) list ./...); do \
-		$(GOVET) -mod vendor $${d};  \
+		$(GOVET) -mod=vendor $${d};  \
 	done
 
 .PHONY: lint
