@@ -31,9 +31,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 
-	"github.com/ottenwbe/go-cook/core"
-	"github.com/ottenwbe/go-cook/recipes"
-	"github.com/ottenwbe/go-cook/utils"
+	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/recipes"
+	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 // SourceResponse describes a sourceClient in detail

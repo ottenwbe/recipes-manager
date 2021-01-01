@@ -69,11 +69,11 @@ definitions:
     type: object
 info:
   contact: {}
-  description: This is the API documentation for go-cook.
+  description: This is the API documentation for recipes-manager.
   license:
     name: MIT
-    url: https://github.com/ottenwbe/go-cook/blob/master/LICENSE
-  title: Swagger API documentation for go-cook
+    url: https://github.com/ottenwbe/recipes-manager/blob/master/LICENSE
+  title: Swagger API documentation for recipes-manager
   version: "1.0"
 paths:
   /recipes:

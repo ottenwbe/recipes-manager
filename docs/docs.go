@@ -21,7 +21,7 @@ var doc = `{
         "contact": {},
         "license": {
             "name": "MIT",
-            "url": "https://github.com/ottenwbe/go-cook/blob/master/LICENSE"
+            "url": "https://github.com/ottenwbe/recipes-manager/blob/master/LICENSE"
         },
         "version": "{{.Version}}"
     },
@@ -527,8 +527,8 @@ var SwaggerInfo = swaggerInfo{
 	Host:        "",
 	BasePath:    "/api/v1",
 	Schemes:     []string{},
-	Title:       "Swagger API documentation for go-cook",
-	Description: "This is the API documentation for go-cook.",
+	Title:       "Swagger API documentation for recipes-manager",
+	Description: "This is the API documentation for recipes-manager.",
 }
 
 type s struct{}

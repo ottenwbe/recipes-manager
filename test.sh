@@ -11,12 +11,12 @@ docker rm -v test-db | true
 # run a mongo-db
 docker run -d --name=test-db -p 27018:27017 mongo:4
 
-mkdir -p ~/.go-cook
+mkdir -p ~/.recipes-manager
 
 {
     echo "recipeDB:"
     echo "  host: mongodb://localhost:27018"
-} > ~/.go-cook/go-cook-config.yml
+} > ~/.recipes-manager/recipes-manager-config.yml
 
 echo "Testing..."
 

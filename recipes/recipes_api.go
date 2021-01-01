@@ -31,7 +31,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/ottenwbe/go-cook/core"
+	"github.com/ottenwbe/recipes-manager/core"
 	log "github.com/sirupsen/logrus"
 )
 

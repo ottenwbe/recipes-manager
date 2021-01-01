@@ -34,7 +34,7 @@ import (
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/ottenwbe/go-cook/recipes"
+	"github.com/ottenwbe/recipes-manager/recipes"
 )
 
 var _ = Describe("drive parser", func() {

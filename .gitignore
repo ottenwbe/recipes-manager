@@ -5,7 +5,7 @@
 # App and config
 client_secret.json
 token*json
-go-cook*
+recipes-manager*
 
 # Test
 Test Results*

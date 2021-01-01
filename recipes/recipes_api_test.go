@@ -32,7 +32,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ottenwbe/go-cook/core"
+	"github.com/ottenwbe/recipes-manager/core"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

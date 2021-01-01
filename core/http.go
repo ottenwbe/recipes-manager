@@ -38,9 +38,9 @@ import (
 	"github.com/swaggo/gin-swagger"
 
 	// based on swagger documentation
-	_ "github.com/ottenwbe/go-cook/docs"
+	_ "github.com/ottenwbe/recipes-manager/docs"
 
-	"github.com/ottenwbe/go-cook/utils"
+	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 const (
@@ -101,9 +101,9 @@ func NewHandler() Handler {
 	return handler
 }
 
-// @title GO-Cook API
+// @title recipes-manager API
 // @version 1.0
-// @description This is the go-cook api
+// @description This is the recipes-manager api
 
 // @license.name MIT
 // @BasePath /api/v1

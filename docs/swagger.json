@@ -1,12 +1,12 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is the API documentation for go-cook.",
-        "title": "Swagger API documentation for go-cook",
+        "description": "This is the API documentation for recipes-manager.",
+        "title": "Swagger API documentation for recipes-manager",
         "contact": {},
         "license": {
             "name": "MIT",
-            "url": "https://github.com/ottenwbe/go-cook/blob/master/LICENSE"
+            "url": "https://github.com/ottenwbe/recipes-manager/blob/master/LICENSE"
         },
         "version": "1.0"
     },
