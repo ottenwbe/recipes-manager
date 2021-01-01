@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/ottenwbe/recipes-manager.svg?branch=master)](https://travis-ci.org/ottenwbe/recipes-manager)
 
 Backend service to manage recipes. 
-recipes-manager supports managing recipes via API while persisting them in a database.
+Recipes-manager supports managing recipes via API while persisting them in a database.
 
 ## Related projects
 
@@ -16,13 +16,13 @@ recipes-manager supports managing recipes via API while persisting them in a dat
 
 ### Deployment
 
-We briefly describe two deployment options. First, a Kubernetes-based deployment, including the deployment of all other recipes-manager tools. Secondly, a stand-alone deployment:
+We briefly describe two deployment options. First, a Kubernetes-based deployment, including the deployment of all other cooking-related tools. Secondly, a stand-alone deployment:
 
 1. See https://github.com/ottenwbe/recipes-manager-deployment for how to run the whole suite of micro-services on a Kubernetes cluster, including the frontend and a database.
 
 2. To run recipes-manager as standalone service (either amd64 or arm64): 
 
-    1. Prepare a configuraiton file (see next section).
+    1. Prepare a configuration file (see next section).
     1. Start a database
 
             docker run -d --name=db-recipes-manager -p 27018:27017 mongo:4
@@ -41,7 +41,7 @@ We briefly describe two deployment options. First, a Kubernetes-based deployment
 
 ### File-based Configuration 
 
-Configuraiton files are expected at ```~/.recipes-manager/recipes-manager-config.yml``` or ```/etc/recipes-manager/recipes-manager-config.yml```.
+Configuration files are expected at ```~/.recipes-manager/recipes-manager-config.yml``` or ```/etc/recipes-manager/recipes-manager-config.yml```.
 
 ```yaml
 # Mandatory Configuration

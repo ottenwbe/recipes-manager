@@ -10,6 +10,10 @@ addons:
     sources:
       - sourceline: 'deb https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable'
 
+env:
+  global:
+    - GO_COOK_DOCKER_PREFIX=ottenwbe/
+
 before_install:
   - sudo rm -rf /var/lib/apt/lists/*
   - sudo apt-get update
@@ -17,15 +21,12 @@ before_install:
   - sudo apt-get install -y qemu-user-static binfmt-support
   - docker buildx create --use
 
-env:
-  global:
-    - GO_COOK_DOCKER_PREFIX=ottenwbe/ 
-
 install:
   - go get -u golang.org/x/lint/golint
   - go get -u github.com/onsi/ginkgo/ginkgo
   - go get -u github.com/onsi/gomega/...
-
+  - go get -u github.com/swaggo/swag/cmd/swag
+  -
 script:
   - make verify # qa steps
   - make api-docu
