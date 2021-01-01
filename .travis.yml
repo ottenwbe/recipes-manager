@@ -12,7 +12,7 @@ addons:
 
 env:
   global:
-    - GO_COOK_DOCKER_PREFIX=ottenwbe/
+    - GO_COOK_DOCKER_PREFIX=ottenwbe/ GOFLAGS=-mod=vendor
 
 before_install:
   - sudo rm -rf /var/lib/apt/lists/*
