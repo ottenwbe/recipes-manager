@@ -49,7 +49,7 @@ start: fmt ; $(info $(M) running the app locally…) @ ## Run program's snapshot
 # Quality and Testing
 
 .PHONY: verify
-verify: fmt mod-verify vet lint test; $(info $(M) QA steps…) @ ## Run all QA steps
+verify: mod-verify vet lint test; $(info $(M) QA steps…) @ ## Run all QA steps
 	@echo "End of QA steps..."
 
 .PHONY: mod-verify
