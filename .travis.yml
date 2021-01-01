@@ -37,5 +37,4 @@ deploy:
   provider: script
   script: make docker-buildx
   on:
-    all_branches: true
-    #tags: true
+    tags: true

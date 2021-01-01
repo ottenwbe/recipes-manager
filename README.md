@@ -29,7 +29,7 @@ We briefly describe two deployment options. First, a Kubernetes-based deployment
 
     1. Run the container
         
-            docker run -p 8080:8080 --name=backend-recipes-manager -v <local-config>:/etc/recipes-manager/recipes-manager-config.yml ottenwbe/recipes-manager:0.2.0-amd64
+            docker run -p 8080:8080 --name=backend-recipes-manager -v <local-config>:/etc/recipes-manager/recipes-manager-config.yml ottenwbe/recipes-manager:v0.3.0
     
     1. Check if everything is running:
 
