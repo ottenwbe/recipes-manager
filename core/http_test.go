@@ -30,7 +30,7 @@ import (
 
 	"reflect"
 
-	"github.com/ottenwbe/go-cook/utils"
+	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 var _ = Describe("http", func() {

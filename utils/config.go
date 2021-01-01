@@ -43,9 +43,9 @@ type RecipeConfig interface {
 var Config RecipeConfig
 
 // defaultConfigName is the name of the default configuration
-const defaultConfigName = "go-cook-config"
+const defaultConfigName = "recipes-manager-config"
 
-var defaultPaths = []string{"/etc/go-cook/", "$HOME/.go-cook", "."}
+var defaultPaths = []string{"/etc/recipes-manager/", "$HOME/.recipes-manager", "."}
 
 func init() {
 	Config = NewViperConfig(defaultConfigName, defaultPaths)

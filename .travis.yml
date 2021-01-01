@@ -23,12 +23,12 @@ env:
 
 install:
   - go get -u golang.org/x/lint/golint
-
-script:
   - go get -u github.com/onsi/ginkgo/ginkgo
   - go get -u github.com/onsi/gomega/...
-  - make build  
-  - make verify  
+
+script:
+  - make verify # qa steps
+  - make api-docu
   - make release
   - make docker
 

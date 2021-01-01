@@ -1,35 +1,35 @@
- # go-cook
+ # recipes-manager
 
-[![Build Status](https://travis-ci.org/ottenwbe/go-cook.svg?branch=master)](https://travis-ci.org/ottenwbe/go-cook)
+[![Build Status](https://travis-ci.org/ottenwbe/recipes-manager.svg?branch=master)](https://travis-ci.org/ottenwbe/recipes-manager)
 
 Backend service to manage recipes. 
-Go-cook supports managing recipes via API while persisting them in a database.
+recipes-manager supports managing recipes via API while persisting them in a database.
 
 ## Related projects
 
 |Tool|URL|
 |---|---|
-| Web Frontend  |  https://github.com/ottenwbe/go-cook-ui |
-| Deployment    |  https://github.com/ottenwbe/go-cook-deployment |
+| Web Frontend  |  https://github.com/ottenwbe/recipes-manager-ui |
+| Deployment    |  https://github.com/ottenwbe/recipes-manager-deployment |
 
 ## How to Use?
 
 ### Deployment
 
-We briefly describe two deployment options. First, a Kubernetes-based deployment, including the deployment of all other go-cook tools. Secondly, a stand-alone deployment:
+We briefly describe two deployment options. First, a Kubernetes-based deployment, including the deployment of all other recipes-manager tools. Secondly, a stand-alone deployment:
 
-1. See https://github.com/ottenwbe/go-cook-deployment for how to run the whole suite of micro-services on a Kubernetes cluster, including the frontend and a database.
+1. See https://github.com/ottenwbe/recipes-manager-deployment for how to run the whole suite of micro-services on a Kubernetes cluster, including the frontend and a database.
 
-2. To run go-cook as standalone service (either amd64 or arm64): 
+2. To run recipes-manager as standalone service (either amd64 or arm64): 
 
     1. Prepare a configuraiton file (see next section).
     1. Start a database
 
-            docker run -d --name=db-go-cook -p 27018:27017 mongo:4
+            docker run -d --name=db-recipes-manager -p 27018:27017 mongo:4
 
     1. Run the container
         
-            docker run -p 8080:8080 --name=backend-go-cook -v <local-config>:/etc/go-cook/go-cook-config.yml ottenwbe/go-cook:0.2.0-amd64
+            docker run -p 8080:8080 --name=backend-recipes-manager -v <local-config>:/etc/recipes-manager/recipes-manager-config.yml ottenwbe/recipes-manager:0.2.0-amd64
     
     1. Check if everything is running:
 
@@ -41,7 +41,7 @@ We briefly describe two deployment options. First, a Kubernetes-based deployment
 
 ### File-based Configuration 
 
-Configuraiton files are expected at ```~/.go-cook/go-cook-config.yml``` or ```/etc/go-cook/go-cook-config.yml```.
+Configuraiton files are expected at ```~/.recipes-manager/recipes-manager-config.yml``` or ```/etc/recipes-manager/recipes-manager-config.yml```.
 
 ```yaml
 # Mandatory Configuration
@@ -88,9 +88,9 @@ By prepending all variables (see file-based configuration) with ```GO_COOK_``` t
     go get github.com/onsi/gomega/...
     ```
 
-## Building Go-Cook
+## Building recipes-manager
 
-A Makefile supports the build process. This includes building a development and release version of the go-cook service. Furthermore, it includes building docker images to easily deploy the go-cook service.
+A Makefile supports the build process. This includes building a development and release version of the recipes-manager service. Furthermore, it includes building docker images to easily deploy the recipes-manager service.
 
 ### Build Snapshot
 
@@ -98,7 +98,7 @@ A Makefile supports the build process. This includes building a development and 
 make build 
 ```
 
-Builds a fully functioning binary named ```go-cook-snapshot```. In contrast to the release version, there is still debugging informaiton included.
+Builds a fully functioning binary named ```recipes-manager-snapshot```. In contrast to the release version, there is still debugging informaiton included.
 
 ### Build Release Version
 
@@ -106,7 +106,7 @@ Builds a fully functioning binary named ```go-cook-snapshot```. In contrast to t
 make release
 ```
 
-Builds a fully functioning binary named ```go-cook```. 
+Builds a fully functioning binary named ```recipes-manager```. 
 
 ### Docker builds
 

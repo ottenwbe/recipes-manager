@@ -25,7 +25,7 @@
 package core
 
 import (
-	"github.com/ottenwbe/go-cook/utils"
+	"github.com/ottenwbe/recipes-manager/utils"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -1,13 +1,15 @@
-GO_COOK_APP     = go-cook
+GO_COOK_APP     = recipes-manager
 TMPAPP  		= $(GO_COOK_APP)-tmp
 SNAPSHOT		= $(GO_COOK_APP)-snapshot
 DATE     		= $(shell date +%F_%T)
 GO_COOK_VERSION	= $(shell git describe --tags --always --match=v* 2> /dev/null || echo v0.0.0)
 GO_COOK_ARCH	?= default
 
+GO_COOK_DOCKER_PREFIX ?= ottenwbe/
+
 GO_COOK_MAINTAINER ?= Beate Ottenwaelder <ottenwbe.public@gmail.com>
 
-VERSIONPKG = "github.com/ottenwbe/go-cook/core.appVersionString"
+VERSIONPKG = "github.com/ottenwbe/recipes-manager/core.appVersionString"
 
 DOCKER_REGISTRY ?= docker.io
 
@@ -22,22 +24,17 @@ M = $(shell printf "\033[34;1m▶\033[0m")
 release: ; $(info $(M) building executable…) @ ## Build the app's binary release version
 	@$(GO) build \
 		-tags release \
+		-mod vendor \
 		-ldflags "-s -w" \
 		-ldflags "-X $(VERSIONPKG)=$(GO_COOK_VERSION)" \
 		-o $(GO_COOK_APP)-$(GO_COOK_VERSION) \
 		*.go
 
-.PHONY: build
-build:  ; $(info $(M) building snapshot…) @ ## Build the app's development version
-	@$(GO) build \
-		-o $(SNAPSHOT) \
-		-ldflags "-X $(VERSIONPKG)=$(GO_COOK_VERSION)" \
-		*.go
-
 .PHONY: snapshot
-snapshot:  ; $(info $(M) building development snapshot…) @ ## Build the app's snapshot version
+snapshot:  ; $(info $(M) building snapshot…) @ ## Build the app's snapshot version
 	@CGO_ENABLED=0 \
 		$(GO) build \
+		-mod vendor \
 		-o $(SNAPSHOT) \
 		-ldflags "-X $(VERSIONPKG)=$(GO_COOK_VERSION)" \
 		*.go

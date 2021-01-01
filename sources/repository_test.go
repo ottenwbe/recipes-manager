@@ -31,7 +31,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/ottenwbe/go-cook/recipes"
+	"github.com/ottenwbe/recipes-manager/recipes"
 )
 
 var _ = Describe("sourceClient repository", func() {

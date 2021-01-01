@@ -27,21 +27,21 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 
-	"github.com/ottenwbe/go-cook/core"
-	"github.com/ottenwbe/go-cook/recipes"
-	"github.com/ottenwbe/go-cook/sources"
+	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/recipes"
+	"github.com/ottenwbe/recipes-manager/sources"
 )
 
 func init() {
 	log.Infof("Initializing cooking application version=%v API=%v", core.AppVersion().App, core.AppVersion().API)
 }
 
-// @title Swagger API documentation for go-cook
+// @title Swagger API documentation for recipes-manager
 // @version 1.0
-// @description This is the API documentation for go-cook.
+// @description This is the API documentation for recipes-manager.
 
 // @license.name MIT
-// @license.url https://github.com/ottenwbe/go-cook/blob/master/LICENSE
+// @license.url https://github.com/ottenwbe/recipes-manager/blob/master/LICENSE
 
 // @BasePath /api/v1
 func main() {

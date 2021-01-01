@@ -1,4 +1,4 @@
-module github.com/ottenwbe/go-cook
+module github.com/ottenwbe/recipes-manager
 
 go 1.13
 

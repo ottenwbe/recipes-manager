@@ -31,7 +31,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/satori/go.uuid"
 
-	. "github.com/ottenwbe/go-cook/utils"
+	. "github.com/ottenwbe/recipes-manager/utils"
 )
 
 var _ = Describe("SourceClient", func() {

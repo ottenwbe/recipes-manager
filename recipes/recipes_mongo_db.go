@@ -38,12 +38,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 
-	"github.com/ottenwbe/go-cook/utils"
+	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 const (
 	//DATABASE name
-	DATABASE = "go-cook"
+	DATABASE = "recipes-manager"
 	//RECIPES index
 	RECIPES = "recipes"
 	//PICTURES index

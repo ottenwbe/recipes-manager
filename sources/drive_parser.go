@@ -35,8 +35,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/html"
 
-	"github.com/ottenwbe/go-cook/recipes"
-	"github.com/ottenwbe/go-cook/utils"
+	"github.com/ottenwbe/recipes-manager/recipes"
+	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 //driveRecipeParser enumerates all states of the driveRecipeParser
