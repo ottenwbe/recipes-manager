@@ -323,5 +323,5 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/core.Version'
-      summary: Get the curent version
+      summary: Get the current version
 swagger: "2.0"

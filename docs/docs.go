@@ -395,7 +395,7 @@ var doc = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Get the curent version",
+                "summary": "Get the current version",
                 "responses": {
                     "200": {
                         "description": "OK",

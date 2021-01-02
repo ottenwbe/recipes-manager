@@ -28,14 +28,25 @@ package core
 func AddCoreAPIToHandler(handler Handler) {
 	v1 := handler.API(1)
 	v1.GET("/version", prepareVersionRoutes)
+	v1.GET("/health", prepareHealthRoutes)
 }
 
-// Version example
-// @Summary Get the curent version
+// Version API
+// @Summary Get the current version
+// @Description get the current version
+// @Produce  json
+// @Success 200 {object} Version
+// @Router /health [get]
+func prepareVersionRoutes(c *APICallContext) {
+	c.JSON(200, AppVersion())
+}
+
+// Version API
+// @Summary Get the current version
 // @Description get the current version
 // @Produce  json
 // @Success 200 {object} Version
 // @Router /version [get]
-func prepareVersionRoutes(c *APICallContext) {
-	c.JSON(200, AppVersion())
+func prepareHealthRoutes(c *APICallContext) {
+	c.String(200, "{}")
 }
