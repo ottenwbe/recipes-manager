@@ -31,8 +31,6 @@ github.com/aws/aws-sdk-go/private/protocol/rest
 github.com/beorn7/perks/quantile
 # github.com/cespare/xxhash/v2 v2.1.1
 github.com/cespare/xxhash/v2
-# github.com/chenjiandongx/ginprom v0.0.0-20201217063207-fe11b7f55a35
-github.com/chenjiandongx/ginprom
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
 # github.com/gin-contrib/sse v0.1.0
@@ -201,6 +199,8 @@ github.com/ugorji/go/codec
 github.com/xdg/scram
 # github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc
 github.com/xdg/stringprep
+# github.com/zsais/go-gin-prometheus v0.1.0
+github.com/zsais/go-gin-prometheus
 # go.mongodb.org/mongo-driver v1.4.4
 go.mongodb.org/mongo-driver/bson
 go.mongodb.org/mongo-driver/bson/bsoncodec
