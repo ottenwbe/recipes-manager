@@ -98,7 +98,7 @@ A Makefile supports the build process. This includes building a development and 
 make build 
 ```
 
-Builds a fully functioning binary named ```recipes-manager-snapshot```. In contrast to the release version, there is still debugging informaiton included.
+Builds a fully functioning binary named ```recipes-manager-snapshot```. In contrast to the release version, there is still debugging information included.
 
 ### Build Release Version
 
@@ -143,7 +143,7 @@ The Swagger API documentation is based on [gin-swagger](https://github.com/swagg
  ### Disclaimer
  
  I created this project for the purpose of educating myself and personal use.
- If you are interested in the outcome, feel free to contribute; this work is published under the MIT license. 
+ If you are interested in the outcome, feel free to use and contribute; this work is published under the MIT license. 
  
 ### Notice
 The base MAKEFILE is adapted from: https://github.com/vincentbernat/hellogopher 

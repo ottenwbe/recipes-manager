@@ -31,8 +31,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/chenjiandongx/ginprom"
 	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
@@ -148,8 +150,13 @@ func (g *ginHandler) route(route string) Routes {
 // configure the default middleware with a logger and recovery (crash-free) middleware
 func (g *ginHandler) configure() {
 
+	//Add swagger endpoint
 	url := ginSwagger.URL("doc.json") // The url pointing to API definition
 	g.handler.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+
+	g.handler.Use(ginprom.PromMiddleware(nil))
+	// register the `/metrics` route.
+	g.handler.GET("/metrics", ginprom.PromHandler(promhttp.Handler()))
 
 	g.handler.Use(ginrus.Ginrus(log.StandardLogger(), time.RFC3339, true))
 	g.handler.Use(g.corsMiddleware())
