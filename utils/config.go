@@ -30,79 +30,73 @@ import (
 	"strings"
 )
 
-// RecipeConfig allows the recipe application to retrieve configuration data
+//RecipeConfig allows the recipe-manager to retrieve configuration data.
+//It acts as facade to the actual configuration.
 type RecipeConfig interface {
 	GetInt64(key string) int64
 	GetString(key string) string
 	SetDefault(key string, val interface{})
-	BindEnv(key string)
 	Debug()
 }
 
-// Config allows this application to access its configuration
+//Config allows this application to access its configuration
 var Config RecipeConfig
 
-// defaultConfigName is the name of the default configuration
+//defaultConfigName is the name of the default configuration
 const defaultConfigName = "recipes-manager-config"
+
+//envPrefix is the prefix for all environment variables
+const envPrefix = "go_cook"
 
 var defaultPaths = []string{"/etc/recipes-manager/", "$HOME/.recipes-manager", "."}
 
 func init() {
-	Config = NewViperConfig(defaultConfigName, defaultPaths)
+	recipeConfig := &viperConfig{}
+	recipeConfig.initConfigEnv(envPrefix)
+	recipeConfig.initConfigFile(defaultConfigName, defaultPaths)
+	recipeConfig.readConfig()
+	Config = recipeConfig
 }
 
 type viperConfig struct{}
 
-// NewViperConfig creates a configuration based on the viper framework
-func NewViperConfig(name string, paths []string) RecipeConfig {
-	c := &viperConfig{}
-	c.config(name, paths)
-	return c
-}
-
-// GetString returns a string for the given key
+//GetString returns a string for the given key
 func (*viperConfig) GetString(key string) string {
 	return viper.GetString(key)
 }
 
-// GetInt64 returns an integer for the given key
+//GetInt64 returns an integer for the given key
 func (*viperConfig) GetInt64(key string) int64 {
 	return viper.GetInt64(key)
 }
 
-// SetDefault sets the default value for a key
+//SetDefault sets the default value for a key
 func (*viperConfig) SetDefault(key string, val interface{}) {
 	viper.SetDefault(key, val)
 }
 
-//BindEnv binds a key to an environment variable
-func (*viperConfig) BindEnv(key string) {
-	viper.BindEnv(key)
+func (*viperConfig) initConfigFile(name string, paths []string) {
+	viper.SetConfigName(name) // name of config file (without extension)
+	for i := range paths {
+		viper.AddConfigPath(paths[i])
+	}
 }
 
-func (*viperConfig) configEnv() {
-	viper.SetEnvPrefix("go_cook")
+func (*viperConfig) initConfigEnv(prefix string) {
+	viper.SetEnvPrefix(prefix)
 	viper.AutomaticEnv()
 	replacer := strings.NewReplacer(".", "_")
 	viper.SetEnvKeyReplacer(replacer)
 }
 
-func (v *viperConfig) config(name string, paths []string) {
-
-	v.configEnv()
-
-	viper.SetConfigName(name) // name of config file (without extension)
-	for i := range paths {
-		viper.AddConfigPath(paths[i])
-	}
-
+func (*viperConfig) readConfig() {
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {             // Handle errors reading the config file
-		log.WithError(err).Error("Error while reading config file ")
+		log.WithError(err).Error("Error while reading config file.")
 	}
 }
 
-// Debug prints all configurations
+//Debug prints all configurations
 func (*viperConfig) Debug() {
 	viper.Debug()
 }

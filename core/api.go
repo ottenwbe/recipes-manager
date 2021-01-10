@@ -41,7 +41,7 @@ func prepareVersionRoutes(c *APICallContext) {
 	c.JSON(200, AppVersion())
 }
 
-// Version API
+// Health Endpoint API
 // @Summary Get the current version
 // @Description get the current version
 // @Produce  json

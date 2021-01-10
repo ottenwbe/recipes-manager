@@ -35,17 +35,24 @@ var _ = Describe("Config", func() {
 		Expect(Config).ToNot(BeNil())
 	})
 
+	var (
+		c RecipeConfig
+	)
+
+	BeforeEach(func() {
+		recipeConfig := &viperConfig{}
+		recipeConfig.initConfigFile("test-config", []string{"fixtures"})
+		recipeConfig.readConfig()
+		c = recipeConfig
+	})
+
 	Context("Viper Configuration", func() {
 		It("can read string values from files with arbitrary name and path", func() {
-			c := NewViperConfig("test-config", []string{"fixtures"})
-
 			s := c.GetString("str")
-
 			Expect(s).To(Equal("success"))
 		})
 
 		It("can read integer values from files with arbitrary name and path", func() {
-			c := NewViperConfig("test-config", []string{"fixtures"})
 			i := c.GetInt64("int")
 			Expect(i).To(Equal(int64(123)))
 		})
@@ -53,7 +60,6 @@ var _ = Describe("Config", func() {
 		It("can handle string default values", func() {
 			const expected = "default"
 			const testKey = "default-str"
-			c := NewViperConfig("test-config", []string{"fixtures"})
 			c.SetDefault(testKey, expected)
 			s := c.GetString(testKey)
 			Expect(s).To(Equal(expected))
@@ -62,12 +68,9 @@ var _ = Describe("Config", func() {
 		It("can handle int default values", func() {
 			const expected = int64(1023)
 			const testKey = "default-int"
-			c := NewViperConfig("test-config", []string{"fixtures"})
 			c.SetDefault(testKey, expected)
 			i := c.GetInt64(testKey)
 			Expect(i).To(Equal(expected))
 		})
-
 	})
-
 })

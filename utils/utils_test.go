@@ -36,4 +36,10 @@ var _ = Describe("Utils", func() {
 			Expect(CBytes(bytes)).To(Equal("[100,200,50]"))
 		})
 	})
+	Context("UniqueSlice", func() {
+		It("should remove duplicates from a slice", func() {
+			text := []string{"a", "b", "a", "c", "a", "c"}
+			Expect(UniqueSlice(text)).To(Equal([]string{"a", "b", "c"}))
+		})
+	})
 })

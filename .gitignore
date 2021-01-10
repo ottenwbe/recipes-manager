@@ -6,6 +6,7 @@
 client_secret.json
 token*json
 recipes-manager*
+go-cook-*
 
 # Test
 Test Results*

@@ -143,7 +143,7 @@ The Swagger API documentation is based on [gin-swagger](https://github.com/swagg
  ### Disclaimer
  
  I created this project for the purpose of educating myself and personal use.
- If you are interested in the outcome, feel free to use and contribute; this work is published under the MIT license. 
+ If you are interested in the outcome, feel free to use the tool and contribute; this work is published under the MIT license. 
  
 ### Notice
 The base MAKEFILE is adapted from: https://github.com/vincentbernat/hellogopher 
