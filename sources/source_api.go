@@ -33,7 +33,6 @@ import (
 
 	"github.com/ottenwbe/recipes-manager/core"
 	"github.com/ottenwbe/recipes-manager/recipes"
-	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 // SourceResponse describes a sourceClient in detail
@@ -272,6 +271,6 @@ var (
 )
 
 func init() {
-	utils.Config.SetDefault(SOURCEREDIRECT, "http://localhost:8080/#!/src")
-	host = utils.Config.GetString(SOURCEREDIRECT)
+	core.Config.SetDefault(SOURCEREDIRECT, "http://localhost:8080/#!/src")
+	host = core.Config.GetString(SOURCEREDIRECT)
 }

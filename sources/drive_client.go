@@ -29,6 +29,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ottenwbe/recipes-manager/core"
 
 	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -42,7 +43,6 @@ import (
 	"sync"
 
 	"github.com/ottenwbe/recipes-manager/recipes"
-	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 //driveRecipes is a cache for recipes from Drive
@@ -377,9 +377,9 @@ func downloadHTML(srv *drive.Service, id string) (io.Reader, error) {
 }
 
 func init() {
-	utils.Config.SetDefault(driveConnectionSecretCfg, "client_secret.json")
-	utils.Config.SetDefault(driveRecipesFolderNameCfg, "Rezepte Test")
+	core.Config.SetDefault(driveConnectionSecretCfg, "client_secret.json")
+	core.Config.SetDefault(driveRecipesFolderNameCfg, "Rezepte Test")
 
-	clientSecretFile = utils.Config.GetString(driveConnectionSecretCfg)
-	recipesFolderName = utils.Config.GetString(driveRecipesFolderNameCfg)
+	clientSecretFile = core.Config.GetString(driveConnectionSecretCfg)
+	recipesFolderName = core.Config.GetString(driveRecipesFolderNameCfg)
 }

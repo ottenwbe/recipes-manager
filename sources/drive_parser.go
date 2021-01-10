@@ -27,6 +27,7 @@ package sources
 import (
 	"bytes"
 	"errors"
+	"github.com/ottenwbe/recipes-manager/core"
 	"io"
 	"regexp"
 	"strconv"
@@ -245,9 +246,9 @@ var (
 )
 
 func init() {
-	utils.Config.SetDefault(driveParserIngredientsTitle, "Zutaten")
-	utils.Config.SetDefault(driveRecipeInstructionsTitle, "Zubereitung")
+	core.Config.SetDefault(driveParserIngredientsTitle, "Zutaten")
+	core.Config.SetDefault(driveRecipeInstructionsTitle, "Zubereitung")
 
-	ingredients = utils.Config.GetString(driveParserIngredientsTitle)
-	instruction = utils.Config.GetString(driveRecipeInstructionsTitle)
+	ingredients = core.Config.GetString(driveParserIngredientsTitle)
+	instruction = core.Config.GetString(driveRecipeInstructionsTitle)
 }

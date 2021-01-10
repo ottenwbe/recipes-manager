@@ -29,6 +29,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ottenwbe/recipes-manager/core"
 	"strings"
 	"sync"
 
@@ -53,7 +54,7 @@ const (
 var mongoAddress string
 
 func init() {
-	mongoAddress = utils.Config.GetString("recipeDB.host")
+	mongoAddress = core.Config.GetString("recipeDB.host")
 }
 
 //MongoRecipeDB implements the Recipe interface to read and write Recipes to and from a Mongo DB

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package utils
+package core
 
 import (
 	log "github.com/sirupsen/logrus"
@@ -40,25 +40,33 @@ type RecipeConfig interface {
 }
 
 //Config allows this application to access its configuration
-var Config RecipeConfig
+var Config = newRecipeConfig()
 
 //defaultConfigName is the name of the default configuration
 const defaultConfigName = "recipes-manager-config"
 
 //envPrefix is the prefix for all environment variables
-const envPrefix = "go_cook"
+const defaultEnvPrefix = "go_cook"
 
 var defaultPaths = []string{"/etc/recipes-manager/", "$HOME/.recipes-manager", "."}
 
-func init() {
-	recipeConfig := &viperConfig{}
-	recipeConfig.initConfigEnv(envPrefix)
-	recipeConfig.initConfigFile(defaultConfigName, defaultPaths)
+func newRecipeConfig() RecipeConfig {
+	recipeConfig := &viperConfig{
+		envPrefix:      defaultEnvPrefix,
+		configFile:     defaultConfigName,
+		configFilePath: defaultPaths,
+	}
+	recipeConfig.initConfigEnv()
+	recipeConfig.initConfigFile()
 	recipeConfig.readConfig()
-	Config = recipeConfig
+	return recipeConfig
 }
 
-type viperConfig struct{}
+type viperConfig struct {
+	envPrefix      string
+	configFile     string
+	configFilePath []string
+}
 
 //GetString returns a string for the given key
 func (*viperConfig) GetString(key string) string {
@@ -75,15 +83,15 @@ func (*viperConfig) SetDefault(key string, val interface{}) {
 	viper.SetDefault(key, val)
 }
 
-func (*viperConfig) initConfigFile(name string, paths []string) {
-	viper.SetConfigName(name) // name of config file (without extension)
-	for i := range paths {
-		viper.AddConfigPath(paths[i])
+func (v *viperConfig) initConfigFile() {
+	viper.SetConfigName(v.configFile) // name of config file (without extension)
+	for i := range v.configFilePath {
+		viper.AddConfigPath(v.configFilePath[i])
 	}
 }
 
-func (*viperConfig) initConfigEnv(prefix string) {
-	viper.SetEnvPrefix(prefix)
+func (v *viperConfig) initConfigEnv() {
+	viper.SetEnvPrefix(v.envPrefix)
 	viper.AutomaticEnv()
 	replacer := strings.NewReplacer(".", "_")
 	viper.SetEnvKeyReplacer(replacer)

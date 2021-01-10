@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package utils
+package core
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -40,8 +40,11 @@ var _ = Describe("Config", func() {
 	)
 
 	BeforeEach(func() {
-		recipeConfig := &viperConfig{}
-		recipeConfig.initConfigFile("test-config", []string{"fixtures"})
+		recipeConfig := &viperConfig{
+			configFile:     "test-config",
+			configFilePath: []string{"fixtures"},
+		}
+		recipeConfig.initConfigFile()
 		recipeConfig.readConfig()
 		c = recipeConfig
 	})

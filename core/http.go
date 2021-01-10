@@ -40,8 +40,6 @@ import (
 
 	// based on swagger documentation
 	_ "github.com/ottenwbe/recipes-manager/docs"
-
-	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 const (
@@ -58,10 +56,10 @@ var (
 
 // init configures the handler for api calls when the core package is initialized
 func init() {
-	utils.Config.SetDefault(addressCfg, ":8080")
-	utils.Config.SetDefault(corsAllowOriginCfg, "*")
-	defaultAddress = utils.Config.GetString(addressCfg)
-	corsOrigin = utils.Config.GetString(corsAllowOriginCfg)
+	Config.SetDefault(addressCfg, ":8080")
+	Config.SetDefault(corsAllowOriginCfg, "*")
+	defaultAddress = Config.GetString(addressCfg)
+	corsOrigin = Config.GetString(corsAllowOriginCfg)
 }
 
 //Routes is managing a set of API endpoints.
