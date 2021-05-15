@@ -1,6 +1,6 @@
 language: go
 go:
-- '1.15'
+- '1.16'
 arch:
   - amd64
 
@@ -14,10 +14,15 @@ env:
   global:
     - GO_COOK_DOCKER_PREFIX=ottenwbe/ GOFLAGS=-mod=vendor
 
+services:
+  - docker
+
 before_install:
   - sudo rm -rf /var/lib/apt/lists/*
   - sudo apt-get update
-  - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce docker-ce-cli containerd.io
+  - mkdir -vp ~/.docker/cli-plugins/
+  - curl --silent -L "https://github.com/docker/buildx/releases/download/v0.5.1/buildx-v0.5.1.linux-amd64" > ~/.docker/cli-plugins/docker-buildx
+  - chmod a+x ~/.docker/cli-plugins/docker-buildx
   - sudo apt-get install -y qemu-user-static binfmt-support
   - docker buildx create --use
 
@@ -34,7 +39,11 @@ script:
   - make docker
 
 deploy:
-  provider: script
-  script: make docker-buildx
-  on:
-    tags: true
+  - provider: script
+    script: make docker-buildx
+    on:
+      tags: true
+  - provider: script
+    script: make docker-buildx-dev
+    on:
+      all_branches: true

@@ -1,13 +1,13 @@
 GO_COOK_APP     = recipes-manager
 TMPAPP  		= $(GO_COOK_APP)-tmp
 SNAPSHOT		= $(GO_COOK_APP)-snapshot
+GO_VERSION     	= $(shell go version)
 DATE     		= $(shell date +%F_%T)
 GO_COOK_VERSION	= $(shell git describe --tags --always --match=v* 2> /dev/null || echo v0.0.0)
-GO_COOK_ARCH	?= default
 
-GO_COOK_DOCKER_PREFIX ?= ottenwbe/
-
-GO_COOK_MAINTAINER ?= Beate Ottenwaelder <ottenwbe.public@gmail.com>
+GO_COOK_ARCH			?= default
+GO_COOK_DOCKER_PREFIX 	?= ottenwbe/
+GO_COOK_MAINTAINER 		?= Beate Ottenwaelder <ottenwbe.public@gmail.com>
 
 VERSIONPKG = "github.com/ottenwbe/recipes-manager/core.appVersionString"
 
@@ -114,7 +114,11 @@ docker-push-snapshot: docker-snapshot docker-login ; $(info $(M) push snapshot t
 
 .PHONY: docker-buildx
 docker-buildx: docker-login ; ## Push docker image
-	docker buildx build --push --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION) -f Dockerfile .
+	docker buildx build --push --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)" --label "go=$(GO_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION) -f Dockerfile .
+
+.PHONY: docker-buildx-dev
+docker-buildx-dev: docker-login ; ## Push docker image
+	docker buildx build --push --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)" --label "go=$(GO_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):development -f Dockerfile .
 
 .PHONY: docker-push
 docker-push: docker-login ; ## Push docker image
@@ -135,6 +139,11 @@ help:
 .PHONY: version
 version:
 	@echo $(GO_COOK_VERSION)
+
+.PHONY: details
+details:
+	@echo $(GO_COOK_APP) $(GO_COOK_VERSION)
+	@echo $(GO_VERSION)
 
 .PHONY: date
 date:
