@@ -65,6 +65,10 @@ var _ = Describe("recipes db", func() {
 
 		BeforeEach(func() {
 			db, err = NewDatabaseClient()
+			// clean db for testing
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(ctx())
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(ctx())
+
 		})
 
 		AfterEach(func() {
@@ -186,6 +190,8 @@ var _ = Describe("recipes db", func() {
 
 		AfterEach(func() {
 			// clean db for testing
+			// clean db for testing
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(ctx())
 			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(ctx())
 
 			db.Close()

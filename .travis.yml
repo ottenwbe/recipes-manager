@@ -21,7 +21,7 @@ before_install:
   - sudo rm -rf /var/lib/apt/lists/*
   - sudo apt-get update
   - mkdir -vp ~/.docker/cli-plugins/
-  - curl --silent -L "https://github.com/docker/buildx/releases/download/v0.3.0/buildx-v0.3.0.linux-amd64" > ~/.docker/cli-plugins/docker-buildx
+  - curl --silent -L "https://github.com/docker/buildx/releases/download/v0.5.1/buildx-v0.3.0.linux-amd64" > ~/.docker/cli-plugins/docker-buildx
   - chmod a+x ~/.docker/cli-plugins/docker-buildx
   - sudo apt-get install -y qemu-user-static binfmt-support
   - docker buildx create --use
