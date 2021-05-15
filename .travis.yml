@@ -45,3 +45,5 @@ deploy:
       tags: true
   - provider: script
     script: make docker-buildx-dev
+    on:
+      all_branches: true
