@@ -431,14 +431,14 @@ func (m *MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
 		Options: options.Index().SetUnique(true).SetSparse(true),
 	}
 
-	indexId := mongo.IndexModel{
+	indexID := mongo.IndexModel{
 		Keys: bson.M{ // index in ascending order
-			"id":   1,
+			"id": 1,
 		},
 		Options: options.Index().SetUnique(true).SetSparse(true),
 	}
 
-	_, err := c.Indexes().CreateMany(ctx(), []mongo.IndexModel{indexId, indexName})
+	_, err := c.Indexes().CreateMany(ctx(), []mongo.IndexModel{indexID, indexName})
 	if err != nil {
 		log.Info("idx error", err)
 	}
