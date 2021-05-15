@@ -34,6 +34,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 	"strings"
 	"sync"
 
@@ -393,10 +394,10 @@ func (m *MongoRecipeDB) connectToDB() (err error) {
 	}
 
 	err = m.ensureRecipeIndex()
-	/*if err != nil {
+	if err != nil {
 		log.WithError(err).Info("Could not create mongo db recipe index")
 		return
-	}*/
+	}
 	err = m.ensurePictureIndex()
 	if err != nil {
 		log.WithError(err).Info("Could not create mongo db picture index")
@@ -428,7 +429,7 @@ func (m *MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
 		Keys: bson.M{ // index in ascending order
 			"name": 1,
 		},
-		Options: options.Index().SetUnique(true).SetSparse(true),
+		Options: options.Index().SetUnique(false).SetSparse(true),
 	}
 
 	indexID := mongo.IndexModel{
@@ -447,27 +448,15 @@ func (m *MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
 
 func (m *MongoRecipeDB) createTextIndex(c *mongo.Collection) error {
 	textIndex := mongo.IndexModel{
-		Keys: bson.M{
-			"description": "text",
+		Keys: bsonx.Doc{
+			{Key: "name", Value: bsonx.String("text")},
+			{Key: "description", Value: bsonx.String("text")},
+			{Key: "ingredients.name", Value: bsonx.String("text")},
 		},
 		Options: options.Index().SetUnique(false),
 	}
 
-	textIndexName := mongo.IndexModel{
-		Keys: bson.M{
-			"name": "text",
-		},
-		Options: options.Index().SetUnique(false),
-	}
-
-	textIndexIngredients := mongo.IndexModel{
-		Keys: bson.M{
-			"ingredients.name": "text",
-		},
-		Options: options.Index().SetUnique(false),
-	}
-
-	_, err := c.Indexes().CreateMany(ctx(), []mongo.IndexModel{textIndexName, textIndex, textIndexIngredients})
+	_, err := c.Indexes().CreateOne(ctx(), textIndex)
 
 	return err
 }
@@ -479,7 +468,7 @@ func (m *MongoRecipeDB) ensurePictureIndex() error {
 		Keys: bson.M{
 			"name": 1, // index in ascending order
 		},
-		Options: options.Index().SetUnique(true).SetSparse(true),
+		Options: options.Index().SetUnique(false).SetSparse(true),
 	}
 	_, err := c.Indexes().CreateOne(ctx(), index)
 
