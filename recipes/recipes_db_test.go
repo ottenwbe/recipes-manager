@@ -270,8 +270,8 @@ var _ = Describe("recipes db", func() {
 			recipes := db.IDs(&RecipeSearchFilter{Name: "something", Description: "describes"})
 
 			Expect(err).To(BeNil())
-			Expect(recipes).To(ContainElement(expectedResult.ID.String()))
-			Expect(recipes).To(ContainElement(expectedResult2.ID.String()))
+			Expect(recipes.Recipes).To(ContainElement(expectedResult.ID.String()))
+			Expect(recipes.Recipes).To(ContainElement(expectedResult2.ID.String()))
 		})
 
 		It("can list all Recipes and filter them by description", func() {
@@ -297,7 +297,7 @@ var _ = Describe("recipes db", func() {
 			recipes := db.IDs(&RecipeSearchFilter{Description: "describes"})
 
 			Expect(err).To(BeNil())
-			Expect(recipes).To(ContainElement(expectedResult.ID.String()))
+			Expect(recipes.Recipes).To(ContainElement(expectedResult.ID.String()))
 		})
 
 		It("can list all Recipes and filter them by name", func() {
@@ -314,7 +314,7 @@ var _ = Describe("recipes db", func() {
 			recipes := db.IDs(&RecipeSearchFilter{Name: "test"})
 
 			Expect(err).To(BeNil())
-			Expect(recipes).To(ContainElement(expectedResult.ID.String()))
+			Expect(recipes.Recipes).To(ContainElement(expectedResult.ID.String()))
 		})
 
 		It("can list all Recipes", func() {
@@ -380,7 +380,7 @@ var _ = Describe("recipes db", func() {
 
 			names := db.IDs(&RecipeSearchFilter{})
 
-			Expect(names).To(ContainElement(expectedResult.ID.String()))
+			Expect(names.Recipes).To(ContainElement(expectedResult.ID.String()))
 		})
 
 	})
