@@ -94,7 +94,7 @@ type RecipePicture struct {
 
 //RecipeList models a list of recipes by ID
 type RecipeList struct {
-	Recipes []string `json:"name"`
+	Recipes []string `json:"recipes"`
 }
 
 //NewInvalidRecipePicture returns an invalid picture
