@@ -89,7 +89,7 @@ else
 endif
 
 .PHONY: docker
-docker: docker-login ; $(info $(M) building docker image...) @ ## Create docker image
+docker: ; $(info $(M) building docker image...) @ ## Create docker image
 ifndef GO_COOK_BUILD_DOCKER_HOST
 	docker build --label "version=$(GO_COOK_VERSION)" --build-arg "APP=$(GO_COOK_APP)-$(GO_COOK_VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(GO_COOK_MAINTAINER)" -t $(GO_COOK_DOCKER_PREFIX)$(GO_COOK_APP):$(GO_COOK_VERSION) -f Dockerfile .
 else
