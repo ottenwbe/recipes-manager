@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      GO_COOK_DOCKER_PREFIX: ottenwbe/
+      RECIPES_MANAGER_DOCKER_PREFIX: ottenwbe/
       GOFLAGS: -mod=vendor
     steps:
     - uses: actions/checkout@v2
@@ -29,15 +29,11 @@ jobs:
     - run: GO111MODULE=off go get -u github.com/onsi/gomega/...
     - run: GO111MODULE=off go get -u github.com/swaggo/swag/cmd/swag
     
-    - name: Verify
+    - name: Execute Verify and Test steps
       run: make verify
-    - name: API Documentation
-      run: make api-docu
+    - name: Create API Documentation
+      run: make api documentation
     - name: Build Release
-      run: make release   
-    - name: Build Release
-      run: make release         
-    - name: Build Release
-      run: make release  
-    - name: Dokcer
-      run: make docker      
+      run: make release
+    - name: Build Docker
+      run: make docker-buildx-dev
