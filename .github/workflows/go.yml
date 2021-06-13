@@ -23,16 +23,24 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: 1.15
-        
+
+    # setup build environment
     - run: GO111MODULE=off go get -u golang.org/x/lint/golint
     - run: GO111MODULE=off go get -u github.com/onsi/ginkgo/ginkgo
     - run: GO111MODULE=off go get -u github.com/onsi/gomega/...
     - run: GO111MODULE=off go get -u github.com/swaggo/swag/cmd/swag
-    
+
+    # setup buildx
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    # test
     - name: Execute Verify and Test steps
       run: make verify
     - name: Create API Documentation
-      run: make api documentation
+      run: make api-docu
     - name: Build Release
       run: make release
     - name: Build Docker
