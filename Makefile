@@ -116,11 +116,11 @@ docker-push-snapshot: docker-snapshot ; $(info $(M) push snapshot to docker hub.
 
 .PHONY: docker-buildx
 docker-buildx: ; ## Push docker image
-	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH )" --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --label "version=$(RECIPES_MANAGER_VERSION)" --build-arg "APP=$(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION)" --label "go=$(GO_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
+	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --label "version=$(RECIPES_MANAGER_VERSION)" --build-arg "APP=$(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION)" --label "go=$(GO_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
 
 .PHONY: docker-buildx-dev
 docker-buildx-dev:  ; ## Push docker image
-	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH )" --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --label "commit=$(RECIPES_MANAGER_GIT_HASH)" --label "version=$(RECIPES_MANAGER_VERSION)" --build-arg "APP=$(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION)" --label "go=$(GO_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):development -f Dockerfile .
+	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --label "commit=$(RECIPES_MANAGER_GIT_HASH)" --label "version=$(RECIPES_MANAGER_VERSION)" --build-arg "APP=$(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION)" --label "go=$(GO_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):development -f Dockerfile .
 
 .PHONY: docker-push
 docker-push: ; ## Push docker image
