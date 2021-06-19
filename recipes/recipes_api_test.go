@@ -87,10 +87,10 @@ var _ = Describe("recipesAPI", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
 
-			var recipeIDs []string
+			var recipeIDs RecipeList
 			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
-			Expect(len(recipeIDs)).To(Equal(1))
-			Expect(expectedID.String()).To(Equal(recipeIDs[0]))
+			Expect(len(recipeIDs.Recipes)).To(Equal(1))
+			Expect(expectedID.String()).To(Equal(recipeIDs.Recipes[0]))
 		})
 
 		It("should be able to filter by description", func() {
@@ -106,10 +106,10 @@ var _ = Describe("recipesAPI", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
 
-			var recipeIDs []string
+			var recipeIDs RecipeList
 			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
-			Expect(len(recipeIDs)).To(Equal(1))
-			Expect(expectedID.String()).To(Equal(recipeIDs[0]))
+			Expect(len(recipeIDs.Recipes)).To(Equal(1))
+			Expect(expectedID.String()).To(Equal(recipeIDs.Recipes[0]))
 		})
 
 		It("should be able to filter by name and description", func() {
@@ -129,11 +129,11 @@ var _ = Describe("recipesAPI", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
 
-			var recipeIDs []string
+			var recipeIDs RecipeList
 			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
-			Expect(len(recipeIDs)).To(Equal(2))
-			Expect(recipeIDs).To(ContainElement(expectedID1.String()))
-			Expect(recipeIDs).To(ContainElement(expectedID2.String()))
+			Expect(len(recipeIDs.Recipes)).To(Equal(2))
+			Expect(recipeIDs.Recipes).To(ContainElement(expectedID1.String()))
+			Expect(recipeIDs.Recipes).To(ContainElement(expectedID2.String()))
 		})
 
 		It("should not return elements that do not match the search query", func() {

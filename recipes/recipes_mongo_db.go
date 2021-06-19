@@ -135,7 +135,7 @@ func RecipeToBsonM(searchQuery *RecipeSearchFilter) bson.M {
 }
 
 //IDs lists all ids of all recipes
-func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) []string {
+func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) RecipeList {
 
 	collection := m.getRecipesCollection()
 
@@ -163,7 +163,7 @@ func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) []string {
 		result = append(result, recipe.ID.String())
 	}
 
-	return result
+	return RecipeList{Recipes: result}
 }
 
 //Get a recipe by ID
