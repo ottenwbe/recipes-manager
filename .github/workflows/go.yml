@@ -1,4 +1,4 @@
-name: Go
+name: CI
 
 on:
   push:
@@ -30,18 +30,22 @@ jobs:
     - run: GO111MODULE=off go get -u github.com/onsi/gomega/...
     - run: GO111MODULE=off go get -u github.com/swaggo/swag/cmd/swag
 
-    # setup buildx
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v1
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
-
-    # test
+    # test application
     - name: Execute Verify and Test steps
       run: make verify
     - name: Create API Documentation
       run: make api-docu
     - name: Build Release
       run: make release
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    # test docker build
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
     - name: Build Docker
       run: make docker-buildx-dev
