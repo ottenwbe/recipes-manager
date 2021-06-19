@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RECIPES_MANAGER_DOCKER_SHOULD_PUSH: true
+      RECIPES_MANAGER_DOCKER_PREFIX: ottenwbe
     steps:
 
       - name: Checkout code

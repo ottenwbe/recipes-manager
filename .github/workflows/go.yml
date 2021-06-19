@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      RECIPES_MANAGER_DOCKER_PREFIX: ottenwbe/
+      RECIPES_MANAGER_DOCKER_PREFIX: ottenwbe
       GOFLAGS: -mod=vendor
     steps:
     - uses: actions/checkout@v2
