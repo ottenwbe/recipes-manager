@@ -35,5 +35,5 @@ import (
 func TestGoCook(t *testing.T) {
 	RegisterFailHandler(Fail)
 	junitReporter := reporters.NewJUnitReporter("main-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "GoCook Suite", []Reporter{junitReporter})
+	RunSpecsWithDefaultAndCustomReporters(t, "Recipes Manager Suite", []Reporter{junitReporter})
 }
