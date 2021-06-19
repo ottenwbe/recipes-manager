@@ -7,11 +7,12 @@ DATE     			= $(shell date +%F_%T)
 RECIPES_MANAGER_VERSION		= $(shell git describe --tags --always --match=v* 2> /dev/null || echo v0.0.0)
 RECIPES_MANAGER_GIT_HASH	= $(shell git rev-parse --short HEAD)
 
+RECIPES_MANAGER_REPO 				?= github.com/ottenwbe/recipes-manager
 RECIPES_MANAGER_DOCKER_SHOULD_PUSH	?= false
-RECIPES_MANAGER_DOCKER_PREFIX  		?= ottenwbe/
+RECIPES_MANAGER_DOCKER_PREFIX  		?= ottenwbe
 RECIPES_MANAGER_MAINTAINER			?= Beate Ottenwaelder <ottenwbe.public@gmail.com>
 
-VERSIONPKG = "github.com/ottenwbe/recipes-manager/core.appVersionString"
+VERSIONPKG = "$(RECIPES_MANAGER_REPO)/core.appVersionString"
 
 DOCKER_REGISTRY ?= docker.io
 
@@ -21,6 +22,18 @@ GOVET   = go vet
 GOLINT  = golint
 
 M = $(shell printf "\033[34;1m▶\033[0m")
+
+RECIPES_MANAGER_BUILD_DOCKER_HOST	?=
+
+RECIPES_MANAGER_DOCKER_IMAGE	= $(DOCKER_REGISTRY)/$(RECIPES_MANAGER_DOCKER_PREFIX)/$(RECIPES_MANAGER_APP)
+RECIPES_MANAGER_DOCKER_PARAMS	= \
+								--build-arg "APP=$(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION)" \
+								--label "version=$(RECIPES_MANAGER_VERSION)" \
+								--label "go=$(GO_VERSION)" \
+								--label "build_date=$(DATE)" \
+								--label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" \
+								--label "git-hash=$(RECIPES_MANAGER_GIT_HASH)" \
+								--label "git-repo=$(RECIPES_MANAGER_REPO)"
 
 .PHONY: release
 release: ; $(info $(M) building executable…) @ ## Build the app's binary release version
@@ -83,50 +96,50 @@ test: ; $(info $(M) running tests…) @ ## Run tests
 
 .PHONY: docker-arm
 docker-arm: ; $(info $(M) building arm docker image...) @  ## Create docker image for arm
-ifndef GO_COOK_BUILD_DOCKER_HOST
-	docker build --label "version=${RECIPES_MANAGER_VERSION}" --build-arg "APP=$(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION)"  --label "build_date=${DATE}" --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):$(RECIPES_MANAGER_VERSION) -f Dockerfile.armhf .
+ifndef RECIPES_MANAGER_BUILD_DOCKER_HOST
+	docker build $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile.armhf .
 else
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST)  build --build-arg "APP=$(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION)"  --label "version=${RECIPES_MANAGER_VERSION}" --label "build_date=${DATE}" --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):$(RECIPES_MANAGER_VERSION) -f Dockerfile.armhf .
+	docker -H $(RECIPES_MANAGER_BUILD_DOCKER_HOST)  build $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile.armhf .
 endif
 
 .PHONY: docker
 docker: ; $(info $(M) building docker image...) @ ## Create docker image
-ifndef GO_COOK_BUILD_DOCKER_HOST
-	docker build --label "version=$(RECIPES_MANAGER_VERSION)" --build-arg "APP=$(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION)"  --label "build_date=$(DATE)"  --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
+ifndef RECIPES_MANAGER_BUILD_DOCKER_HOST
+	docker build $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
 else
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST) build --build-arg "APP=$(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION)"  --label "version=$(RECIPES_MANAGER_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
+	docker -H $(RECIPES_MANAGER_BUILD_DOCKER_HOST) $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
 endif
 
-.PHONY: docker-snapshot
-docker-dev: ; $(info $(M) building docker-development image...) @ ## Create docker image of the snapshot
-ifndef GO_COOK_BUILD_DOCKER_HOST	
-	docker build --label "version=$(RECIPES_MANAGER_VERSION)" --build-arg "APP=$(SNAPSHOT)"  --label "build_date=$(DATE)"  --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):SNAPSHOT -f Dockerfile .
+.PHONY: docker-dev
+docker-dev: ; $(info $(M) building development docker image...) @ ## Create docker image for development
+ifndef RECIPES_MANAGER_BUILD_DOCKER_HOST	
+	docker build $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):development -f Dockerfile .
 else
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST) build --build-arg "APP=$(SNAPSHOT)"  --label "version=$(RECIPES_MANAGER_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):SNAPSHOT -f Dockerfile .
+	docker -H $(RECIPES_MANAGER_BUILD_DOCKER_HOST) build  $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):development -f Dockerfile .
 endif
 
 .PHONY: docker-login
 docker-login: ; $(info $(M) login to docker hub...) @ ## Login to Dockerhub
 	echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) $(DOCKER_REGISTRY) --password-stdin
 
-.PHONY: docker-push-snapshot
-docker-push-snapshot: docker-snapshot ; $(info $(M) push snapshot to docker hub...) @ ## Push docker image with a development version
-	docker push $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):SNAPSHOT $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):SNAPSHOT
+.PHONY: docker-push-dev
+docker-push-dev: ; $(info $(M) push snapshot to registry...) @ ## Push docker image with a development version
+	docker push $(RECIPES_MANAGER_DOCKER_IMAGE):development
 
-.PHONY: docker-buildx
-docker-buildx: ; ## Push docker image
-	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --label "version=$(RECIPES_MANAGER_VERSION)" --build-arg "APP=$(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION)" --label "go=$(GO_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
+.PHONY: dockerx
+dockerx: ; ## Build docker image with buildx
+	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm/v7,linux/arm64/v8,linux/amd64 $(RECIPES_MANAGER_DOCKER_PARAMS) $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
 
-.PHONY: docker-buildx-dev
-docker-buildx-dev:  ; ## Push docker image
-	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --label "commit=$(RECIPES_MANAGER_GIT_HASH)" --label "version=$(RECIPES_MANAGER_VERSION)" --build-arg "APP=$(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION)" --label "go=$(GO_VERSION)" --label "build_date=$(DATE)"  --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):development -f Dockerfile .
+.PHONY: dockerx-dev
+dockerx-dev:  ; ## Build development docker image with buildx
+	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm/v7,linux/arm64/v8,linux/amd64 $(RECIPES_MANAGER_DOCKER_PARAMS) $(RECIPES_MANAGER_DOCKER_IMAGE):development -f Dockerfile .
 
 .PHONY: docker-push
 docker-push: ; ## Push docker image
-ifndef GO_COOK_BUILD_DOCKER_HOST
-	docker push $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):$(RECIPES_MANAGER_VERSION)
+ifndef RECIPES_MANAGER_BUILD_DOCKER_HOST
+	docker push $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION)
 else
-	docker -H $(GO_COOK_BUILD_DOCKER_HOST) push $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):$(RECIPES_MANAGER_VERSION)
+	docker -H $(RECIPES_MANAGER_BUILD_DOCKER_HOST) push $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION)
 endif
 
 .PHONY: api-docu
@@ -143,8 +156,10 @@ version:
 
 .PHONY: details
 details:
-	@echo $(RECIPES_MANAGER_APP) $(RECIPES_MANAGER_VERSION)
-	@echo $(GO_VERSION)
+	@echo "APP:    " $(RECIPES_MANAGER_APP) $(RECIPES_MANAGER_VERSION) $(VERSIONPKG)
+	@echo "GO:     " $(GO_VERSION)
+	@echo "GIT:    " $(RECIPES_MANAGER_REPO) $(RECIPES_MANAGER_GIT_HASH)
+	@echo "DOCKER: " $(RECIPES_MANAGER_DOCKER_PARAMS)
 
 .PHONY: date
 date:

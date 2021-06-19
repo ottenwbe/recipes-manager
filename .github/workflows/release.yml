@@ -33,7 +33,7 @@ jobs:
       - name: Docker Buildx (including push)
         if: success() && github.event_name != 'pull_request'
         run: |
-          make docker-buildx
+          make dockerx
 
       - name: Build Changelog
         id: github_release
