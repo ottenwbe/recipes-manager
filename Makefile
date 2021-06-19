@@ -128,11 +128,11 @@ docker-push-dev: ; $(info $(M) push snapshot to registry...) @ ## Push docker im
 
 .PHONY: dockerx
 dockerx: ; ## Build docker image with buildx
-	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm/v7,linux/arm64/v8,linux/amd64 $(RECIPES_MANAGER_DOCKER_PARAMS) $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
+	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm/v7,linux/arm64/v8,linux/amd64 $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
 
 .PHONY: dockerx-dev
 dockerx-dev:  ; ## Build development docker image with buildx
-	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm/v7,linux/arm64/v8,linux/amd64 $(RECIPES_MANAGER_DOCKER_PARAMS) $(RECIPES_MANAGER_DOCKER_IMAGE):development -f Dockerfile .
+	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm/v7,linux/arm64/v8,linux/amd64 $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):development -f Dockerfile .
 
 .PHONY: docker-push
 docker-push: ; ## Push docker image
