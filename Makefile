@@ -34,15 +34,14 @@ release: ; $(info $(M) building executable…) @ ## Build the app's binary relea
 
 .PHONY: snapshot
 snapshot:  ; $(info $(M) building snapshot…) @ ## Build the app's snapshot version
-	@CGO_ENABLED=0 \
-		$(GO) build \
+		@$(GO) build \
 		-mod=vendor \
 		-o $(SNAPSHOT) \
 		-ldflags "-X $(VERSIONPKG)=$(RECIPES_MANAGER_VERSION)" \
 		*.go
 
 .PHONY: start
-start: fmt ; $(info $(M) running the app locally…) @ ## Run program's snapshot version
+start: fmt ; $(info $(M) running the app locally…) @ ## Run the program's snapshot version
 	@$(GO) build \
 	    -o $(TMPAPP) \
     	-ldflags "-X $(VERSIONPKG)=$(RECIPES_MANAGER_VERSION)" \
@@ -99,7 +98,7 @@ else
 endif
 
 .PHONY: docker-snapshot
-docker-snapshot: snapshot ; $(info $(M) building docker-snapshot image...) @ ## Create docker image of the snapshot 
+docker-dev: ; $(info $(M) building docker-development image...) @ ## Create docker image of the snapshot
 ifndef GO_COOK_BUILD_DOCKER_HOST	
 	docker build --label "version=$(RECIPES_MANAGER_VERSION)" --build-arg "APP=$(SNAPSHOT)"  --label "build_date=$(DATE)"  --label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" -t $(RECIPES_MANAGER_DOCKER_PREFIX )$(RECIPES_MANAGER_APP):SNAPSHOT -f Dockerfile .
 else

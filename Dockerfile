@@ -8,7 +8,6 @@ RUN make release
 
 FROM docker.io/ubuntu:latest
 
-ARG TARGETPLATFORM
 ARG APP=recipes-manager
 ENV GIN_MODE release
 
