@@ -46,10 +46,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/recipes.RecipeList"
                         }
                     }
                 }
@@ -448,6 +445,17 @@
                 },
                 "servings": {
                     "type": "integer"
+                }
+            }
+        },
+        "recipes.RecipeList": {
+            "type": "object",
+            "properties": {
+                "recipes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

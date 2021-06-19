@@ -179,7 +179,7 @@ func (rAPI *API) getRandomRecipe(c *core.APICallContext) {
 // @Param description query string false "Search for a specific term in a description"
 // @Param ingredient query string false "Search for a specific ingredient"
 // @Produce json
-// @Success 200 {object} []string
+// @Success 200 {object} RecipeList
 // @Router /recipes [get]
 func (rAPI *API) getRecipes(c *core.APICallContext) {
 

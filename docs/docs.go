@@ -62,10 +62,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/recipes.RecipeList"
                         }
                     }
                 }
@@ -464,6 +461,17 @@ var doc = `{
                 },
                 "servings": {
                     "type": "integer"
+                }
+            }
+        },
+        "recipes.RecipeList": {
+            "type": "object",
+            "properties": {
+                "recipes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

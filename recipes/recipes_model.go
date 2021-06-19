@@ -92,6 +92,11 @@ type RecipePicture struct {
 	Picture string   `json:"picture"`
 }
 
+//RecipeList models a list of recipes by ID
+type RecipeList struct {
+	Recipes []string `json:"recipes"`
+}
+
 //NewInvalidRecipePicture returns an invalid picture
 func NewInvalidRecipePicture() *RecipePicture {
 	return &RecipePicture{
@@ -111,7 +116,7 @@ type RecipeSearchFilter struct {
 //Recipes interface is an abstraction for the provider of a collection of recipes, i.e., a data-base or a cache
 type Recipes interface {
 	List() []*Recipe
-	IDs(filterQuery *RecipeSearchFilter) []string
+	IDs(filterQuery *RecipeSearchFilter) RecipeList
 	Num() int64
 	Get(id RecipeID) *Recipe
 	GetByName(name string) (*Recipe, error)

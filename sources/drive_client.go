@@ -174,13 +174,13 @@ func (r *driveRecipes) Random() *recipes.Recipe {
 }
 
 //IDs returns a list of all recipe IDs
-func (r *driveRecipes) IDs(*recipes.RecipeSearchFilter) []string {
+func (r *driveRecipes) IDs(*recipes.RecipeSearchFilter) recipes.RecipeList {
 	r.ensureCache()
 	recipeNames := make([]string, 0)
 	for _, recipe := range r.List() {
 		recipeNames = append(recipeNames, recipe.Name)
 	}
-	return recipeNames
+	return recipes.RecipeList{Recipes: recipeNames}
 }
 
 //List all recipes
