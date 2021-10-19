@@ -2,9 +2,11 @@ package ginSwagger
 
 import (
 	"html/template"
+	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
-	"strings"
+	"sync"
 
 	"golang.org/x/net/webdav"
 
@@ -15,14 +17,23 @@ import (
 // Config stores ginSwagger configuration variables.
 type Config struct {
 	//The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `doc.json`.
-	URL         string
-	DeepLinking bool
+	URL                      string
+	DeepLinking              bool
+	DocExpansion             string
+	DefaultModelsExpandDepth int
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
 func URL(url string) func(c *Config) {
 	return func(c *Config) {
 		c.URL = url
+	}
+}
+
+// DocExpansion list, full, none.
+func DocExpansion(docExpansion string) func(c *Config) {
+	return func(c *Config) {
+		c.DocExpansion = docExpansion
 	}
 }
 
@@ -33,11 +44,21 @@ func DeepLinking(deepLinking bool) func(c *Config) {
 	}
 }
 
+// DefaultModelsExpandDepth set the default expansion depth for models
+// (set to -1 completely hide the models).
+func DefaultModelsExpandDepth(depth int) func(c *Config) {
+	return func(c *Config) {
+		c.DefaultModelsExpandDepth = depth
+	}
+}
+
 // WrapHandler wraps `http.Handler` into `gin.HandlerFunc`.
 func WrapHandler(h *webdav.Handler, confs ...func(c *Config)) gin.HandlerFunc {
 	defaultConfig := &Config{
-		URL:         "doc.json",
-		DeepLinking: true,
+		URL:                      "doc.json",
+		DeepLinking:              true,
+		DocExpansion:             "list",
+		DefaultModelsExpandDepth: 1,
 	}
 
 	for _, c := range confs {
@@ -48,55 +69,53 @@ func WrapHandler(h *webdav.Handler, confs ...func(c *Config)) gin.HandlerFunc {
 }
 
 // CustomWrapHandler wraps `http.Handler` into `gin.HandlerFunc`
-func CustomWrapHandler(config *Config, h *webdav.Handler) gin.HandlerFunc {
-	//create a template with name
+func CustomWrapHandler(config *Config, handler *webdav.Handler) gin.HandlerFunc {
+	var once sync.Once
+
+	// create a template with name
 	t := template.New("swagger_index.html")
 	index, _ := t.Parse(swagger_index_templ)
 
 	var rexp = regexp.MustCompile(`(.*)(index\.html|doc\.json|favicon-16x16\.png|favicon-32x32\.png|/oauth2-redirect\.html|swagger-ui\.css|swagger-ui\.css\.map|swagger-ui\.js|swagger-ui\.js\.map|swagger-ui-bundle\.js|swagger-ui-bundle\.js\.map|swagger-ui-standalone-preset\.js|swagger-ui-standalone-preset\.js\.map)[\?|.]*`)
 
 	return func(c *gin.Context) {
+		matches := rexp.FindStringSubmatch(c.Request.RequestURI)
 
-		type swaggerUIBundle struct {
-			URL         string
-			DeepLinking bool
-		}
-
-		var matches []string
-		if matches = rexp.FindStringSubmatch(c.Request.RequestURI); len(matches) != 3 {
+		if len(matches) != 3 {
 			c.Status(404)
-			c.Writer.Write([]byte("404 page not found"))
+			_, _ = c.Writer.Write([]byte("404 page not found"))
 			return
 		}
-		path := matches[2]
-		prefix := matches[1]
-		h.Prefix = prefix
 
-		if strings.HasSuffix(path, ".html") {
+		path := matches[2]
+		once.Do(func() {
+			handler.Prefix = matches[1]
+		})
+
+		switch filepath.Ext(path) {
+		case ".html":
 			c.Header("Content-Type", "text/html; charset=utf-8")
-		} else if strings.HasSuffix(path, ".css") {
+		case ".css":
 			c.Header("Content-Type", "text/css; charset=utf-8")
-		} else if strings.HasSuffix(path, ".js") {
+		case ".js":
 			c.Header("Content-Type", "application/javascript")
-		} else if strings.HasSuffix(path, ".json") {
-			c.Header("Content-Type", "application/json")
+		case ".json":
+			c.Header("Content-Type", "application/json; charset=utf-8")
 		}
 
 		switch path {
 		case "index.html":
-			index.Execute(c.Writer, &swaggerUIBundle{
-				URL:         config.URL,
-				DeepLinking: config.DeepLinking,
-			})
+			_ = index.Execute(c.Writer, config)
 		case "doc.json":
 			doc, err := swag.ReadDoc()
 			if err != nil {
-				panic(err)
+				c.AbortWithStatus(http.StatusInternalServerError)
+
+				return
 			}
-			c.Writer.Write([]byte(doc))
-			return
+			_, _ = c.Writer.Write([]byte(doc))
 		default:
-			h.ServeHTTP(c.Writer, c.Request)
+			handler.ServeHTTP(c.Writer, c.Request)
 		}
 	}
 }
@@ -217,7 +236,9 @@ window.onload = function() {
       SwaggerUIBundle.plugins.DownloadUrl
     ],
 	layout: "StandaloneLayout",
-	deepLinking: {{.DeepLinking}}
+    docExpansion: "{{.DocExpansion}}",
+	deepLinking: {{.DeepLinking}},
+	defaultModelsExpandDepth: {{.DefaultModelsExpandDepth}}
   })
 
   window.ui = ui
