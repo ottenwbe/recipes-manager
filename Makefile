@@ -124,7 +124,7 @@ docker-login: ; $(info $(M) login to docker hub...) @ ## Login to Dockerhub
 
 .PHONY: docker-push-dev
 docker-push-dev: ; $(info $(M) push snapshot to registry...) @ ## Push docker image with a development version
-	docker push $(RECIPES_MANAGER_DOCKER_IMAGE):development
+	docker push $(RECIPES_MANAGER_DOCKER_IMAGE):development --tls-verify=false 
 
 .PHONY: dockerx
 dockerx: ; ## Build docker image with buildx
