@@ -25,8 +25,7 @@
 package main_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"testing"
@@ -34,6 +33,5 @@ import (
 
 func TestGoCook(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("main-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "Recipes Manager Suite", []Reporter{junitReporter})
+	RunSpecs(t, "Recipes Manager Suite")
 }

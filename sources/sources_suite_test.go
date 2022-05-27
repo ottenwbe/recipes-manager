@@ -25,15 +25,13 @@
 package sources_test
 
 import (
-	"github.com/onsi/ginkgo/reporters"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 func TestSources(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("sources-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "Sources Suite", []Reporter{junitReporter})
+	RunSpecs(t, "Sources Suite")
 }

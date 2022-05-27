@@ -27,13 +27,11 @@ package recipes
 import (
 	"testing"
 
-	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 func TestRecipes(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("recipes-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "Recipes Suite", []Reporter{junitReporter})
+	RunSpecs(t, "Recipes Suite")
 }
