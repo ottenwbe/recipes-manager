@@ -27,13 +27,11 @@ package docs_test
 import (
 	"testing"
 
-	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 func TestCore(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("docs-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "Docs Suite", []Reporter{junitReporter})
+	RunSpecs(t, "Docs Suite")
 }

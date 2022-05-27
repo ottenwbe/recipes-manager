@@ -25,8 +25,7 @@
 package utils_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"testing"
@@ -34,6 +33,5 @@ import (
 
 func TestUtils(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("utils-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "Utils Suite", []Reporter{junitReporter})
+	RunSpecs(t, "Utils Suite")
 }

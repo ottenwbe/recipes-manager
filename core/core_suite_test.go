@@ -27,13 +27,11 @@ package core
 import (
 	"testing"
 
-	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 func TestCore(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("core-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "Core Suite", []Reporter{junitReporter})
+	RunSpecs(t, "Core Suite")
 }

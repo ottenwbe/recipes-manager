@@ -34,36 +34,36 @@ import (
 
 	"github.com/ottenwbe/recipes-manager/core"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
+var (
+	server  core.Server
+	recipes RecipeDB
+)
+
+var _ = BeforeSuite(func() {
+	handler := core.NewHandler()
+	recipes, _ = NewDatabaseClient()
+	AddRecipesAPIToHandler(handler, recipes)
+	server = core.NewServerA(":8080", handler)
+	server.Run()
+	time.Sleep(500 * time.Millisecond)
+})
+
+var _ = AfterSuite(func() {
+	err := server.Close()
+	if err != nil {
+		Fail(err.Error())
+	}
+	err = recipes.Close()
+	if err != nil {
+		Fail(err.Error())
+	}
+})
+
 var _ = Describe("recipesAPI", func() {
-
-	var (
-		server  core.Server
-		recipes RecipeDB
-	)
-
-	BeforeSuite(func() {
-		handler := core.NewHandler()
-		recipes, _ = NewDatabaseClient()
-		AddRecipesAPIToHandler(handler, recipes)
-		server = core.NewServerA(":8080", handler)
-		server.Run()
-		time.Sleep(500 * time.Millisecond)
-	})
-
-	AfterSuite(func() {
-		err := server.Close()
-		if err != nil {
-			Fail(err.Error())
-		}
-		err = recipes.Close()
-		if err != nil {
-			Fail(err.Error())
-		}
-	})
 
 	Context("Creating the API V1", func() {
 		It("should get created", func() {

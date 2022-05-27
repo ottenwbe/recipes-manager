@@ -31,11 +31,6 @@ rm -rf test/coverage
 mkdir -p test/results
 mkdir -p test/coverage
 
-for d in $(go list -f '{{.Dir}}' ./...); do
-    mv $d/*junit.xml test/results
-    mv $d/*coverprofile test/coverage
-done
-
 # remove existing test container
 # or ignore the error if the container does not exist
 #docker stop test-db | true
