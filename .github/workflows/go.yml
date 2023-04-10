@@ -17,18 +17,18 @@ jobs:
       RECIPES_MANAGER_DOCKER_PREFIX: ottenwbe
       GOFLAGS: -mod=vendor
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v4
       with:
-        go-version: 1.18
+        go-version: '1.20'
+    - run: go version
 
     # setup build environment
-    - run: GO111MODULE=off go get -u golang.org/x/lint/golint
     - run: GO111MODULE=off go get -u github.com/onsi/ginkgo/ginkgo
     - run: GO111MODULE=off go get -u github.com/onsi/gomega/...
-    - run: GO111MODULE=off go get -u github.com/swaggo/swag/cmd/swag
+    - run: GOFLAGS="" go install github.com/swaggo/swag/cmd/swag@latest
 
     # test application
     - name: Execute Verify and Test steps
@@ -41,11 +41,11 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     # test docker build
     - name: Set up QEMU
-      uses: docker/setup-qemu-action@v1
+      uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+      uses: docker/setup-buildx-action@v2
     - name: Build Docker
       run: make dockerx-dev

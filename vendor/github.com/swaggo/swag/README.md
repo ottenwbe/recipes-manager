@@ -29,6 +29,7 @@ Swag converts Go annotations to Swagger Documentation 2.0. We've created a varie
  - [Examples](#examples)
 	- [Descriptions over multiple lines](#descriptions-over-multiple-lines)
 	- [User defined structure with an array type](#user-defined-structure-with-an-array-type)
+	- [Function scoped struct declaration](#function-scoped-struct-declaration)
 	- [Model composition in response](#model-composition-in-response)
 	- [Add a headers in response](#add-a-headers-in-response)
 	- [Use multiple path params](#use-multiple-path-params)
@@ -51,18 +52,15 @@ Swag converts Go annotations to Swagger Documentation 2.0. We've created a varie
 
 2. Download swag by using:
 ```sh
-$ go get -u github.com/swaggo/swag/cmd/swag
-
-# 1.16 or newer
-$ go install github.com/swaggo/swag/cmd/swag@latest
+go install github.com/swaggo/swag/cmd/swag@latest
 ```
-To build from source you need [Go](https://golang.org/dl/) (1.15 or newer).
+To build from source you need [Go](https://golang.org/dl/) (1.17 or newer).
 
 Or download a pre-compiled binary from the [release page](https://github.com/swaggo/swag/releases).
 
 3. Run `swag init` in the project's root folder which contains the `main.go` file. This will parse your comments and generate the required files (`docs` folder and `docs/docs.go`).
 ```sh
-$ swag init
+swag init
 ```
 
   Make sure to import the generated `docs/docs.go` so that your specific configuration gets `init`'ed. If your General API annotations do not live in `main.go`, you can let swag know with `-g` flag.
@@ -79,7 +77,7 @@ $ swag init
 ## swag cli
 
 ```sh
-$ swag init -h
+swag init -h
 NAME:
    swag init - Create docs.go
 
@@ -87,6 +85,7 @@ USAGE:
    swag init [command options] [arguments...]
 
 OPTIONS:
+   --quiet, -q                            Make the logger quiet. (default: false)
    --generalInfo value, -g value          Go file path in which 'swagger general API Info' is written (default: "main.go")
    --dir value, -d value                  Directories you want to parse,comma separated and general-info file must be in the first one (default: "./")
    --exclude value                        Exclude directories and files when searching, comma separated
@@ -100,8 +99,12 @@ OPTIONS:
    --parseInternal                        Parse go files in internal packages, disabled by default (default: false)
    --generatedTime                        Generate timestamp at the top of docs.go, disabled by default (default: false)
    --parseDepth value                     Dependency parse depth (default: 100)
+   --requiredByDefault                    Set validation required for all fields by default (default: false)
    --instanceName value                   This parameter can be used to name different swagger document instances. It is optional.
    --overridesFile value                  File to read global type overrides from. (default: ".swaggo")
+   --parseGoList                          Parse dependency via 'go list' (default: true)
+   --tags value, -t value                 A comma-separated list of tags to filter the APIs for which the documentation is generated.Special case if the tag is prefixed with the '!' character then the APIs with that tag will be excluded
+   --collectionFormat value, --cf value   Set default collection format (default: "csv")
    --help, -h                             show help (default: false)
 ```
 
@@ -127,9 +130,12 @@ OPTIONS:
 - [echo](http://github.com/swaggo/echo-swagger)
 - [buffalo](https://github.com/swaggo/buffalo-swagger)
 - [net/http](https://github.com/swaggo/http-swagger)
+- [gorilla/mux](https://github.com/swaggo/http-swagger)
+- [go-chi/chi](https://github.com/swaggo/http-swagger)
 - [flamingo](https://github.com/i-love-flamingo/swagger)
-- [fiber](https://github.com/arsmn/fiber-swagger)
+- [fiber](https://github.com/gofiber/swagger)
 - [atreugo](https://github.com/Nerzal/atreugo-swagger)
+- [hertz](https://github.com/hertz-contrib/swagger)
 
 ## How to use it with Gin
 
@@ -160,6 +166,9 @@ import "github.com/swaggo/files" // swagger embed files
 // @BasePath  /api/v1
 
 // @securityDefinitions.basic  BasicAuth
+
+// @externalDocs.description  OpenAPI
+// @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
 	r := gin.Default()
 
@@ -289,7 +298,7 @@ func (c *Controller) ListAccounts(ctx *gin.Context) {
 ```
 
 ```console
-$ swag init
+swag init
 ```
 
 4. Run your app, and browse to http://localhost:8080/swagger/index.html. You will see Swagger 2.0 Api documents as shown below:
@@ -309,6 +318,28 @@ swag fmt
 Exclude folder：
 ```shell
 swag fmt -d ./ --exclude ./internal
+```
+
+When using `swag fmt`, you need to ensure that you have a doc comment for the function to ensure correct formatting.
+This is due to `swag fmt` indenting swag comments with tabs, which is only allowed *after* a standard doc comment.
+
+For example, use
+
+```go
+// ListAccounts lists all existing accounts
+//
+//  @Summary      List accounts
+//  @Description  get accounts
+//  @Tags         accounts
+//  @Accept       json
+//  @Produce      json
+//  @Param        q    query     string  false  "name search by q"  Format(email)
+//  @Success      200  {array}   model.Account
+//  @Failure      400  {object}  httputil.HTTPError
+//  @Failure      404  {object}  httputil.HTTPError
+//  @Failure      500  {object}  httputil.HTTPError
+//  @Router       /accounts [get]
+func (c *Controller) ListAccounts(ctx *gin.Context) {
 ```
 
 ## Implementation Status
@@ -359,6 +390,8 @@ swag fmt -d ./ --exclude ./internal
 | produce     | A list of MIME types the APIs can produce. Value MUST be as described under [Mime Types](#mime-types).                     | // @produce json |
 | query.collection.format | The default collection(array) param format in query,enums:csv,multi,pipes,tsv,ssv. If not set, csv is the default.| // @query.collection.format multi
 | schemes     | The transfer protocol for the operation that separated by spaces. | // @schemes http https |
+| externalDocs.description | Description of the external document. | // @externalDocs.description OpenAPI |
+| externalDocs.url         | URL of the external document. | // @externalDocs.url https://swagger.io/resources/open-api/ |
 | x-name      | The extension key, must be start by x- and take only json value | // @x-example-key {"key": "value"} |
 
 ### Using markdown descriptions
@@ -438,6 +471,7 @@ Besides that, `swag` also accepts aliases for some MIME Types as follows:
 - integer (int, uint, uint32, uint64)
 - number (float32)
 - boolean (bool)
+- file (param data type when uploading)
 - user defined struct
 
 ## Security
@@ -488,7 +522,7 @@ type Foo struct {
 
 Field Name | Type | Description
 ---|:---:|---
-<a name="validate"></a>validate | `string` | 	Determines the validation for the parameter. Possible values are: `required`.
+<a name="validate"></a>validate | `string` | 	Determines the validation for the parameter. Possible values are: `required,optional`.
 <a name="parameterDefault"></a>default | * | Declares the value of the parameter that the server will use if none is provided, for example a "count" to control the number of results per page might default to 100 if not supplied by the client in the request. (Note: "default" has no meaning for required parameters.)  See https://tools.ietf.org/html/draft-fge-json-schema-validation-00#section-6.2. Unlike JSON Schema this value MUST conform to the defined [`type`](#parameterType) for this parameter.
 <a name="parameterMaximum"></a>maximum | `number` | See https://tools.ietf.org/html/draft-fge-json-schema-validation-00#section-5.1.2.
 <a name="parameterMinimum"></a>minimum | `number` | See https://tools.ietf.org/html/draft-fge-json-schema-validation-00#section-5.1.3.
@@ -536,6 +570,30 @@ type Account struct {
     Name string `json:"name" example:"account name"`
 }
 ```
+
+
+### Function scoped struct declaration
+
+You can declare your request response structs inside a function body.
+You must have to follow the naming convention `<package-name>.<function-name>.<struct-name> `.
+
+```go
+package main
+
+// @Param request body main.MyHandler.request true "query params"
+// @Success 200 {object} main.MyHandler.response
+// @Router /test [post]
+func MyHandler() {
+	type request struct {
+		RequestField string
+	}
+
+	type response struct {
+		ResponseField string
+	}
+}
+```
+
 
 ### Model composition in response
 ```go

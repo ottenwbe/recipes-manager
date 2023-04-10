@@ -19,7 +19,6 @@ DOCKER_REGISTRY ?= docker.io
 GO      = go
 GOFMT   = gofmt
 GOVET   = go vet
-GOLINT  = golint
 
 M = $(shell printf "\033[34;1m▶\033[0m")
 
@@ -63,7 +62,7 @@ start: fmt ; $(info $(M) running the app locally…) @ ## Run the program's snap
 # Quality and Testing
 
 .PHONY: verify
-verify: mod-verify vet lint test; $(info $(M) QA steps…) @ ## Run all QA steps
+verify: mod-verify vet test; $(info $(M) QA steps…) @ ## Run all QA steps
 	@echo "End of QA steps..."
 
 .PHONY: mod-verify
@@ -74,12 +73,6 @@ mod-verify: ; $(info $(M) verifying modules…) @ ## Run go mod verify
 vet: ; $(info $(M) running vet…) @ ## Run go vet
 	@for d in $$($(GO) list ./...); do \
 		$(GOVET) -mod=vendor $${d};  \
-	done
-
-.PHONY: lint
-lint: ; $(info $(M) running golint…) @ ## Run golint
-	@for d in $$($(GO) list ./...); do \
-		$(GOLINT) $${d};  \
 	done
 
 .PHONY: fmt
@@ -140,6 +133,17 @@ ifndef RECIPES_MANAGER_BUILD_DOCKER_HOST
 	docker push $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION)
 else
 	docker -H $(RECIPES_MANAGER_BUILD_DOCKER_HOST) push $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION)
+endif
+
+.PHONY: update-go-deps
+update-go-deps:
+	@echo ">> updating Go dependencies"
+	@for m in $$(go list -mod=readonly -m -f '{{ if and (not .Indirect) (not .Main)}}{{.Path}}{{end}}' all); do \
+		go get $$m; \
+	done
+	go mod tidy
+ifneq (,$(wildcard vendor))
+	go mod vendor
 endif
 
 .PHONY: api-docu

@@ -35,7 +35,7 @@
   "description": "Manages files in Drive including uploading, downloading, searching, detecting changes, and updating sharing permissions.",
   "discoveryVersion": "v1",
   "documentationLink": "https://developers.google.com/drive/",
-  "etag": "\"uWj2hSb4GVjzdDlAnRd2gbM1ZQ8/DjxGwbwcG0aMN4JG40B35nyJYNc\"",
+  "etag": "\"uWj2hSb4GVjzdDlAnRd2gbM1ZQ8/Feg8gV_ME3xYqXxzychzT-zuDJk\"",
   "icons": {
     "x16": "https://ssl.gstatic.com/docs/doclist/images/drive_icon_16.png",
     "x32": "https://ssl.gstatic.com/docs/doclist/images/drive_icon_32.png"
@@ -608,23 +608,11 @@
             "driveId"
           ],
           "parameters": {
-            "allowItemDeletion": {
-              "default": "false",
-              "description": "Whether any items inside the shared drive should also be deleted. This option is only supported when useDomainAdminAccess is also set to true.",
-              "location": "query",
-              "type": "boolean"
-            },
             "driveId": {
               "description": "The ID of the shared drive.",
               "location": "path",
               "required": true,
               "type": "string"
-            },
-            "useDomainAdminAccess": {
-              "default": "false",
-              "description": "Issue the request as a domain administrator; if set to true, then the requester will be granted access if they are an administrator of the domain to which the shared drive belongs.",
-              "location": "query",
-              "type": "boolean"
             }
           },
           "path": "drives/{driveId}",
@@ -692,7 +680,7 @@
           "parameters": {
             "pageSize": {
               "default": "10",
-              "description": "Maximum number of shared drives to return per page.",
+              "description": "Maximum number of shared drives to return.",
               "format": "int32",
               "location": "query",
               "maximum": "100",
@@ -994,7 +982,7 @@
           ]
         },
         "export": {
-          "description": "Exports a Google Workspace document to the requested MIME type and returns exported byte content. Note that the exported content is limited to 10MB.",
+          "description": "Exports a Google Doc to the requested MIME type and returns the exported content. Please note that the exported content is limited to 10MB.",
           "httpMethod": "GET",
           "id": "drive.files.export",
           "parameterOrder": [
@@ -1186,7 +1174,7 @@
             },
             "spaces": {
               "default": "drive",
-              "description": "A comma-separated list of spaces to query within the corpus. Supported values are 'drive' and 'appDataFolder'.",
+              "description": "A comma-separated list of spaces to query within the corpus. Supported values are 'drive', 'appDataFolder' and 'photos'.",
               "location": "query",
               "type": "string"
             },
@@ -1223,7 +1211,7 @@
           ]
         },
         "update": {
-          "description": "Updates a file's metadata and/or content. When calling this method, only populate fields in the request that you want to modify. When updating fields, some fields might change automatically, such as modifiedDate. This method supports patch semantics.",
+          "description": "Updates a file's metadata and/or content. This method supports patch semantics.",
           "httpMethod": "PATCH",
           "id": "drive.files.update",
           "mediaUpload": {
@@ -1320,7 +1308,7 @@
           "supportsMediaUpload": true
         },
         "watch": {
-          "description": "Subscribes to changes to a file. While you can establish a channel for changes to a file on a shared drive, a change to a shared drive file won't create a notification.",
+          "description": "Subscribes to changes to a file",
           "httpMethod": "POST",
           "id": "drive.files.watch",
           "parameterOrder": [
@@ -1432,7 +1420,7 @@
             },
             "transferOwnership": {
               "default": "false",
-              "description": "Whether to transfer ownership to the specified user and downgrade the current owner to a writer. This parameter is required as an acknowledgement of the side effect. File owners can only transfer ownership of files existing on My Drive. Files existing in a shared drive are owned by the organization that owns that shared drive. Ownership transfers are not supported for files and folders in shared drives. Organizers of a shared drive can move items from that shared drive into their My Drive which transfers the ownership to them.",
+              "description": "Whether to transfer ownership to the specified user and downgrade the current owner to a writer. This parameter is required as an acknowledgement of the side effect.",
               "location": "query",
               "type": "boolean"
             },
@@ -1659,7 +1647,7 @@
             },
             "transferOwnership": {
               "default": "false",
-              "description": "Whether to transfer ownership to the specified user and downgrade the current owner to a writer. This parameter is required as an acknowledgement of the side effect. File owners can only transfer ownership of files existing on My Drive. Files existing in a shared drive are owned by the organization that owns that shared drive. Ownership transfers are not supported for files and folders in shared drives. Organizers of a shared drive can move items from that shared drive into their My Drive which transfers the ownership to them.",
+              "description": "Whether to transfer ownership to the specified user and downgrade the current owner to a writer. This parameter is required as an acknowledgement of the side effect.",
               "location": "query",
               "type": "boolean"
             },
@@ -2203,7 +2191,7 @@
       }
     }
   },
-  "revision": "20220508",
+  "revision": "20210509",
   "rootUrl": "https://www.googleapis.com/",
   "schemas": {
     "About": {
@@ -2703,10 +2691,6 @@
               "description": "Whether the current user can rename this shared drive.",
               "type": "boolean"
             },
-            "canResetDriveRestrictions": {
-              "description": "Whether the current user can reset the shared drive restrictions to defaults.",
-              "type": "boolean"
-            },
             "canShare": {
               "description": "Whether the current user can share files or folders in this shared drive.",
               "type": "boolean"
@@ -2741,16 +2725,7 @@
           "type": "string"
         },
         "name": {
-          "annotations": {
-            "required": [
-              "drive.drives.create"
-            ]
-          },
           "description": "The name of this shared drive.",
-          "type": "string"
-        },
-        "orgUnitId": {
-          "description": "The organizational unit of this shared drive. This field is only populated on drives.list responses when the useDomainAdminAccess parameter is set to true.",
           "type": "string"
         },
         "restrictions": {
@@ -2819,10 +2794,6 @@
         "capabilities": {
           "description": "Capabilities the current user has on this file. Each capability corresponds to a fine-grained action that a user may take.",
           "properties": {
-            "canAcceptOwnership": {
-              "description": "Whether the current user is the pending owner of the file. Not populated for shared drive files.",
-              "type": "boolean"
-            },
             "canAddChildren": {
               "description": "Whether the current user can add children to this folder. This is always false when the item is not a folder.",
               "type": "boolean"
@@ -2837,10 +2808,6 @@
             },
             "canChangeCopyRequiresWriterPermission": {
               "description": "Whether the current user can change the copyRequiresWriterPermission restriction of this file.",
-              "type": "boolean"
-            },
-            "canChangeSecurityUpdateEnabled": {
-              "description": "Whether the current user can change the securityUpdateEnabled field on link share metadata.",
               "type": "boolean"
             },
             "canChangeViewersCanCopyContent": {
@@ -3033,7 +3000,7 @@
           "type": "string"
         },
         "folderColorRgb": {
-          "description": "The color for a folder or shortcut to a folder as an RGB hex string. The supported colors are published in the folderColorPalette field of the About resource.\nIf an unsupported color is specified, the closest color in the palette will be used instead.",
+          "description": "The color for a folder as an RGB hex string. The supported colors are published in the folderColorPalette field of the About resource.\nIf an unsupported color is specified, the closest color in the palette will be used instead.",
           "type": "string"
         },
         "fullFileExtension": {
@@ -3190,20 +3157,6 @@
           "$ref": "User",
           "description": "The last user to modify the file."
         },
-        "linkShareMetadata": {
-          "description": "Contains details about the link URLs that clients are using to refer to this item.",
-          "properties": {
-            "securityUpdateEligible": {
-              "description": "Whether the file is eligible for security update.",
-              "type": "boolean"
-            },
-            "securityUpdateEnabled": {
-              "description": "Whether the security update is enabled for this file.",
-              "type": "boolean"
-            }
-          },
-          "type": "object"
-        },
         "md5Checksum": {
           "description": "The MD5 checksum for the content of the file. This is only applicable to files with binary content in Google Drive.",
           "type": "string"
@@ -3239,7 +3192,7 @@
           "type": "boolean"
         },
         "owners": {
-          "description": "The owner of this file. Only certain legacy files may have more than one owner. This field isn't populated for items in shared drives.",
+          "description": "The owners of the file. Currently, only certain legacy files may have more than one owner. Not populated for items in shared drives.",
           "items": {
             "$ref": "User"
           },
@@ -3278,10 +3231,6 @@
           "format": "int64",
           "type": "string"
         },
-        "resourceKey": {
-          "description": "A key needed to access the item via a shared link.",
-          "type": "string"
-        },
         "shared": {
           "description": "Whether the file has been shared. Not populated for items in shared drives.",
           "type": "boolean"
@@ -3304,10 +3253,6 @@
             },
             "targetMimeType": {
               "description": "The MIME type of the file that this shortcut points to. The value of this field is a snapshot of the target's MIME type, captured when the shortcut is created.",
-              "type": "string"
-            },
-            "targetResourceKey": {
-              "description": "The ResourceKey for the target file.",
               "type": "string"
             }
           },
@@ -3497,10 +3442,6 @@
           "description": "Identifies what kind of resource this is. Value: the fixed string \"drive#permission\".",
           "type": "string"
         },
-        "pendingOwner": {
-          "description": "Whether the account associated with this permission is a pending owner. Only populated for user type permissions for files that are not in a shared drive.",
-          "type": "boolean"
-        },
         "permissionDetails": {
           "description": "Details of whether the permissions on this shared drive item are inherited or directly on this item. This is an output-only field which is present only for shared drive items.",
           "items": {
@@ -3524,7 +3465,6 @@
             },
             "type": "object"
           },
-          "readOnly": true,
           "type": "array"
         },
         "photoLink": {
@@ -3563,7 +3503,6 @@
             },
             "type": "object"
           },
-          "readOnly": true,
           "type": "array"
         },
         "type": {
@@ -3891,10 +3830,6 @@
               "description": "Whether the current user can rename this Team Drive.",
               "type": "boolean"
             },
-            "canResetTeamDriveRestrictions": {
-              "description": "Whether the current user can reset the Team Drive restrictions to defaults.",
-              "type": "boolean"
-            },
             "canShare": {
               "description": "Whether the current user can share files or folders in this Team Drive.",
               "type": "boolean"
@@ -3925,16 +3860,7 @@
           "type": "string"
         },
         "name": {
-          "annotations": {
-            "required": [
-              "drive.teamdrives.create"
-            ]
-          },
           "description": "The name of this Team Drive.",
-          "type": "string"
-        },
-        "orgUnitId": {
-          "description": "The organizational unit of this shared drive. This field is only populated on drives.list responses when the useDomainAdminAccess parameter is set to true.",
           "type": "string"
         },
         "restrictions": {

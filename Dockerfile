@@ -1,4 +1,4 @@
-FROM docker.io/golang:1.18 AS builder
+FROM docker.io/golang:1.20 AS builder
 ARG APP=recipes-manager
 COPY . /build
 
