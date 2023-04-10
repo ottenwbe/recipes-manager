@@ -19,7 +19,6 @@ DOCKER_REGISTRY ?= docker.io
 GO      = go
 GOFMT   = gofmt
 GOVET   = go vet
-GOLINT  = golint
 
 M = $(shell printf "\033[34;1m▶\033[0m")
 
@@ -63,7 +62,7 @@ start: fmt ; $(info $(M) running the app locally…) @ ## Run the program's snap
 # Quality and Testing
 
 .PHONY: verify
-verify: mod-verify vet lint test; $(info $(M) QA steps…) @ ## Run all QA steps
+verify: mod-verify vet test; $(info $(M) QA steps…) @ ## Run all QA steps
 	@echo "End of QA steps..."
 
 .PHONY: mod-verify
@@ -74,12 +73,6 @@ mod-verify: ; $(info $(M) verifying modules…) @ ## Run go mod verify
 vet: ; $(info $(M) running vet…) @ ## Run go vet
 	@for d in $$($(GO) list ./...); do \
 		$(GOVET) -mod=vendor $${d};  \
-	done
-
-.PHONY: lint
-lint: ; $(info $(M) running golint…) @ ## Run golint
-	@for d in $$($(GO) list ./...); do \
-		$(GOLINT) $${d};  \
 	done
 
 .PHONY: fmt
