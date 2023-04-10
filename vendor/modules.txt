@@ -2,10 +2,6 @@
 cloud.google.com/go/compute/metadata
 # github.com/KyleBanks/depth v1.2.1
 github.com/KyleBanks/depth
-# github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-## explicit
-# github.com/cpuguy83/go-md2man/v2 v2.0.2
-## explicit
 # github.com/fsnotify/fsnotify v1.5.4
 github.com/fsnotify/fsnotify
 # github.com/gin-contrib/sse v0.1.0
@@ -174,8 +170,6 @@ github.com/swaggo/swag
 ## explicit
 # github.com/ugorji/go/codec v1.2.7
 github.com/ugorji/go/codec
-# github.com/urfave/cli/v2 v2.8.1
-## explicit
 # github.com/xdg-go/pbkdf2 v1.0.0
 github.com/xdg-go/pbkdf2
 # github.com/xdg-go/scram v1.1.1
