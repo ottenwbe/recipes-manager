@@ -17,7 +17,7 @@ jobs:
       RECIPES_MANAGER_DOCKER_PREFIX: ottenwbe
       GOFLAGS: -mod=vendor
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up Go
       uses: actions/setup-go@v2
@@ -41,7 +41,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     # test docker build
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v1
