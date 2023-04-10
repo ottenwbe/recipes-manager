@@ -1,7 +1,4 @@
-# cloud.google.com/go/compute v1.19.0
-## explicit; go 1.19
-cloud.google.com/go/compute/internal
-# cloud.google.com/go/compute/metadata v0.2.3
+# cloud.google.com/go/compute/metadata v0.2.0
 ## explicit; go 1.19
 cloud.google.com/go/compute/metadata
 # github.com/KyleBanks/depth v1.2.1
@@ -112,19 +109,9 @@ github.com/google/go-cmp/cmp/internal/value
 # github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38
 ## explicit; go 1.14
 github.com/google/pprof/profile
-# github.com/google/uuid v1.3.0
+# github.com/googleapis/gax-go/v2 v2.0.5
 ## explicit
-github.com/google/uuid
-# github.com/googleapis/enterprise-certificate-proxy v0.2.3
-## explicit; go 1.19
-github.com/googleapis/enterprise-certificate-proxy/client
-github.com/googleapis/enterprise-certificate-proxy/client/util
-# github.com/googleapis/gax-go/v2 v2.8.0
-## explicit; go 1.19
 github.com/googleapis/gax-go/v2
-github.com/googleapis/gax-go/v2/apierror
-github.com/googleapis/gax-go/v2/apierror/internal/proto
-github.com/googleapis/gax-go/v2/internal
 # github.com/hashicorp/hcl v1.0.0
 ## explicit
 github.com/hashicorp/hcl
@@ -214,6 +201,9 @@ github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
+# github.com/pelletier/go-toml v1.9.3
+## explicit; go 1.12
+github.com/pelletier/go-toml
 # github.com/pelletier/go-toml/v2 v2.0.6
 ## explicit; go 1.16
 github.com/pelletier/go-toml/v2
@@ -244,17 +234,9 @@ github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
 ## explicit; go 1.12
 github.com/spf13/pflag
-# github.com/spf13/viper v1.15.0
-## explicit; go 1.17
+# github.com/spf13/viper v1.8.1
+## explicit; go 1.12
 github.com/spf13/viper
-github.com/spf13/viper/internal/encoding
-github.com/spf13/viper/internal/encoding/dotenv
-github.com/spf13/viper/internal/encoding/hcl
-github.com/spf13/viper/internal/encoding/ini
-github.com/spf13/viper/internal/encoding/javaproperties
-github.com/spf13/viper/internal/encoding/json
-github.com/spf13/viper/internal/encoding/toml
-github.com/spf13/viper/internal/encoding/yaml
 # github.com/subosito/gotenv v1.4.2
 ## explicit; go 1.18
 github.com/subosito/gotenv
@@ -429,20 +411,21 @@ golang.org/x/tools/go/buildutil
 golang.org/x/tools/go/internal/cgo
 golang.org/x/tools/go/loader
 golang.org/x/tools/internal/typeparams
-# google.golang.org/api v0.116.0
-## explicit; go 1.19
+# google.golang.org/api v0.47.0
+## explicit; go 1.11
 google.golang.org/api/drive/v3
 google.golang.org/api/googleapi
 google.golang.org/api/googleapi/transport
 google.golang.org/api/internal
-google.golang.org/api/internal/cert
 google.golang.org/api/internal/gensupport
 google.golang.org/api/internal/impersonate
 google.golang.org/api/internal/third_party/uritemplates
 google.golang.org/api/option
 google.golang.org/api/option/internaloption
+google.golang.org/api/transport/cert
 google.golang.org/api/transport/http
 google.golang.org/api/transport/http/internal/propagation
+google.golang.org/api/transport/internal/dca
 # google.golang.org/appengine v1.6.7
 ## explicit; go 1.11
 google.golang.org/appengine
@@ -455,12 +438,10 @@ google.golang.org/appengine/internal/modules
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/genproto v0.0.0-20230331144136-dcfb400f0633
-## explicit; go 1.19
-google.golang.org/genproto/googleapis/rpc/code
-google.golang.org/genproto/googleapis/rpc/errdetails
+# google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c
+## explicit; go 1.11
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.54.0
+# google.golang.org/grpc v1.52.0-dev
 ## explicit; go 1.17
 google.golang.org/grpc
 google.golang.org/grpc/attributes
@@ -547,6 +528,9 @@ google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/ini.v1 v1.67.0
 ## explicit
 gopkg.in/ini.v1
+# gopkg.in/yaml.v2 v2.4.0
+## explicit; go 1.15
+gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
