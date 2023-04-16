@@ -38,7 +38,6 @@ RECIPES_MANAGER_DOCKER_PARAMS	= \
 release: ; $(info $(M) building executable…) @ ## Build the app's binary release version
 	@$(GO) build \
 		-tags release \
-		-mod=vendor \
 		-ldflags "-s -w" \
 		-ldflags "-X $(VERSIONPKG)=$(RECIPES_MANAGER_VERSION)" \
 		-o $(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION) \
@@ -47,7 +46,6 @@ release: ; $(info $(M) building executable…) @ ## Build the app's binary relea
 .PHONY: snapshot
 snapshot:  ; $(info $(M) building snapshot…) @ ## Build the app's snapshot version
 		@$(GO) build \
-		-mod=vendor \
 		-o $(SNAPSHOT) \
 		-ldflags "-X $(VERSIONPKG)=$(RECIPES_MANAGER_VERSION)" \
 		*.go
@@ -72,7 +70,7 @@ mod-verify: ; $(info $(M) verifying modules…) @ ## Run go mod verify
 .PHONY: vet
 vet: ; $(info $(M) running vet…) @ ## Run go vet
 	@for d in $$($(GO) list ./...); do \
-		$(GOVET) -mod=vendor $${d};  \
+		$(GOVET) $${d};  \
 	done
 
 .PHONY: fmt
