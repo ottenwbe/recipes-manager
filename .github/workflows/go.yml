@@ -43,8 +43,11 @@ jobs:
     - uses: actions/checkout@v3
     # test docker build
     - name: Set up QEMU
+      if: success() && github.event_name == 'pull_request'
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
+      if: success() && github.event_name == 'pull_request'
       uses: docker/setup-buildx-action@v2
     - name: Build Docker
+      if: success() && github.event_name == 'pull_request'
       run: make dockerx-dev
