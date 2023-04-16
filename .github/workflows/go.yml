@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RECIPES_MANAGER_DOCKER_PREFIX: ottenwbe
-      GOFLAGS: -mod=vendor
     steps:
     - uses: actions/checkout@v3
 
@@ -28,7 +27,7 @@ jobs:
     # setup build environment
     - run: GO111MODULE=off go get -u github.com/onsi/ginkgo/ginkgo
     - run: GO111MODULE=off go get -u github.com/onsi/gomega/...
-    - run: GOFLAGS="" go install github.com/swaggo/swag/cmd/swag@latest
+    - run: go install github.com/swaggo/swag/cmd/swag@latest
 
     # test application
     - name: Execute Verify and Test steps
