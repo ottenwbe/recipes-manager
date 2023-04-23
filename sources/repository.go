@@ -31,7 +31,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//DefaultSources is the default implementation of a sourceClient repository
+// DefaultSources is the default implementation of a sourceClient repository
 type DefaultSources struct {
 	sources map[SourceID]*Source
 }
@@ -84,14 +84,14 @@ func (s *DefaultSources) Add(sourceMeta *SourceDescription, source SourceClient)
 	return errors.New("could not add invalid sourceClient")
 }
 
-//RemoveByID will delete the element with ID id from the repository
+// RemoveByID will delete the element with ID id from the repository
 func (s *DefaultSources) RemoveByID(id SourceID) error {
 	delete(s.sources, id)
 	return nil
 }
 
-//Remove will delete the given element from the repository.
-//The deletion will use the sourceClient's id for this purpose.
+// Remove will delete the given element from the repository.
+// The deletion will use the sourceClient's id for this purpose.
 func (s *DefaultSources) Remove(source *SourceDescription) error {
 	if source != nil {
 		delete(s.sources, source.ID)
@@ -100,7 +100,7 @@ func (s *DefaultSources) Remove(source *SourceDescription) error {
 	return errors.New("could not delete invalid sourceClient")
 }
 
-//Client by id returns the corresponding sourceClient implementations
+// Client by id returns the corresponding sourceClient implementations
 func (s *DefaultSources) Client(id SourceID) (SourceClient, error) {
 	if val, ok := s.sources[id]; ok {
 		return val.concrete, nil
@@ -108,7 +108,7 @@ func (s *DefaultSources) Client(id SourceID) (SourceClient, error) {
 	return nil, errors.New("cannot find sourceClient")
 }
 
-//Description will return a sourceClient's SourceDescription
+// Description will return a sourceClient's SourceDescription
 func (s *DefaultSources) Description(id SourceID) (*SourceDescription, error) {
 	if val, ok := s.sources[id]; ok {
 		return val.sourceDescription, nil

@@ -1,9 +1,13 @@
+# Build container for the application.
+# Eases up the process of building
+# for different target architectures.
 FROM docker.io/golang:1.20 AS builder
 ARG APP=recipes-manager
 COPY . /build
 
 WORKDIR /build
 
+# build the app binary
 RUN make release
 
 FROM docker.io/ubuntu:latest

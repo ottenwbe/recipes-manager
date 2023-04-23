@@ -59,13 +59,13 @@ func newSourceResponse(sourceDescription *SourceDescription) *SourceResponse {
 	}
 }
 
-//API related sourceDescription data
+// API related sourceDescription data
 type API struct {
 	sources Sources
 	recipes recipes.RecipeDB
 }
 
-//NewSourceAPI creates the API for sources
+// NewSourceAPI creates the API for sources
 func NewSourceAPI(sources Sources, recipes recipes.RecipeDB) API {
 	return API{sources, recipes}
 }

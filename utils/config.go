@@ -75,7 +75,7 @@ func (*viperConfig) SetDefault(key string, val interface{}) {
 	viper.SetDefault(key, val)
 }
 
-//BindEnv binds a key to an environment variable
+// BindEnv binds a key to an environment variable
 func (*viperConfig) BindEnv(key string) {
 	viper.BindEnv(key)
 }

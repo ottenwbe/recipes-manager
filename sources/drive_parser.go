@@ -39,7 +39,7 @@ import (
 	"github.com/ottenwbe/recipes-manager/utils"
 )
 
-//driveRecipeParser enumerates all states of the driveRecipeParser
+// driveRecipeParser enumerates all states of the driveRecipeParser
 type driveRecipeParser struct {
 	descriptionBuffer bytes.Buffer
 	recipe            *recipes.Recipe
@@ -48,7 +48,7 @@ type driveRecipeParser struct {
 	parseState        parseState
 }
 
-//parseState enumerates all states of the driveRecipeParser
+// parseState enumerates all states of the driveRecipeParser
 type parseState int
 
 const (
@@ -58,7 +58,7 @@ const (
 	descriptionState
 )
 
-//ParseRecipe transforms a html file to the Recipe format
+// ParseRecipe transforms a html file to the Recipe format
 func ParseRecipe(htmlFile io.Reader, fileID recipes.RecipeID) (*recipes.Recipe, map[string]*recipes.RecipePicture, error) {
 	parser := newDriveRecipeParser(fileID)
 	return parser.parseHTML(htmlFile)

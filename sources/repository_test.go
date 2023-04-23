@@ -25,7 +25,7 @@
 package sources
 
 import (
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -41,7 +41,7 @@ var _ = Describe("sourceClient repository", func() {
 			s := NewSources()
 			var source testSource
 
-			s.Add(NewSourceDescription(SourceID(uuid.NewV4()), "test", "0.1.0", nil), source)
+			s.Add(NewSourceDescription(SourceID(uuid.New()), "test", "0.1.0", nil), source)
 			testData, err := s.List()
 
 			Expect(err).To(BeNil())
@@ -52,7 +52,7 @@ var _ = Describe("sourceClient repository", func() {
 			s := NewSources()
 			var (
 				source         testSource
-				expectedSource = NewSourceDescription(SourceID(uuid.NewV4()), "test", "0.1.0", nil)
+				expectedSource = NewSourceDescription(SourceID(uuid.New()), "test", "0.1.0", nil)
 			)
 
 			s.Add(expectedSource, source)
@@ -66,7 +66,7 @@ var _ = Describe("sourceClient repository", func() {
 			s := NewSources()
 			var (
 				source         testSource
-				expectedSource = NewSourceDescription(SourceID(uuid.NewV4()), "test", "0.1.0", nil)
+				expectedSource = NewSourceDescription(SourceID(uuid.New()), "test", "0.1.0", nil)
 			)
 
 			s.Add(expectedSource, source)
@@ -81,7 +81,7 @@ var _ = Describe("sourceClient repository", func() {
 			s := NewSources()
 			var (
 				source         testSource
-				expectedSource = NewSourceDescription(SourceID(uuid.NewV4()), "test", "0.1.0", nil)
+				expectedSource = NewSourceDescription(SourceID(uuid.New()), "test", "0.1.0", nil)
 			)
 
 			s.Add(expectedSource, source)

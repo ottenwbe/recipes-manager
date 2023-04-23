@@ -28,7 +28,7 @@ import (
 	"io"
 )
 
-//RecipeDB is the interface that all DB implementations have to expose
+// RecipeDB is the interface that all DB implementations have to expose
 type RecipeDB interface {
 	io.Closer
 	Recipes

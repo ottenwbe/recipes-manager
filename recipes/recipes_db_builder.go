@@ -24,7 +24,7 @@
 
 package recipes
 
-//NewDatabaseClient builds a client to communicate with a database
+// NewDatabaseClient builds a client to communicate with a database
 func NewDatabaseClient() (RecipeDB, error) {
 	m := &MongoRecipeDB{}
 	err := m.StartDB()
