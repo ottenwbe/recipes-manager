@@ -1,9 +1,13 @@
+# Build container for the application.
+# Eases up the process of building
+# for different target architectures.
 FROM docker.io/golang:1.20 AS builder
 ARG APP=recipes-manager
 COPY . /build
 
 WORKDIR /build
 
+# build the app binary
 RUN make release
 
 FROM docker.io/ubuntu:latest
@@ -11,7 +15,7 @@ FROM docker.io/ubuntu:latest
 ARG APP=recipes-manager
 ENV GIN_MODE release
 
-RUN apt-get update && apt-get install -y ca-certificates
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 
 RUN mkdir -p /app; mkdir -p /etc/recipes-manager
 

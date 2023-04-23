@@ -29,8 +29,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 
-	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -45,7 +45,7 @@ import (
 	"github.com/ottenwbe/recipes-manager/utils"
 )
 
-//driveRecipes is a cache for recipes from Drive
+// driveRecipes is a cache for recipes from Drive
 type driveRecipes struct {
 	driveService *drive.Service
 	pictures     map[recipes.RecipeID]map[string]*recipes.RecipePicture
@@ -96,12 +96,12 @@ func appendPictures(pictures map[string]*recipes.RecipePicture, resultPictures m
 	return resultPictures
 }
 
-//Insert is not supported for Drive
+// Insert is not supported for Drive
 func (r *driveRecipes) Insert(recipe *recipes.Recipe) error {
 	return errors.New(recipes.NotSupportedError)
 }
 
-//Remove is not supported for Drive
+// Remove is not supported for Drive
 func (r *driveRecipes) RemoveByName(name string) error {
 	return errors.New(recipes.NotSupportedError)
 }
@@ -110,7 +110,7 @@ func (r *driveRecipes) Remove(id recipes.RecipeID) error {
 	return errors.New(recipes.NotSupportedError)
 }
 
-//Picture by ID and name
+// Picture by ID and name
 func (r *driveRecipes) Picture(id recipes.RecipeID, name string) *recipes.RecipePicture {
 	r.ensureCache()
 	if pic, ok := r.pictures[id][name]; ok {
@@ -119,7 +119,7 @@ func (r *driveRecipes) Picture(id recipes.RecipeID, name string) *recipes.Recipe
 	return nil
 }
 
-//Pictures of a given recipe
+// Pictures of a given recipe
 func (r *driveRecipes) Pictures(id recipes.RecipeID) map[string]*recipes.RecipePicture {
 	r.ensureCache()
 	if pics, ok := r.pictures[id]; ok {
@@ -134,17 +134,17 @@ func (r *driveRecipes) ensureCache() {
 	})
 }
 
-//AddPicture is not supported for Drive
+// AddPicture is not supported for Drive
 func (r *driveRecipes) AddPicture(pic *recipes.RecipePicture) error {
 	return errors.New(recipes.NotSupportedError)
 }
 
-//GetByName is not supported for Drive
+// GetByName is not supported for Drive
 func (r *driveRecipes) GetByName(name string) (*recipes.Recipe, error) {
 	return nil, errors.New(recipes.NotSupportedError)
 }
 
-//Get a recipe by ID
+// Get a recipe by ID
 func (r *driveRecipes) Get(id recipes.RecipeID) *recipes.Recipe {
 	r.ensureCache()
 	for _, recipe := range r.recipes {
@@ -155,13 +155,13 @@ func (r *driveRecipes) Get(id recipes.RecipeID) *recipes.Recipe {
 	return recipes.NewInvalidRecipe()
 }
 
-//Num recipes that are found in Drive
+// Num recipes that are found in Drive
 func (r *driveRecipes) Num() int64 {
 	r.ensureCache()
 	return int64(len(r.List()))
 }
 
-//Random recipe from Drive
+// Random recipe from Drive
 func (r *driveRecipes) Random() *recipes.Recipe {
 	r.ensureCache()
 	list := r.List()
@@ -173,7 +173,7 @@ func (r *driveRecipes) Random() *recipes.Recipe {
 	return recipes.NewInvalidRecipe()
 }
 
-//IDs returns a list of all recipe IDs
+// IDs returns a list of all recipe IDs
 func (r *driveRecipes) IDs(*recipes.RecipeSearchFilter) recipes.RecipeList {
 	r.ensureCache()
 	recipeNames := make([]string, 0)
@@ -183,7 +183,7 @@ func (r *driveRecipes) IDs(*recipes.RecipeSearchFilter) recipes.RecipeList {
 	return recipes.RecipeList{Recipes: recipeNames}
 }
 
-//List all recipes
+// List all recipes
 func (r *driveRecipes) List() []*recipes.Recipe {
 	r.ensureCache()
 	return r.recipes
@@ -199,15 +199,15 @@ var (
 	recipesFolderName string
 )
 
-//DriveClient is handling the interaction with Drive
+// DriveClient is handling the interaction with Drive
 type DriveClient struct {
 	driveRecipes recipes.Recipes
 	oAuthConfig  *oauth2.Config
 }
 
-//ID of this SourceClient
+// ID of this SourceClient
 func (c *DriveClient) ID() SourceID {
-	id, err := uuid.FromString("9647df42-737e-412d-bfb6-0c95c71f8218")
+	id, err := uuid.Parse("9647df42-737e-412d-bfb6-0c95c71f8218")
 
 	if err != nil {
 		return SourceID(uuid.Nil)
@@ -216,22 +216,22 @@ func (c *DriveClient) ID() SourceID {
 	return SourceID(id)
 }
 
-//Name of this SourceClient
+// Name of this SourceClient
 func (c *DriveClient) Name() string {
 	return "Google Drive SourceClient"
 }
 
-//Version of this SourceClient
+// Version of this SourceClient
 func (c *DriveClient) Version() string {
 	return "0.1.0"
 }
 
-//Recipes of this SourceClient
+// Recipes of this SourceClient
 func (c *DriveClient) Recipes() recipes.Recipes {
 	return c.driveRecipes
 }
 
-//Refresh cleans the internal cache of recipes and refreshes the token from file
+// Refresh cleans the internal cache of recipes and refreshes the token from file
 func (c *DriveClient) Refresh() (err error) {
 	c.driveRecipes = nil
 	c.oAuthConfig, err = c.OAuthLoginConfig()
@@ -245,19 +245,19 @@ func (c *DriveClient) Refresh() (err error) {
 	return
 }
 
-//OpenNewGoogleDriveConnection with an empty cache of recipes
+// OpenNewGoogleDriveConnection with an empty cache of recipes
 func OpenNewGoogleDriveConnection() *DriveClient {
 	c := &DriveClient{}
 	c.Refresh()
 	return c
 }
 
-//Connected returns true if there is a connection established to Drive
+// Connected returns true if there is a connection established to Drive
 func (c *DriveClient) Connected() bool {
 	return c.driveRecipes != nil
 }
 
-//ConnectOAuth gets a new initial Token
+// ConnectOAuth gets a new initial Token
 func (c *DriveClient) ConnectOAuth(code string) (err error) {
 	tok, err := c.getToken(code)
 	if err != nil {
@@ -299,7 +299,7 @@ func (c *DriveClient) oAuthLoginConfig() (*oauth2.Config, error) {
 	return config, nil
 }
 
-//OAuthLoginConfig returns the configuration for the Authentication endpoint
+// OAuthLoginConfig returns the configuration for the Authentication endpoint
 func (c *DriveClient) OAuthLoginConfig() (*oauth2.Config, error) {
 	return c.oAuthLoginConfig()
 }

@@ -27,11 +27,10 @@ package sources
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/satori/go.uuid"
-
-	. "github.com/ottenwbe/recipes-manager/utils"
+	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 var _ = Describe("SourceClient", func() {
@@ -53,9 +52,10 @@ var _ = Describe("SourceClient", func() {
 	Context("Marshalling", func() {
 		It("of a SourceDescription to json is possible", func() {
 
-			id := uuid.NewV4()
+			id := uuid.New()
 			meta := NewSourceDescription(SourceID(id), "name", "test", nil)
-			expected := fmt.Sprintf("{\"id\":%v,\"name\":\"name\",\"connected\":true,\"version\":\"test\"}", CBytes(id.Bytes()))
+			bs, _ := id.MarshalBinary()
+			expected := fmt.Sprintf("{\"id\":%v,\"name\":\"name\",\"connected\":true,\"version\":\"test\"}", utils.CBytes(bs))
 
 			b, err := json.Marshal(meta)
 

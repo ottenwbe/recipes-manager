@@ -26,7 +26,7 @@ package utils
 
 import "fmt"
 
-//CBytes takes a byte string and casts it to a comma separated string representation of that byte string
+// CBytes takes a byte string and casts it to a comma separated string representation of that byte string
 func CBytes(bytes []byte) string {
 	var (
 		result   = "["
@@ -39,7 +39,7 @@ func CBytes(bytes []byte) string {
 	return result + "]"
 }
 
-//UniqueSlice removes duplicates and ensures that a slice only comprises unique elements
+// UniqueSlice removes duplicates and ensures that a slice only comprises unique elements
 func UniqueSlice(input []string) []string {
 	seen := make(map[string]struct{}, len(input))
 	last := 0

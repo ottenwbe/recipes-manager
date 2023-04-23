@@ -63,8 +63,8 @@ func init() {
 	corsOrigin = utils.Config.GetString(corsAllowOriginCfg)
 }
 
-//Routes is managing a set of API endpoints.
-//Routes implementation(s) call handler function to perform typical CRUD operations (GET, POST, PATCH, ...).
+// Routes is managing a set of API endpoints.
+// Routes implementation(s) call handler function to perform typical CRUD operations (GET, POST, PATCH, ...).
 type Routes interface {
 	//Route is created to a specific set of endpoints
 	Route(string) Routes
@@ -82,16 +82,16 @@ type Routes interface {
 	DELETE(string, func(c *APICallContext))
 }
 
-//Handler is a facade for a HTTP handler and can be implemented by a concrete handler like gin.
+// Handler is a facade for a HTTP handler and can be implemented by a concrete handler like gin.
 type Handler interface {
 	API(version int16) Routes
 	http.Handler
 }
 
-//APICallContext is a facade for any concrete Context, e.g. gins
+// APICallContext is a facade for any concrete Context, e.g. gins
 type APICallContext = gin.Context
 
-//NewHandler creates a handler for API calls with a pre-configured ADDRESS
+// NewHandler creates a handler for API calls with a pre-configured ADDRESS
 func NewHandler() Handler {
 	handler := &ginHandler{
 		gin.New(),
@@ -131,7 +131,7 @@ func v(version int16) string {
 	return fmt.Sprintf("v%v", version)
 }
 
-//API registers the endpoint /api/v<version> and returns a group of endpoints under /api/v<version>
+// API registers the endpoint /api/v<version> and returns a group of endpoints under /api/v<version>
 func (g *ginHandler) API(version int16) Routes {
 	rg, ok := g.routerGroups[v(version)]
 	if !ok {
@@ -165,32 +165,32 @@ func (g *ginRoutes) Route(path string) Routes {
 	return &ginRoutes{g.rg.Group(path)}
 }
 
-//GET endpoint for a specific path and a corresponding handler
+// GET endpoint for a specific path and a corresponding handler
 func (g *ginRoutes) GET(path string, handler func(c *APICallContext)) {
 	g.rg.GET(path, handler)
 }
 
-//PUT endpoint for a specific path and a corresponding handler
+// PUT endpoint for a specific path and a corresponding handler
 func (g *ginRoutes) PUT(path string, handler func(c *APICallContext)) {
 	g.rg.PUT(path, handler)
 }
 
-//DELETE endpoint for a specific path and a corresponding handler
+// DELETE endpoint for a specific path and a corresponding handler
 func (g *ginRoutes) DELETE(path string, handler func(c *APICallContext)) {
 	g.rg.DELETE(path, handler)
 }
 
-//PATCH endpoint for a specific path and a corresponding handler
+// PATCH endpoint for a specific path and a corresponding handler
 func (g *ginRoutes) PATCH(path string, handler func(c *APICallContext)) {
 	g.rg.PATCH(path, handler)
 }
 
-//POST endpoint for a specific path and a corresponding handler
+// POST endpoint for a specific path and a corresponding handler
 func (g *ginRoutes) POST(path string, handler func(c *APICallContext)) {
 	g.rg.POST(path, handler)
 }
 
-//PATH of the given route
+// PATH of the given route
 func (g *ginRoutes) Path() string {
 	return g.rg.BasePath()
 }
@@ -218,7 +218,7 @@ type Server struct {
 	stopWaitGroup *sync.WaitGroup
 }
 
-//NewServerA creates a new server using a given address to listen to
+// NewServerA creates a new server using a given address to listen to
 func NewServerA(addr string, handler http.Handler) Server {
 	return Server{
 		Address: addr,
@@ -229,17 +229,17 @@ func NewServerA(addr string, handler http.Handler) Server {
 		stopWaitGroup: &sync.WaitGroup{}}
 }
 
-//NewServerH creates a new server using the default address with a custom handler
+// NewServerH creates a new server using the default address with a custom handler
 func NewServerH(handler http.Handler) Server {
 	return NewServerA(defaultAddress, handler)
 }
 
-//NewServer creates a new server to listen on the defaultAddress
+// NewServer creates a new server to listen on the defaultAddress
 func NewServer() Server {
 	return NewServerA(defaultAddress, NewHandler())
 }
 
-//Run the server for the API
+// Run the server for the API
 func (s Server) Run() *sync.WaitGroup {
 	s.stopWaitGroup.Add(1)
 	go func() {
@@ -251,7 +251,7 @@ func (s Server) Run() *sync.WaitGroup {
 	return s.stopWaitGroup
 }
 
-//Close the server
+// Close the server
 func (s Server) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()

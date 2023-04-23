@@ -56,7 +56,7 @@ func init() {
 	mongoAddress = utils.Config.GetString("recipeDB.host")
 }
 
-//MongoRecipeDB implements the Recipe interface to read and write Recipes to and from a Mongo DB
+// MongoRecipeDB implements the Recipe interface to read and write Recipes to and from a Mongo DB
 type MongoRecipeDB struct {
 	mongoClient *mongo.Client
 	//mtx avoids race conditions while connecting to the database and while closing the connection
@@ -75,7 +75,7 @@ func (m *MongoRecipeDB) Clear() {
 	}
 }
 
-//List all recipes from the db
+// List all recipes from the db
 func (m *MongoRecipeDB) List() (recipes []*Recipe) {
 
 	collection := m.getRecipesCollection()
@@ -95,7 +95,7 @@ func (m *MongoRecipeDB) List() (recipes []*Recipe) {
 	return
 }
 
-//Num counts the number of recipes in the db
+// Num counts the number of recipes in the db
 func (m *MongoRecipeDB) Num() int64 {
 
 	collection := m.getRecipesCollection()
@@ -108,7 +108,7 @@ func (m *MongoRecipeDB) Num() int64 {
 	return num
 }
 
-//RecipeToBsonM converts a RecipeSearchFilter to a search query (bson.M)
+// RecipeToBsonM converts a RecipeSearchFilter to a search query (bson.M)
 func RecipeToBsonM(searchQuery *RecipeSearchFilter) bson.M {
 	query := bson.M{}
 
@@ -134,7 +134,7 @@ func RecipeToBsonM(searchQuery *RecipeSearchFilter) bson.M {
 	return query
 }
 
-//IDs lists all ids of all recipes
+// IDs lists all ids of all recipes
 func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) RecipeList {
 
 	collection := m.getRecipesCollection()
@@ -166,7 +166,7 @@ func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) RecipeList {
 	return RecipeList{Recipes: result}
 }
 
-//Get a recipe by ID
+// Get a recipe by ID
 func (m *MongoRecipeDB) Get(id RecipeID) *Recipe {
 
 	collection := m.getRecipesCollection()
@@ -182,7 +182,7 @@ func (m *MongoRecipeDB) Get(id RecipeID) *Recipe {
 	return recipe
 }
 
-//Pictures returns all pictures for a given recipe
+// Pictures returns all pictures for a given recipe
 func (m *MongoRecipeDB) Pictures(id RecipeID) map[string]*RecipePicture {
 
 	collection := m.getPictureCollection()
@@ -210,7 +210,7 @@ func (m *MongoRecipeDB) Pictures(id RecipeID) map[string]*RecipePicture {
 	return result
 }
 
-//Remove removes a recipe by id
+// Remove removes a recipe by id
 func (m *MongoRecipeDB) Remove(id RecipeID) error {
 	c := m.getRecipesCollection()
 
@@ -219,7 +219,7 @@ func (m *MongoRecipeDB) Remove(id RecipeID) error {
 	return err
 }
 
-//Picture returns a specific picture with a specific name for a specific recipe
+// Picture returns a specific picture with a specific name for a specific recipe
 func (m *MongoRecipeDB) Picture(id RecipeID, name string) *RecipePicture {
 
 	collection := m.getPictureCollection()
@@ -235,7 +235,7 @@ func (m *MongoRecipeDB) Picture(id RecipeID, name string) *RecipePicture {
 	return recipePicture
 }
 
-//AddPicture to the database
+// AddPicture to the database
 func (m *MongoRecipeDB) AddPicture(pic *RecipePicture) error {
 
 	collection := m.getPictureCollection()
@@ -262,7 +262,7 @@ func (m *MongoRecipeDB) AddPicture(pic *RecipePicture) error {
 	return nil
 }
 
-//Random picture will be returned
+// Random picture will be returned
 func (m *MongoRecipeDB) Random() *Recipe {
 
 	collection := m.getRecipesCollection()
@@ -284,7 +284,7 @@ func (m *MongoRecipeDB) Random() *Recipe {
 	return recipes[0]
 }
 
-//Update a recipe with a given recipe id
+// Update a recipe with a given recipe id
 func (m *MongoRecipeDB) Update(id RecipeID, recipe *Recipe) error {
 
 	collection := m.getRecipesCollection()
@@ -298,7 +298,7 @@ func (m *MongoRecipeDB) Update(id RecipeID, recipe *Recipe) error {
 	return nil
 }
 
-//Insert a recipe into the database
+// Insert a recipe into the database
 func (m *MongoRecipeDB) Insert(recipe *Recipe) error {
 
 	collection := m.getRecipesCollection()
@@ -312,12 +312,12 @@ func (m *MongoRecipeDB) Insert(recipe *Recipe) error {
 	return nil
 }
 
-//Ping MongoDB
+// Ping MongoDB
 func (m *MongoRecipeDB) Ping() error {
 	return m.mongoClient.Ping(ctx(), readpref.Primary())
 }
 
-//RemoveByName a recipe by name
+// RemoveByName a recipe by name
 func (m *MongoRecipeDB) RemoveByName(name string) error {
 	c := m.getRecipesCollection()
 
@@ -326,7 +326,7 @@ func (m *MongoRecipeDB) RemoveByName(name string) error {
 	return err
 }
 
-//GetByName a recipe from the database
+// GetByName a recipe from the database
 func (m *MongoRecipeDB) GetByName(name string) (*Recipe, error) {
 
 	collection := m.getRecipesCollection()
@@ -338,12 +338,12 @@ func (m *MongoRecipeDB) GetByName(name string) (*Recipe, error) {
 	return &recipe, err
 }
 
-//Close the connection to the database
+// Close the connection to the database
 func (m *MongoRecipeDB) Close() error {
 	return m.StopDB()
 }
 
-//StartDB initializes the database connection
+// StartDB initializes the database connection
 func (m *MongoRecipeDB) StartDB() error {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
@@ -362,7 +362,7 @@ func (m *MongoRecipeDB) StartDB() error {
 	return nil
 }
 
-//StopDB closes the connection to the db
+// StopDB closes the connection to the db
 func (m *MongoRecipeDB) StopDB() (err error) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()

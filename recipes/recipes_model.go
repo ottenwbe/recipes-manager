@@ -27,11 +27,11 @@ package recipes
 import (
 	"encoding/json"
 
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )
 
-//Ingredients of a recipe
+// Ingredients of a recipe
 type Ingredients struct {
 	//Name of the ingredient
 	Name string `json:"name"`
@@ -46,28 +46,28 @@ const (
 	NoAmountIngredient = -1.0
 )
 
-//RecipeID is a data type that provides a unique id for each recipe
+// RecipeID is a data type that provides a unique id for each recipe
 type RecipeID string
 
-//String converts a RecipeID to string
+// String converts a RecipeID to string
 func (r RecipeID) String() string {
 	return string(r)
 }
 
-//InvalidRecipeID should not be used for any valid Recipe
+// InvalidRecipeID should not be used for any valid Recipe
 func InvalidRecipeID() RecipeID {
 	return RecipeID(uuid.Nil.String())
 }
 
-//NewRecipeID returns a random recipe id
+// NewRecipeID returns a random recipe id
 func NewRecipeID() RecipeID {
-	return RecipeID(uuid.NewV4().String())
+	return RecipeID(uuid.New().String())
 }
 
-//NewRecipeIDFromString converts a string to a recipe id and returns this recipe id.
-//Returns the InvalidRecipeID iff the recipe id cannot be converted
+// NewRecipeIDFromString converts a string to a recipe id and returns this recipe id.
+// Returns the InvalidRecipeID iff the recipe id cannot be converted
 func NewRecipeIDFromString(recipeID string) (result RecipeID) {
-	if tmp, err := uuid.FromString(recipeID); err != nil {
+	if tmp, err := uuid.Parse(recipeID); err != nil {
 		result = InvalidRecipeID()
 	} else {
 		result = RecipeID(tmp.String())
@@ -75,7 +75,7 @@ func NewRecipeIDFromString(recipeID string) (result RecipeID) {
 	return
 }
 
-//Recipe model
+// Recipe model
 type Recipe struct {
 	ID          RecipeID      `json:"id"`
 	Name        string        `json:"name"`
@@ -85,19 +85,19 @@ type Recipe struct {
 	Servings    int8          `json:"servings"`
 }
 
-//RecipePicture model
+// RecipePicture model
 type RecipePicture struct {
 	ID      RecipeID `json:"id"`
 	Name    string   `json:"name"`
 	Picture string   `json:"picture"`
 }
 
-//RecipeList models a list of recipes by ID
+// RecipeList models a list of recipes by ID
 type RecipeList struct {
 	Recipes []string `json:"recipes"`
 }
 
-//NewInvalidRecipePicture returns an invalid picture
+// NewInvalidRecipePicture returns an invalid picture
 func NewInvalidRecipePicture() *RecipePicture {
 	return &RecipePicture{
 		ID:      InvalidRecipeID(),
@@ -106,14 +106,14 @@ func NewInvalidRecipePicture() *RecipePicture {
 	}
 }
 
-//RecipeSearchFilter models a search query to filter recipes
+// RecipeSearchFilter models a search query to filter recipes
 type RecipeSearchFilter struct {
 	Name        string   `json:"name"`
 	Ingredient  []string `json:"ingredients"`
 	Description string   `json:"description"`
 }
 
-//Recipes interface is an abstraction for the provider of a collection of recipes, i.e., a data-base or a cache
+// Recipes interface is an abstraction for the provider of a collection of recipes, i.e., a data-base or a cache
 type Recipes interface {
 	List() []*Recipe
 	IDs(filterQuery *RecipeSearchFilter) RecipeList
@@ -135,7 +135,7 @@ const (
 	NotSupportedError = "recipe operation not supported"
 )
 
-//NewInvalidRecipe returns an empty Recipe object. The ID of the returned Recipe is InvalidRecipeID.
+// NewInvalidRecipe returns an empty Recipe object. The ID of the returned Recipe is InvalidRecipeID.
 func NewInvalidRecipe() *Recipe {
 	return &Recipe{
 		ID:   InvalidRecipeID(),
@@ -143,7 +143,7 @@ func NewInvalidRecipe() *Recipe {
 	}
 }
 
-//NewRecipe creates a new Recipe with a given id
+// NewRecipe creates a new Recipe with a given id
 func NewRecipe(id RecipeID) *Recipe {
 	return &Recipe{
 		ID:          id,
@@ -155,7 +155,7 @@ func NewRecipe(id RecipeID) *Recipe {
 	}
 }
 
-//JSON returns the encoded version of the recipe. If an error occurs, '{}' is returned.
+// JSON returns the encoded version of the recipe. If an error occurs, '{}' is returned.
 func (r *Recipe) JSON() []byte {
 	bytes, err := json.Marshal(r)
 	if err != nil {
@@ -165,12 +165,12 @@ func (r *Recipe) JSON() []byte {
 	return bytes
 }
 
-//String (JSON) representation of the recipe
+// String (JSON) representation of the recipe
 func (r *Recipe) String() string {
 	return string(r.JSON())
 }
 
-//ScaleBy a factor (of servings) all ingredients of the recipe
+// ScaleBy a factor (of servings) all ingredients of the recipe
 func (r *Recipe) ScaleBy(factor float64) {
 	for i := range r.Ingredients {
 		if r.Ingredients[i].Amount > 0 {
@@ -179,7 +179,7 @@ func (r *Recipe) ScaleBy(factor float64) {
 	}
 }
 
-//ScaleTo a desired number of servings
+// ScaleTo a desired number of servings
 func (r *Recipe) ScaleTo(servings int8) {
 	factor := float64(servings) / float64(r.Servings)
 	r.Servings = servings

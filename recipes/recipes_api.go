@@ -48,7 +48,7 @@ const (
 	DESCRIPTION = "description"
 )
 
-//API for recipes
+// API for recipes
 type API struct {
 	handler core.Handler
 	recipes RecipeDB
@@ -68,7 +68,7 @@ func AddRecipesAPIToHandler(handler core.Handler, recipes RecipeDB) {
 	api.prepareAPI()
 }
 
-//prepareAPI registers all api endpoints for recipes
+// prepareAPI registers all api endpoints for recipes
 func (rAPI *API) prepareAPI() {
 	rAPI.prepareV1API()
 }
