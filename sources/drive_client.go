@@ -25,16 +25,16 @@
 package sources
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/google/uuid"
-
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
+
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
