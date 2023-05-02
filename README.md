@@ -25,7 +25,7 @@ We briefly describe two deployment options. First, a Kubernetes-based deployment
     1. Prepare a configuration file (see next section).
     1. Start a database
 
-            docker run -d --name=db-recipes-manager -p 27018:27017 mongo:4
+            docker run -d --name=db-recipes-manager -p 27018:27017 mongo:6
 
     1. Run the container
         
@@ -75,16 +75,11 @@ By prepending all variables (see file-based configuration) with ```GO_COOK_``` t
 
 ### Dependencies
 
-* Go >= 1.13
-
-* For linting install ```go lint```
-    ```    
-    go get -u golang.org/x/lint/golint
-    ```
+* Go >= 1.19
   
 * For testing install ``ginkgo``
     ```
-    go get github.com/onsi/ginkgo/ginkgo
+    go install github.com/onsi/ginkgo/v2/ginkgo
     go get github.com/onsi/gomega/...
     ```
 
@@ -95,7 +90,7 @@ A Makefile supports the build process. This includes building a development and 
 ### Build Snapshot
 
 ```
-make build 
+make snapshot 
 ```
 
 Builds a fully functioning binary named ```recipes-manager-snapshot```. In contrast to the release version, there is still debugging informaiton included.
@@ -112,12 +107,6 @@ Builds a fully functioning binary named ```recipes-manager```.
 
 ```
 make docker
-```
-
-### ARM Docker builds 
-
-```
-make docker-arm 
 ```
 
 ### Docker Tips and Tricks
