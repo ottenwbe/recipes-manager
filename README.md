@@ -1,6 +1,6 @@
  # recipes-manager
 
-[![Build Status](https://travis-ci.org/ottenwbe/recipes-manager.svg?branch=master)](https://travis-ci.org/ottenwbe/recipes-manager)
+[![CI](https://github.com/ottenwbe/recipes-manager/actions/workflows/go.yml/badge.svg)](https://github.com/ottenwbe/recipes-manager/actions/workflows/go.yml)
 
 Backend service to manage recipes. 
 Recipes-manager supports managing recipes via API while persisting them in a database.
