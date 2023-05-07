@@ -3,6 +3,7 @@ module github.com/ottenwbe/recipes-manager
 go 1.19
 
 require (
+	github.com/coreos/go-oidc/v3 v3.5.0
 	github.com/gin-gonic/contrib v0.0.0-20221130124618-7e01895a63f2
 	github.com/gin-gonic/gin v1.9.0
 	github.com/google/uuid v1.3.0
@@ -27,6 +28,7 @@ require (
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
@@ -80,7 +82,7 @@ require (
 	golang.org/x/tools v0.8.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/grpc v1.54.0 // indirect
+	google.golang.org/grpc v1.55.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

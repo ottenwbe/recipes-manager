@@ -20,6 +20,26 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/accounts": {
+            "post": {
+                "description": "The number of recipes is returned that is managed by the service.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Get the number of recipes",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
         "/recipes": {
             "get": {
                 "description": "A list of ids of recipes is returned",

@@ -63,6 +63,9 @@ drive: # To fetch recipes from Goolge Drive
     ingredients: <name of ingredients section in the drive files>
     instructions: <name of the instructions section in the drive files>
 
+log:
+  level: <log level>
+    
 source:
   host: <source host, i.e., aka host of ui>
 ```

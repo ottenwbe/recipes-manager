@@ -36,7 +36,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"sync"
@@ -287,7 +286,7 @@ func (c *DriveClient) configureDriveConnection(token *oauth2.Token) (err error) 
 }
 
 func (c *DriveClient) oAuthLoginConfig() (*oauth2.Config, error) {
-	b, err := ioutil.ReadFile(clientSecretFile)
+	b, err := os.ReadFile(clientSecretFile)
 	if err != nil {
 		return nil, err
 	}

@@ -66,19 +66,19 @@ func init() {
 // Routes is managing a set of API endpoints.
 // Routes implementation(s) call handler function to perform typical CRUD operations (GET, POST, PATCH, ...).
 type Routes interface {
-	//Route is created to a specific set of endpoints
+	// Route is created to a specific set of endpoints
 	Route(string) Routes
-	//GET endpoint is added to the routes set and registers a corresponding handler
+	// GET endpoint is added to the routes set and registers a corresponding handler
 	GET(string, func(c *APICallContext))
-	//Path returns the base path
+	// Path returns the base path
 	Path() string
-	//PATCH endpoint is added to the routes set and registers a corresponding handler
+	// PATCH endpoint is added to the routes set and registers a corresponding handler
 	PATCH(string, func(c *APICallContext))
-	//POST endpoint is added to the routes set and registers a corresponding handler
+	// POST endpoint is added to the routes set and registers a corresponding handler
 	POST(string, func(c *APICallContext))
-	//PUT endpoint is added to the routes set and registers a corresponding handler
+	// PUT endpoint is added to the routes set and registers a corresponding handler
 	PUT(string, func(c *APICallContext))
-	//DELETE endpoint is added to the routes set and registers a corresponding handler
+	// DELETE endpoint is added to the routes set and registers a corresponding handler
 	DELETE(string, func(c *APICallContext))
 }
 
@@ -190,7 +190,7 @@ func (g *ginRoutes) POST(path string, handler func(c *APICallContext)) {
 	g.rg.POST(path, handler)
 }
 
-// PATH of the given route
+// Path of the given route
 func (g *ginRoutes) Path() string {
 	return g.rg.BasePath()
 }
@@ -203,7 +203,7 @@ func (g *ginHandler) corsMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, PATCH, POST, PUT")
 
 		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
 

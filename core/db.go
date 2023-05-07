@@ -22,13 +22,19 @@
  * SOFTWARE.
  */
 
-package account
+package core
 
-import "github.com/google/uuid"
+import "io"
 
-type Account struct {
-	Name string
-	ID   AccID
+// DB is the interface that all DB implementations have to expose
+type DB interface {
+	io.Closer
+	Ping() error
 }
 
-type AccID uuid.UUID
+// NewDatabaseClient builds a client to communicate with a database
+func NewDatabaseClient() (DB, error) {
+	m := &MongoClient{}
+	err := m.StartDB()
+	return m, err
+}
