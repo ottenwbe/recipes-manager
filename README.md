@@ -63,6 +63,12 @@ drive: # To fetch recipes from Goolge Drive
     ingredients: <name of ingredients section in the drive files>
     instructions: <name of the instructions section in the drive files>
 
+keycloak:
+  address: <address of keycloak sever>
+  clientSecret: <client secret>
+  clientID: <client id>
+  host: <host name>
+
 log:
   level: <log level>
     

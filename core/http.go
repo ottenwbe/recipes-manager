@@ -64,7 +64,7 @@ func init() {
 }
 
 // Routes is managing a set of API endpoints.
-// Routes implementation(s) call handler function to perform typical CRUD operations (GET, POST, PATCH, ...).
+// Routes implementation(s) call handler function to perform typical CRUD operations (GET, 	POST, PATCH, ...).
 type Routes interface {
 	// Route is created to a specific set of endpoints
 	Route(string) Routes

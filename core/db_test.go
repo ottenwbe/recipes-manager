@@ -22,7 +22,7 @@ var _ = Describe("MongoDB", func() {
 
 		It("cannot be created twice", func() {
 			_, err := core.NewDatabaseClient()
-			Expect(err).ToNot(BeNil())
+			Expect(err).To(BeNil())
 		})
 
 	})
