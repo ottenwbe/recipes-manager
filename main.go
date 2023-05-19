@@ -85,7 +85,7 @@ func addAPIsToServer(handler core.Handler, recipesDB recipes.RecipeDB, srcReposi
 	//TODO: refactor
 	db, _ := core.NewDatabaseClient()
 	account.AddAccountAPIToHandler(handler, db)
-	core.AddAuthAPIsToHandler(handler)
+	account.AddAuthAPIsToHandler(handler)
 
 	recipes.AddRecipesAPIToHandler(handler, recipesDB)
 	sourcesAPI := sources.NewSourceAPI(srcRepository, recipesDB)

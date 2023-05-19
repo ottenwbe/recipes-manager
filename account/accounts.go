@@ -27,8 +27,15 @@ package account
 import "github.com/google/uuid"
 
 type Account struct {
-	Name string
-	ID   AccID
+	Name string `json:"name"`
+	ID   AccID  `json:"id"`
 }
 
 type AccID uuid.UUID
+
+func NewAccount(name string) *Account {
+	return &Account{
+		Name: name,
+		ID:   AccID(uuid.New()),
+	}
+}

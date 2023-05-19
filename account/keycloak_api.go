@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package core
+package account
 
 import (
 	"context"
@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
+	"github.com/ottenwbe/recipes-manager/core"
 	"github.com/ottenwbe/recipes-manager/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -57,12 +58,7 @@ var (
 
 // AuthKeyCloakAPI for authorization
 type AuthKeyCloakAPI struct {
-	handler Handler
-}
-
-// Token document
-type Token struct {
-	Token string `json:"token"`
+	handler core.Handler
 }
 
 var (
@@ -70,8 +66,8 @@ var (
 )
 
 func init() {
-	keycloakAddress = utils.Config.GetString(keycloakAddressCfg)           //"http://lars-nas:8889/auth/realms/Test"
-	keyCloakClientSecret = utils.Config.GetString(keycloakClientSecretCfg) //"HnLyz3tDab3DyUxB9QK3UJoKTr8qvAOE"
+	keycloakAddress = utils.Config.GetString(keycloakAddressCfg)
+	keyCloakClientSecret = utils.Config.GetString(keycloakClientSecretCfg)
 	keyCloakClientID = utils.Config.GetString(keyCloakClientIDCfg)
 	keyCloakHost = utils.Config.GetString(keyCloakHostCfg)
 
@@ -79,7 +75,7 @@ func init() {
 }
 
 // AddAuthAPIsToHandler constructs an API for recipes
-func AddAuthAPIsToHandler(handler Handler) {
+func AddAuthAPIsToHandler(handler core.Handler) {
 	authKeyCloakApi = &AuthKeyCloakAPI{
 		handler,
 	}
@@ -140,7 +136,7 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 				panic("id_token is missing")
 			}
 
-			a.writeToken(c, keyCloakConfig, provider, rawIDToken)
+			writeToken(c, keyCloakConfig, provider, NewToken(rawIDToken))
 			c.JSON(http.StatusOK, &Token{Token: rawIDToken})
 		} else {
 			log.Debug("State not found")
@@ -149,8 +145,8 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 	}
 }
 
-func (a *AuthKeyCloakAPI) getKeyCloak(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *APICallContext) {
-	return func(c *APICallContext) {
+func (a *AuthKeyCloakAPI) getKeyCloak(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
+	return func(c *core.APICallContext) {
 
 		if token, err := getToken(c, provider, keyCloakConfig); err != nil {
 			state := createState()
@@ -162,7 +158,7 @@ func (a *AuthKeyCloakAPI) getKeyCloak(keyCloakConfig *oauth2.Config, provider *o
 			c.Redirect(http.StatusFound, authCodeURL)
 		} else {
 			log.Info("Token Reused")
-			c.JSON(http.StatusOK, &Token{Token: token})
+			c.JSON(http.StatusOK, token)
 		}
 	}
 }
@@ -175,33 +171,4 @@ func createState() string {
 	}
 	state := fmt.Sprintf("%x", stateSeed)
 	return state
-}
-
-func getToken(c *APICallContext, provider *oidc.Provider, keyCloakConfig *oauth2.Config) (string, error) {
-	cookie, err := c.Cookie(cookieTokenName)
-
-	if err != nil {
-		return "", err
-	}
-
-	verifier := provider.Verifier(&oidc.Config{ClientID: keyCloakConfig.ClientID})
-	_, err = verifier.Verify(context.Background(), cookie)
-	if err != nil {
-		return "", err
-	}
-
-	return cookie, err
-}
-
-func (a *AuthKeyCloakAPI) writeToken(c *gin.Context, keyCloakConfig *oauth2.Config, provider *oidc.Provider, rawIDToken string) {
-
-	verifier := provider.Verifier(&oidc.Config{ClientID: keyCloakConfig.ClientID})
-	idToken, err := verifier.Verify(context.Background(), rawIDToken)
-	if err != nil {
-		panic(err)
-	} else {
-		c.SetCookie(cookieTokenName, rawIDToken, 3600, "/", keyCloakHost, false, false)
-	}
-
-	log.Debugf("Cookie value: %s \n", idToken)
 }

@@ -41,7 +41,7 @@ func init() {
 	mongoAddress = utils.Config.GetString("recipeDB.host")
 }
 
-// MongoClient to connect to the mongo dtabase
+// MongoClient to connect to the mongo database
 type MongoClient struct {
 	Client *mongo.Client
 	//mtx avoids race conditions while connecting to the database and while closing the connection
