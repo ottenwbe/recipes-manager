@@ -26,16 +26,26 @@ package account
 
 import "github.com/google/uuid"
 
+type Type int64
+
+const (
+	KEYCLOAK Type = 0
+)
+
+// Account stored in the database
 type Account struct {
 	Name string `json:"name"`
 	ID   AccID  `json:"id"`
+	Type Type   `json:"type"`
 }
 
+// AccID identifies the account uniquely
 type AccID uuid.UUID
 
-func NewAccount(name string) *Account {
+func NewAccount(name string, accountType Type) *Account {
 	return &Account{
 		Name: name,
 		ID:   AccID(uuid.New()),
+		Type: accountType,
 	}
 }

@@ -24,6 +24,8 @@
 
 package core
 
+import "net/http"
+
 // AddCoreAPIToHandler constructs an API for recipes
 func AddCoreAPIToHandler(handler Handler) {
 	v1 := handler.API(1)
@@ -37,5 +39,5 @@ func AddCoreAPIToHandler(handler Handler) {
 // @Success 200 {object} Version
 // @Router /version [get]
 func prepareVersionRoutes(c *APICallContext) {
-	c.JSON(200, AppVersion())
+	c.JSON(http.StatusOK, AppVersion())
 }

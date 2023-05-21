@@ -26,9 +26,7 @@ package account
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/binary"
-	"fmt"
+	"encoding/json"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
 	"github.com/ottenwbe/recipes-manager/core"
@@ -43,22 +41,21 @@ const (
 	keycloakClientSecretCfg = "keycloak.clientSecret"
 	keyCloakClientIDCfg     = "keycloak.clientID"
 	keyCloakHostCfg         = "keycloak.host"
-
-	cookieTokenName = "token"
+	keycloakEnabledCfg      = "keycloak.enabled"
 )
 
 var (
+	keycloakEnabled      bool
 	keycloakAddress      string
 	keyCloakClientSecret string
 	keyCloakClientID     string
 	keyCloakHost         string
-
-	states map[string]string
 )
 
 // AuthKeyCloakAPI for authorization
 type AuthKeyCloakAPI struct {
 	handler core.Handler
+	db      *MongoAccountService
 }
 
 var (
@@ -66,109 +63,141 @@ var (
 )
 
 func init() {
-	keycloakAddress = utils.Config.GetString(keycloakAddressCfg)
-	keyCloakClientSecret = utils.Config.GetString(keycloakClientSecretCfg)
-	keyCloakClientID = utils.Config.GetString(keyCloakClientIDCfg)
-	keyCloakHost = utils.Config.GetString(keyCloakHostCfg)
 
-	states = make(map[string]string, 0)
+	utils.Config.SetDefault(keycloakEnabledCfg, true)
+
+	keycloakEnabled = utils.Config.GetBool(keycloakEnabledCfg)
+	if keycloakEnabled {
+		keycloakAddress = utils.Config.GetString(keycloakAddressCfg)
+		keyCloakClientSecret = utils.Config.GetString(keycloakClientSecretCfg)
+		keyCloakClientID = utils.Config.GetString(keyCloakClientIDCfg)
+		keyCloakHost = utils.Config.GetString(keyCloakHostCfg)
+	}
 }
 
 // AddAuthAPIsToHandler constructs an API for recipes
-func AddAuthAPIsToHandler(handler core.Handler) {
-	authKeyCloakApi = &AuthKeyCloakAPI{
-		handler,
-	}
+func AddAuthAPIsToHandler(handler core.Handler, db core.DB) {
 
-	authKeyCloakApi.prepareAPI()
+	if keycloakEnabled {
+
+		if handler == nil {
+			log.WithField("Component", "Auth Keycloak API").Fatal("No handler defined")
+			return
+		}
+
+		authKeyCloakApi = &AuthKeyCloakAPI{
+			handler: handler,
+			db:      NewMongoAccountService(db),
+		}
+		authKeyCloakApi.prepareAPI()
+	} else {
+		log.WithField("Component", "Auth Keycloak API").Info("Keycloak API disabled")
+	}
 }
 
 func (a *AuthKeyCloakAPI) prepareAPI() {
 
-	log.WithField("addr", keycloakAddress).Info("addr")
+	log.WithField("addr", keycloakAddress).Info("Prepare Keycloak API")
 
-	if a.handler == nil {
-		log.WithField("Component", "Auth Keycloak API").Fatal("No handler defined")
-		return
-	}
-
-	provider, err := oidc.NewProvider(context.Background(), keycloakAddress)
+	provider, keyCloakConfig, err := a.prepareConfig()
 	if err != nil {
 		panic(err)
-	}
-
-	keyCloakConfig := &oauth2.Config{
-		ClientID:     keyCloakClientID,
-		ClientSecret: keyCloakClientSecret,
-		RedirectURL:  "http://" + keyCloakHost + "/api/v1/oauth",
-		Endpoint:     provider.Endpoint(),
-		Scopes:       []string{oidc.ScopeOpenID, "email"},
 	}
 
 	v1 := a.handler.API(1)
 
 	//GET the list of accounts
-	v1.GET("/auth/keycloak/token", a.getKeyCloak(keyCloakConfig, provider))
+	v1.GET("/auth/keycloak/token", a.getKeyCloakToken(keyCloakConfig, provider))
 	v1.GET("/oauth", a.handleOAUTHResponse(keyCloakConfig, provider))
+}
+
+func (a *AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error) {
+	provider, err := oidc.NewProvider(context.Background(), keycloakAddress)
+
+	keyCloakConfig := &oauth2.Config{
+		ClientID:     keyCloakClientID,
+		ClientSecret: keyCloakClientSecret,
+		RedirectURL:  keyCloakHost + "/api/v1/oauth",
+		Endpoint:     provider.Endpoint(),
+		Scopes:       []string{oidc.ScopeOpenID, "email"},
+	}
+	return provider, keyCloakConfig, err
 }
 
 func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		log.Info("Token is Back")
+		log.Info("Return Auth response")
 
 		state := c.Query("state")
 		sessionState := c.Query("session_state")
 		code := c.Query("code")
 
 		log.WithField("state", state).
-			WithField("session", sessionState).Info("code")
+			WithField("session", sessionState).
+			Info("code")
 
-		if _, ok := states[state]; ok {
-			delete(states, state)
+		if currentState := States.FindAndDelete(state); currentState != nil {
 
 			token, err := keyCloakConfig.Exchange(context.Background(), code)
 			if err != nil {
-				panic(err)
+				log.Fatal(err)
 			}
+
+			s, _ := json.Marshal(token)
+			log.Info(string(s))
 
 			rawIDToken, ok := token.Extra("id_token").(string)
 			if !ok {
-				panic("id_token is missing")
+				log.Fatal("id_token is missing")
 			}
 
-			writeToken(c, keyCloakConfig, provider, NewToken(rawIDToken))
-			c.JSON(http.StatusOK, &Token{Token: rawIDToken})
+			storedToken := NewToken(rawIDToken)
+
+			// TODO let frontend store the token
+			WriteTokenToCookie(c, keyCloakConfig, provider, storedToken)
+
+			if currentState.Signup {
+				idToken, err := ValidateToken(provider, keyCloakConfig, storedToken)
+				if err != nil {
+					log.Error(err)
+				}
+
+				idTokenClaim := IDTokenClaim{}
+				if err := idToken.Claims(&idTokenClaim); err != nil {
+					panic(err)
+				}
+
+				_, err = a.db.NewAccount(idTokenClaim.Email)
+				if err != nil {
+					log.Error(err)
+				}
+			}
+
+			// TODO: redirect to UI
+			c.Redirect(http.StatusFound, "/login")
 		} else {
 			log.Debug("State not found")
-			c.String(http.StatusNotFound, "")
+			c.String(http.StatusUnauthorized, "Could Not Authenticate")
 		}
 	}
 }
 
-func (a *AuthKeyCloakAPI) getKeyCloak(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
+func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 
-		if token, err := getToken(c, provider, keyCloakConfig); err != nil {
-			state := createState()
-			states[state] = state
+		signup := c.Query("signup")
+		url := c.Query("returnTo")
 
-			authCodeURL := keyCloakConfig.AuthCodeURL(state)
+		if token, err := GetTokenFromCookie(c, provider, keyCloakConfig); err != nil {
+			state := States.CreateState(url, signup == "true")
+
+			authCodeURL := keyCloakConfig.AuthCodeURL(state.StateString)
 			log.Infof("Open %s\n", authCodeURL)
 
 			c.Redirect(http.StatusFound, authCodeURL)
 		} else {
-			log.Info("Token Reused")
+			log.Debug("Token reused")
 			c.JSON(http.StatusOK, token)
 		}
 	}
-}
-
-func createState() string {
-	var stateSeed uint64
-	err := binary.Read(rand.Reader, binary.LittleEndian, &stateSeed)
-	if err != nil {
-		log.Error(err.Error())
-	}
-	state := fmt.Sprintf("%x", stateSeed)
-	return state
 }

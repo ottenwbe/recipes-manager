@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/ottenwbe/recipes-manager/core"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"net/http"
 )
@@ -32,27 +31,11 @@ func AddAccountAPIToHandler(handler core.Handler, db core.DB) {
 }
 
 func (a *API) prepareAPI() {
-	provider, err := oidc.NewProvider(oauth2.NoContext, "http://lars-nas:8889/auth/realms/Test")
-	if err != nil {
-		panic(err)
-	}
-
-	var config oauth2.Config
-
-	if a.handler == nil {
-		log.WithField("Component", "Account API").Fatal("No handler defined")
-		return
-	}
-
-	if a.db == nil {
-		log.WithField("Component", "Account API").Fatal("No persistence defined")
-		return
-	}
 
 	v1 := a.handler.API(1)
 
 	//GET the list of accounts
-	v1.POST("/accounts", a.postAccounts(config, provider))
+	v1.POST("/accounts", a.postAccount)
 }
 
 // postAccounts example
@@ -65,8 +48,8 @@ func (a *API) prepareAPI() {
 func (a *API) postAccounts(config oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		config = oauth2.Config{
-			ClientID:     "GoTest",
-			ClientSecret: "HnLyz3tDab3DyUxB9QK3UJoKTr8qvAOE",
+			ClientID:     "AAAA",
+			ClientSecret: "BBBB",
 			RedirectURL:  "http://localhost:8080/oauth",
 			Endpoint:     provider.Endpoint(),
 			Scopes:       []string{oidc.ScopeOpenID, "email"},
@@ -84,4 +67,11 @@ func (a *API) postAccounts(config oauth2.Config, provider *oidc.Provider) func(c
 
 		c.Redirect(http.StatusFound, authCodeURL)
 	}
+}
+
+func (a *API) postAccount(c *core.APICallContext) {
+	// get token
+	// get email from token
+	// if account exists do nothing
+	// create account if not yet created
 }

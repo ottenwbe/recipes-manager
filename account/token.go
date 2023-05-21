@@ -27,11 +27,12 @@ package account
 import (
 	"context"
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/gin-gonic/gin"
 	"github.com/ottenwbe/recipes-manager/core"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
+
+const cookieTokenName = "token"
 
 // Token document
 type Token struct {
@@ -45,7 +46,12 @@ func NewToken(token string) *Token {
 	}
 }
 
-func getToken(c *core.APICallContext, provider *oidc.Provider, keyCloakConfig *oauth2.Config) (*Token, error) {
+// IDTokenClaim represents the relevant claims
+type IDTokenClaim struct {
+	Email string `json:"email"`
+}
+
+func GetTokenFromCookie(c *core.APICallContext, provider *oidc.Provider, keyCloakConfig *oauth2.Config) (*Token, error) {
 	cookie, err := c.Cookie(cookieTokenName)
 
 	if err != nil {
@@ -55,17 +61,18 @@ func getToken(c *core.APICallContext, provider *oidc.Provider, keyCloakConfig *o
 	verifier := provider.Verifier(&oidc.Config{ClientID: keyCloakConfig.ClientID})
 	_, err = verifier.Verify(context.Background(), cookie)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
 	return NewToken(cookie), err
 }
 
-func writeToken(c *gin.Context, keyCloakConfig *oauth2.Config, provider *oidc.Provider, token *Token) {
+func WriteTokenToCookie(c *core.APICallContext, keyCloakConfig *oauth2.Config, provider *oidc.Provider, token *Token) {
 
-	idToken, err := validateToken(provider, keyCloakConfig, token)
+	idToken, err := ValidateToken(provider, keyCloakConfig, token)
 	if err != nil {
-		log.WithField("Token", "writeToken").Error(err)
+		log.WithField("Token", "WriteTokenToCookie").Error(err)
 	} else {
 		c.SetCookie(cookieTokenName, token.Token, 3600, "/", keyCloakHost, false, false)
 	}
@@ -73,7 +80,7 @@ func writeToken(c *gin.Context, keyCloakConfig *oauth2.Config, provider *oidc.Pr
 	log.Debugf("Cookie value: %s \n", idToken)
 }
 
-func validateToken(provider *oidc.Provider, config *oauth2.Config, token *Token) (*oidc.IDToken, error) {
+func ValidateToken(provider *oidc.Provider, config *oauth2.Config, token *Token) (*oidc.IDToken, error) {
 	verifier := provider.Verifier(&oidc.Config{ClientID: config.ClientID})
 	idToken, err := verifier.Verify(context.Background(), token.Token)
 	return idToken, err

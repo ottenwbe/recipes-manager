@@ -34,6 +34,7 @@ import (
 type RecipeConfig interface {
 	GetInt64(key string) int64
 	GetString(key string) string
+	GetBool(key string) bool
 	SetDefault(key string, val interface{})
 	BindEnv(key string)
 	Debug()
@@ -58,6 +59,11 @@ func NewViperConfig(name string, paths []string) RecipeConfig {
 	c := &viperConfig{}
 	c.config(name, paths)
 	return c
+}
+
+// GetBool returns a boolean for the given key
+func (*viperConfig) GetBool(key string) bool {
+	return viper.GetBool(key)
 }
 
 // GetString returns a string for the given key

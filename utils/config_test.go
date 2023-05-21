@@ -68,6 +68,15 @@ var _ = Describe("Config", func() {
 			Expect(i).To(Equal(expected))
 		})
 
+		It("can handle boo default values", func() {
+			const expected = true
+			const testKey = "default-bool"
+			c := NewViperConfig("test-config", []string{"fixtures"})
+			c.SetDefault(testKey, expected)
+			i := c.GetBool(testKey)
+			Expect(i).To(Equal(expected))
+		})
+
 	})
 
 })

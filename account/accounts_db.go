@@ -27,43 +27,71 @@ package account
 import (
 	"context"
 	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
-type MongoAccountDB struct {
-	Db *core.MongoClient
+type MongoAccountService struct {
+	DbClient *core.MongoClient
 }
 
-func NewMongoAccountClient(db core.DB) *MongoAccountDB {
-	return &MongoAccountDB{
-		Db: db.(*core.MongoClient),
+const (
+	EMAIL = "name"
+	ID    = "id"
+)
+
+func NewMongoAccountService(db core.DB) *MongoAccountService {
+
+	accountDB := &MongoAccountService{
+		DbClient: db.(*core.MongoClient),
 	}
+
+	err := accountDB.createTextIndex()
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	return accountDB
 }
 
-func (db *MongoAccountDB) DeleteAccount(acc *Account) error {
+func (db *MongoAccountService) DeleteAccountByID(id AccID) error {
 	collection := db.getAccountsCollection()
-	_, err := collection.DeleteOne(db.ctx(), acc)
+	_, err := collection.DeleteOne(db.ctx(), bson.M{ID: id})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (db *MongoAccountDB) SaveAccount(acc *Account) error {
+func (db *MongoAccountService) DeleteAccountByName(name string) error {
 	collection := db.getAccountsCollection()
+	_, err := collection.DeleteOne(db.ctx(), bson.M{EMAIL: name})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *MongoAccountService) NewAccount(name string) (*Account, error) {
+	collection := db.getAccountsCollection()
+
+	acc := NewAccount(name, KEYCLOAK)
+
 	_, err := collection.InsertOne(db.ctx(), acc)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return acc, nil
 }
 
-func (db *MongoAccountDB) FindAccount(acc *Account) (*Account, error) {
+func (db *MongoAccountService) FindAccount(name string) (*Account, error) {
 	collection := db.getAccountsCollection()
 	var result Account
 
-	err := collection.FindOne(db.ctx(), bson.M{"name": acc.Name}).Decode(&result)
+	err := collection.FindOne(db.ctx(), bson.M{EMAIL: name}).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
@@ -71,10 +99,26 @@ func (db *MongoAccountDB) FindAccount(acc *Account) (*Account, error) {
 	return &result, nil
 }
 
-func (db *MongoAccountDB) getAccountsCollection() *mongo.Collection {
-	return db.Db.Client.Database("Account").Collection("accounts")
+func (db *MongoAccountService) getAccountsCollection() *mongo.Collection {
+	return db.DbClient.Client.Database("accounts").Collection("accounts")
 }
 
-func (db *MongoAccountDB) ctx() context.Context {
+func (db *MongoAccountService) ctx() context.Context {
 	return context.Background()
+}
+
+func (db *MongoAccountService) createTextIndex() error {
+
+	c := db.getAccountsCollection()
+
+	textIndex := mongo.IndexModel{
+		Keys: bsonx.Doc{
+			{Key: EMAIL, Value: bsonx.String("text")},
+		},
+		Options: options.Index().SetUnique(true),
+	}
+
+	_, err := c.Indexes().CreateOne(db.ctx(), textIndex)
+
+	return err
 }
