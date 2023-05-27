@@ -83,9 +83,9 @@ info:
   title: Swagger API documentation for recipes-manager
   version: "1.0"
 paths:
-  /accounts:
-    post:
-      description: The number of recipes is returned that is managed by the service.
+  /auth/keycloak/logout:
+    get:
+      description: Logout by deleting the token.
       produces:
       - application/json
       responses:
@@ -93,9 +93,35 @@ paths:
           description: OK
           schema:
             type: integer
-      summary: Get the number of recipes
+      summary: Logout by deleting the token
       tags:
-      - Accounts
+      - KeyCloak
+  /auth/keycloak/token:
+    get:
+      description: Login by creating a token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      summary: Login by creating a token
+      tags:
+      - KeyCloak
+  /oauth:
+    get:
+      description: OAuth endpoint
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      summary: OAuth endpoint
+      tags:
+      - KeyCloak
   /recipes:
     get:
       description: A list of ids of recipes is returned

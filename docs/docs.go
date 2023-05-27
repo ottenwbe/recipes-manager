@@ -20,16 +20,56 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/accounts": {
-            "post": {
-                "description": "The number of recipes is returned that is managed by the service.",
+        "/auth/keycloak/logout": {
+            "get": {
+                "description": "Logout by deleting the token.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Accounts"
+                    "KeyCloak"
                 ],
-                "summary": "Get the number of recipes",
+                "summary": "Logout by deleting the token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/keycloak/token": {
+            "get": {
+                "description": "Login by creating a token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KeyCloak"
+                ],
+                "summary": "Login by creating a token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth": {
+            "get": {
+                "description": "OAuth endpoint",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KeyCloak"
+                ],
+                "summary": "OAuth endpoint",
                 "responses": {
                     "200": {
                         "description": "OK",

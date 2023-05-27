@@ -51,14 +51,15 @@ type IDTokenClaim struct {
 	Email string `json:"email"`
 }
 
-func GetTokenFromCookie(c *core.APICallContext, provider *oidc.Provider, keyCloakConfig *oauth2.Config) (*Token, error) {
+// GetTokenFromCookie returns the token or an error
+func GetTokenFromCookie(c *core.APICallContext, provider *oidc.Provider, config *oauth2.Config) (*Token, error) {
 	cookie, err := c.Cookie(cookieTokenName)
 
 	if err != nil {
 		return nil, err
 	}
 
-	verifier := provider.Verifier(&oidc.Config{ClientID: keyCloakConfig.ClientID})
+	verifier := provider.Verifier(&oidc.Config{ClientID: config.ClientID})
 	_, err = verifier.Verify(context.Background(), cookie)
 	if err != nil {
 		log.Error(err)
@@ -68,9 +69,16 @@ func GetTokenFromCookie(c *core.APICallContext, provider *oidc.Provider, keyCloa
 	return NewToken(cookie), err
 }
 
-func WriteTokenToCookie(c *core.APICallContext, keyCloakConfig *oauth2.Config, provider *oidc.Provider, token *Token) {
+// DeleteTokenCookie by setting the cookie maxAge to -1
+func DeleteTokenCookie(c *core.APICallContext) {
+	c.SetCookie(cookieTokenName, "", -1, "/", keyCloakHost, false, false)
 
-	idToken, err := ValidateToken(provider, keyCloakConfig, token)
+}
+
+// WriteTokenToCookie stores the token in a cookie
+func WriteTokenToCookie(c *core.APICallContext, config *oauth2.Config, provider *oidc.Provider, token *Token) {
+
+	idToken, err := ValidateToken(provider, config, token)
 	if err != nil {
 		log.WithField("Token", "WriteTokenToCookie").Error(err)
 	} else {
@@ -80,6 +88,7 @@ func WriteTokenToCookie(c *core.APICallContext, keyCloakConfig *oauth2.Config, p
 	log.Debugf("Cookie value: %s \n", idToken)
 }
 
+// ValidateToken ensures the validity of the token
 func ValidateToken(provider *oidc.Provider, config *oauth2.Config, token *Token) (*oidc.IDToken, error) {
 	verifier := provider.Verifier(&oidc.Config{ClientID: config.ClientID})
 	idToken, err := verifier.Verify(context.Background(), token.Token)

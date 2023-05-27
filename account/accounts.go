@@ -29,10 +29,11 @@ import "github.com/google/uuid"
 type Type int64
 
 const (
+	// KEYCLOAK type
 	KEYCLOAK Type = 0
 )
 
-// Account stored in the database
+// Account document that can be stored in the database
 type Account struct {
 	Name string `json:"name"`
 	ID   AccID  `json:"id"`
@@ -42,6 +43,7 @@ type Account struct {
 // AccID identifies the account uniquely
 type AccID uuid.UUID
 
+// NewAccount is created with a specific name (eMail ID) and type (e.g., KEYCLOAK)
 func NewAccount(name string, accountType Type) *Account {
 	return &Account{
 		Name: name,

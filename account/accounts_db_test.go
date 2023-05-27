@@ -37,15 +37,15 @@ var _ = Describe("Account DB", func() {
 		accountName := "test_create_account"
 
 		It("while not throwing an error", func() {
-			acc, err := mongoDatabase.NewAccount(accountName)
+			acc, err := mongoDatabase.NewAccount(accountName, account.KEYCLOAK)
 
 			Expect(err).To(BeNil())
 			Expect(acc.Name).To(Equal(accountName))
 		})
 
 		It("cannot create an entry twice", func() {
-			_, _ = mongoDatabase.NewAccount(accountName)
-			_, err = mongoDatabase.NewAccount(accountName)
+			_, _ = mongoDatabase.NewAccount(accountName, account.KEYCLOAK)
+			_, err = mongoDatabase.NewAccount(accountName, account.KEYCLOAK)
 
 			Expect(err).ToNot(BeNil())
 		})
@@ -56,7 +56,7 @@ var _ = Describe("Account DB", func() {
 		accountName := "test_find_acc"
 
 		It("that has been stored beforehand", func() {
-			a, err := mongoDatabase.NewAccount(accountName)
+			a, err := mongoDatabase.NewAccount(accountName, account.KEYCLOAK)
 
 			logrus.Info(json.Marshal(a))
 
@@ -73,7 +73,7 @@ var _ = Describe("Account DB", func() {
 		accountName := "test_del_acc"
 
 		It("a stored account by a ID", func() {
-			idAccount, err := mongoDatabase.NewAccount(accountName)
+			idAccount, err := mongoDatabase.NewAccount(accountName, account.KEYCLOAK)
 			err = mongoDatabase.DeleteAccountByID(idAccount.ID)
 			foundAcc, err := mongoDatabase.FindAccount(accountName)
 
@@ -82,7 +82,7 @@ var _ = Describe("Account DB", func() {
 		})
 
 		It("a stored account by a name", func() {
-			_, err = mongoDatabase.NewAccount(accountName)
+			_, err = mongoDatabase.NewAccount(accountName, account.KEYCLOAK)
 			err = mongoDatabase.DeleteAccountByName(accountName)
 			foundAcc, err := mongoDatabase.FindAccount(accountName)
 

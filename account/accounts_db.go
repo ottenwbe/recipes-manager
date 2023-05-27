@@ -34,15 +34,19 @@ import (
 	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
+// MongoAccountService stores and manipulates stored accounts in a DB
 type MongoAccountService struct {
 	DbClient *core.MongoClient
 }
 
 const (
+	// EMAIL key
 	EMAIL = "name"
-	ID    = "id"
+	// ID key
+	ID = "id"
 )
 
+// NewMongoAccountService is created and configured
 func NewMongoAccountService(db core.DB) *MongoAccountService {
 
 	accountDB := &MongoAccountService{
@@ -51,12 +55,13 @@ func NewMongoAccountService(db core.DB) *MongoAccountService {
 
 	err := accountDB.createTextIndex()
 	if err != nil {
-		logrus.Error(err)
+		logrus.Error("Error creating Index", err)
 	}
 
 	return accountDB
 }
 
+// DeleteAccountByID deletes an account indefinitely
 func (db *MongoAccountService) DeleteAccountByID(id AccID) error {
 	collection := db.getAccountsCollection()
 	_, err := collection.DeleteOne(db.ctx(), bson.M{ID: id})
@@ -66,6 +71,7 @@ func (db *MongoAccountService) DeleteAccountByID(id AccID) error {
 	return nil
 }
 
+// DeleteAccountByName deletes an account indefinitely
 func (db *MongoAccountService) DeleteAccountByName(name string) error {
 	collection := db.getAccountsCollection()
 	_, err := collection.DeleteOne(db.ctx(), bson.M{EMAIL: name})
@@ -75,10 +81,11 @@ func (db *MongoAccountService) DeleteAccountByName(name string) error {
 	return nil
 }
 
-func (db *MongoAccountService) NewAccount(name string) (*Account, error) {
+// NewAccount stores the account information in a db
+func (db *MongoAccountService) NewAccount(name string, t Type) (*Account, error) {
 	collection := db.getAccountsCollection()
 
-	acc := NewAccount(name, KEYCLOAK)
+	acc := NewAccount(name, t)
 
 	_, err := collection.InsertOne(db.ctx(), acc)
 	if err != nil {
@@ -87,6 +94,7 @@ func (db *MongoAccountService) NewAccount(name string) (*Account, error) {
 	return acc, nil
 }
 
+// FindAccount by Name
 func (db *MongoAccountService) FindAccount(name string) (*Account, error) {
 	collection := db.getAccountsCollection()
 	var result Account

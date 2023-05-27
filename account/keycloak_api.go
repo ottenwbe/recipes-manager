@@ -106,9 +106,9 @@ func (a *AuthKeyCloakAPI) prepareAPI() {
 
 	v1 := a.handler.API(1)
 
-	//GET the list of accounts
 	v1.GET("/auth/keycloak/token", a.getKeyCloakToken(keyCloakConfig, provider))
 	v1.GET("/oauth", a.handleOAUTHResponse(keyCloakConfig, provider))
+	v1.GET("/auth/keycloak/logout", a.handleLogout(keyCloakConfig, provider))
 }
 
 func (a *AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error) {
@@ -124,6 +124,13 @@ func (a *AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error
 	return provider, keyCloakConfig, err
 }
 
+// handleOAUTHResponse documentation
+// @Summary OAuth endpoint
+// @Description OAuth endpoint
+// @Tags KeyCloak
+// @Produce json
+// @Success 200 {integer} number
+// @Router /oauth [get]
 func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		log.Info("Return Auth response")
@@ -167,7 +174,7 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 					panic(err)
 				}
 
-				_, err = a.db.NewAccount(idTokenClaim.Email)
+				_, err = a.db.NewAccount(idTokenClaim.Email, KEYCLOAK)
 				if err != nil {
 					log.Error(err)
 				}
@@ -182,6 +189,13 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 	}
 }
 
+// getKeyCloakToken documentation
+// @Summary Login by creating a token
+// @Description Login by creating a token
+// @Tags KeyCloak
+// @Produce json
+// @Success 200 {integer} number
+// @Router /auth/keycloak/token [get]
 func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 
@@ -199,5 +213,19 @@ func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provid
 			log.Debug("Token reused")
 			c.JSON(http.StatusOK, token)
 		}
+	}
+}
+
+// handleLogout documentation
+// @Summary Logout by deleting the token
+// @Description Logout by deleting the token.
+// @Tags KeyCloak
+// @Produce json
+// @Success 200 {integer} number
+// @Router /auth/keycloak/logout [get]
+func (a *AuthKeyCloakAPI) handleLogout(config *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
+	return func(c *core.APICallContext) {
+		DeleteTokenCookie(c)
+		c.JSON(http.StatusOK, nil)
 	}
 }

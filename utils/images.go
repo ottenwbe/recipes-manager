@@ -27,8 +27,9 @@ package utils
 import (
 	"encoding/base64"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 )
 
 const metaData = "data:image/jpeg;base64,"
@@ -43,7 +44,7 @@ func DownloadIMGAsBase64(url string) (base64img string, err error) {
 	}
 	defer func() { _ = response.Body.Close() }()
 
-	buf, err := ioutil.ReadAll(response.Body)
+	buf, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.WithError(err).WithField("url", url).Error("Could not read response while downloading an image...")
 	}
@@ -59,7 +60,7 @@ func DownloadIMGAsBase64(url string) (base64img string, err error) {
 
 // IMGFileToBase64 reads an image from a file at given path, i.e., /home/user/test.jpeg. This image is returned as base64 encoded string.
 func IMGFileToBase64(path string) string {
-	buf, err := ioutil.ReadFile(path)
+	buf, err := os.ReadFile(path)
 	if err != nil {
 		log.WithError(err).Error("Could not open image")
 		return ""

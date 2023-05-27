@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+// TestAccounts suite
 func TestAccounts(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Accounts Suite")
