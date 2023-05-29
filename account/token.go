@@ -94,3 +94,19 @@ func ValidateToken(provider *oidc.Provider, config *oauth2.Config, token *Token)
 	idToken, err := verifier.Verify(context.Background(), token.Token)
 	return idToken, err
 }
+
+func GetClaims(provider *oidc.Provider, config *oauth2.Config, token *Token) (*IDTokenClaim, error) {
+	idToken, err := ValidateToken(provider, config, token)
+	if err != nil {
+		log.Error("Could Not Validate ID Token", err)
+		return nil, err
+	}
+
+	idTokenClaim := &IDTokenClaim{}
+	if err := idToken.Claims(idTokenClaim); err != nil {
+		log.Error("Could not determine ID Token", err)
+		return nil, err
+	}
+
+	return idTokenClaim, nil
+}

@@ -64,7 +64,7 @@ var (
 
 func init() {
 
-	utils.Config.SetDefault(keycloakEnabledCfg, true)
+	utils.Config.SetDefault(keycloakEnabledCfg, false)
 
 	keycloakEnabled = utils.Config.GetBool(keycloakEnabledCfg)
 	if keycloakEnabled {
@@ -107,8 +107,9 @@ func (a *AuthKeyCloakAPI) prepareAPI() {
 	v1 := a.handler.API(1)
 
 	v1.GET("/auth/keycloak/token", a.getKeyCloakToken(keyCloakConfig, provider))
-	v1.GET("/oauth", a.handleOAUTHResponse(keyCloakConfig, provider))
+	v1.GET("/auth/keycloak/login", a.getKeyCloakLogin(keyCloakConfig, provider))
 	v1.GET("/auth/keycloak/logout", a.handleLogout(keyCloakConfig, provider))
+	v1.GET("/oauth", a.handleOAUTHResponse(keyCloakConfig, provider))
 }
 
 func (a *AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error) {
@@ -127,7 +128,7 @@ func (a *AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error
 // handleOAUTHResponse documentation
 // @Summary OAuth endpoint
 // @Description OAuth endpoint
-// @Tags KeyCloak
+// @Tags Auth
 // @Produce json
 // @Success 200 {integer} number
 // @Router /oauth [get]
@@ -145,46 +146,93 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 
 		if currentState := States.FindAndDelete(state); currentState != nil {
 
-			token, err := keyCloakConfig.Exchange(context.Background(), code)
-			if err != nil {
-				log.Fatal(err)
+			token := getTokenFromKeyCloak(keyCloakConfig, code)
+
+			WriteTokenToCookie(c, keyCloakConfig, provider, token)
+
+			if a.tryStoreAccountIfSignup(c, keyCloakConfig, token, provider, currentState) {
+				return
 			}
 
-			s, _ := json.Marshal(token)
-			log.Info(string(s))
-
-			rawIDToken, ok := token.Extra("id_token").(string)
-			if !ok {
-				log.Fatal("id_token is missing")
+			if _, err := a.db.FindAccount(""); err == nil {
+				c.Redirect(http.StatusFound, "/")
+			} else {
+				c.Redirect(http.StatusUnauthorized, "/401")
 			}
-
-			storedToken := NewToken(rawIDToken)
-
-			// TODO let frontend store the token
-			WriteTokenToCookie(c, keyCloakConfig, provider, storedToken)
-
-			if currentState.Signup {
-				idToken, err := ValidateToken(provider, keyCloakConfig, storedToken)
-				if err != nil {
-					log.Error(err)
-				}
-
-				idTokenClaim := IDTokenClaim{}
-				if err := idToken.Claims(&idTokenClaim); err != nil {
-					panic(err)
-				}
-
-				_, err = a.db.NewAccount(idTokenClaim.Email, KEYCLOAK)
-				if err != nil {
-					log.Error(err)
-				}
-			}
-
-			// TODO: redirect to UI
-			c.Redirect(http.StatusFound, "/login")
 		} else {
 			log.Debug("State not found")
-			c.String(http.StatusUnauthorized, "Could Not Authenticate")
+			c.Redirect(http.StatusUnauthorized, "/401")
+		}
+	}
+}
+
+func (a *AuthKeyCloakAPI) tryStoreAccountIfSignup(c *gin.Context, keyCloakConfig *oauth2.Config, token *Token, provider *oidc.Provider, currentState *State) bool {
+
+	if currentState.Signup {
+
+		idTokenClaim, err := GetClaims(provider, keyCloakConfig, token)
+		if err != nil {
+			c.Redirect(http.StatusUnauthorized, "/401")
+			return true
+		}
+
+		_, err = a.db.NewAccount(idTokenClaim.Email, KEYCLOAK)
+		if err != nil {
+			log.Error("NewAccount could not be saved", err)
+			c.Redirect(http.StatusUnauthorized, "/401")
+			return true
+		}
+	}
+	return false
+}
+
+func getTokenFromKeyCloak(keyCloakConfig *oauth2.Config, code string) *Token {
+	token, err := keyCloakConfig.Exchange(context.Background(), code)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s, err := json.Marshal(token)
+	if err != nil {
+		log.Error("Could Not Unmarshal Token", err)
+	}
+	log.Debugf("Token received %s", s)
+
+	rawIDToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		log.Fatal("id_token is missing")
+	}
+
+	storedToken := NewToken(rawIDToken)
+	return storedToken
+}
+
+// getKeyCloakToken documentation
+// @Summary Get the token
+// @Description Get the token for a user
+// @Tags Auth
+// @Produce json
+// @Success 200 {integer} number
+// @Router /auth/keycloak/token [get]
+func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
+	return func(c *core.APICallContext) {
+
+		if token, err := GetTokenFromCookie(c, provider, keyCloakConfig); err != nil {
+			c.String(http.StatusNotFound, "you have to login first")
+		} else {
+			idTokenClaim, err := GetClaims(provider, keyCloakConfig, token)
+			if err != nil {
+				log.Error("Token Claims Not Found", err)
+				c.JSON(http.StatusNotFound, "try and login or signup again")
+			} else {
+				if _, err := a.db.FindAccount(idTokenClaim.Email); err == nil {
+					log.Debug("Token Reused")
+					c.JSON(http.StatusOK, token)
+				} else {
+					log.Error("Token Could Not Be Reused", err)
+					c.JSON(http.StatusNotFound, "you have to signup first")
+				}
+			}
 		}
 	}
 }
@@ -192,34 +240,29 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 // getKeyCloakToken documentation
 // @Summary Login by creating a token
 // @Description Login by creating a token
-// @Tags KeyCloak
+// @Tags Auth
 // @Produce json
 // @Success 200 {integer} number
-// @Router /auth/keycloak/token [get]
-func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
+// @Router /auth/keycloak/login [get]
+func (a *AuthKeyCloakAPI) getKeyCloakLogin(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 
 		signup := c.Query("signup")
 		url := c.Query("returnTo")
 
-		if token, err := GetTokenFromCookie(c, provider, keyCloakConfig); err != nil {
-			state := States.CreateState(url, signup == "true")
+		state := States.CreateState(url, signup == "true")
 
-			authCodeURL := keyCloakConfig.AuthCodeURL(state.StateString)
-			log.Infof("Open %s\n", authCodeURL)
+		authCodeURL := keyCloakConfig.AuthCodeURL(state.StateString)
+		log.Infof("Open %s\n", authCodeURL)
 
-			c.Redirect(http.StatusFound, authCodeURL)
-		} else {
-			log.Debug("Token reused")
-			c.JSON(http.StatusOK, token)
-		}
+		c.Redirect(http.StatusFound, authCodeURL)
 	}
 }
 
 // handleLogout documentation
 // @Summary Logout by deleting the token
 // @Description Logout by deleting the token.
-// @Tags KeyCloak
+// @Tags Auth
 // @Produce json
 // @Success 200 {integer} number
 // @Router /auth/keycloak/logout [get]

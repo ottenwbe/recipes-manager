@@ -20,6 +20,26 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/keycloak/login": {
+            "get": {
+                "description": "Login by creating a token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login by creating a token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/keycloak/logout": {
             "get": {
                 "description": "Logout by deleting the token.",
@@ -27,7 +47,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "KeyCloak"
+                    "Auth"
                 ],
                 "summary": "Logout by deleting the token",
                 "responses": {
@@ -42,14 +62,14 @@ const docTemplate = `{
         },
         "/auth/keycloak/token": {
             "get": {
-                "description": "Login by creating a token",
+                "description": "Get the token for a user",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "KeyCloak"
+                    "Auth"
                 ],
-                "summary": "Login by creating a token",
+                "summary": "Get the token",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -67,7 +87,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "KeyCloak"
+                    "Auth"
                 ],
                 "summary": "OAuth endpoint",
                 "responses": {

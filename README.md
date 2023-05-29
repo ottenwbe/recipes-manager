@@ -68,6 +68,7 @@ keycloak:
   clientSecret: <client secret>
   clientID: <client id>
   host: <host name>
+  enabled: <enable or disable keycloak feature>
 
 log:
   level: <log level>
