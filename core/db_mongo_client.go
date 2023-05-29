@@ -44,7 +44,7 @@ func init() {
 // MongoClient to connect to the mongo database
 type MongoClient struct {
 	Client *mongo.Client
-	//mtx avoids race conditions while connecting to the database and while closing the connection
+	// mtx avoids race conditions while connecting to the database and while closing the connection
 	mtx sync.Mutex
 }
 
