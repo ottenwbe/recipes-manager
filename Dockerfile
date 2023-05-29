@@ -15,7 +15,10 @@ FROM docker.io/ubuntu:latest
 ARG APP=recipes-manager
 ENV GIN_MODE release
 
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /app; mkdir -p /etc/recipes-manager
 

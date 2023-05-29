@@ -58,9 +58,8 @@ func (m *MongoClient) Ping() error {
 
 	if m.Client != nil {
 		return m.Client.Ping(ctx(), readpref.Primary())
-	} else {
-		return errors.New("cannot ping since it is not connected")
 	}
+	return errors.New("cannot ping since it is not connected")
 }
 
 // StartDB initializes the database connection
