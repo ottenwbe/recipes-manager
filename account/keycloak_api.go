@@ -150,40 +150,37 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 
 			WriteTokenToCookie(c, keyCloakConfig, provider, token)
 
-			if a.tryStoreAccountIfSignup(c, keyCloakConfig, token, provider, currentState) {
+			idTokenClaim, err := GetClaims(provider, keyCloakConfig, token)
+			if err != nil {
+				log.Error("Signup error", err)
+				c.Redirect(http.StatusUnauthorized, "/401")
 				return
 			}
 
-			if _, err := a.db.FindAccount(""); err == nil {
+			a.tryStoreAccountIfSignup(idTokenClaim, currentState)
+
+			if _, err := a.db.FindAccount(idTokenClaim.Email); err == nil {
 				c.Redirect(http.StatusFound, "/")
 			} else {
-				c.Redirect(http.StatusUnauthorized, "/401")
+				c.Redirect(http.StatusNotFound, "/401")
 			}
 		} else {
 			log.Debug("State not found")
-			c.Redirect(http.StatusUnauthorized, "/401")
+			c.Redirect(http.StatusNotFound, "/401")
 		}
 	}
 }
 
-func (a *AuthKeyCloakAPI) tryStoreAccountIfSignup(c *gin.Context, keyCloakConfig *oauth2.Config, token *Token, provider *oidc.Provider, currentState *State) bool {
+func (a *AuthKeyCloakAPI) tryStoreAccountIfSignup(idTokenClaim *IDTokenClaim, currentState *State) {
+
+	log.Infof("Signup request %v", currentState.Signup)
 
 	if currentState.Signup {
-
-		idTokenClaim, err := GetClaims(provider, keyCloakConfig, token)
+		_, err := a.db.NewAccount(idTokenClaim.Email, KEYCLOAK)
 		if err != nil {
-			c.Redirect(http.StatusUnauthorized, "/401")
-			return true
-		}
-
-		_, err = a.db.NewAccount(idTokenClaim.Email, KEYCLOAK)
-		if err != nil {
-			log.Error("NewAccount could not be saved", err)
-			c.Redirect(http.StatusUnauthorized, "/401")
-			return true
+			log.Error("Account was already saved", err)
 		}
 	}
-	return false
 }
 
 func getTokenFromKeyCloak(keyCloakConfig *oauth2.Config, code string) *Token {
@@ -223,14 +220,14 @@ func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provid
 			idTokenClaim, err := GetClaims(provider, keyCloakConfig, token)
 			if err != nil {
 				log.Error("Token Claims Not Found", err)
-				c.JSON(http.StatusNotFound, "try and login or signup again")
+				c.String(http.StatusNotFound, "try and login or signup again")
 			} else {
 				if _, err := a.db.FindAccount(idTokenClaim.Email); err == nil {
 					log.Debug("Token Reused")
 					c.JSON(http.StatusOK, token)
 				} else {
 					log.Error("Token Could Not Be Reused", err)
-					c.JSON(http.StatusNotFound, "you have to signup first")
+					c.String(http.StatusNotFound, "you have to signup first")
 				}
 			}
 		}
@@ -253,7 +250,7 @@ func (a *AuthKeyCloakAPI) getKeyCloakLogin(keyCloakConfig *oauth2.Config, provid
 		state := States.CreateState(url, signup == "true")
 
 		authCodeURL := keyCloakConfig.AuthCodeURL(state.StateString)
-		log.Infof("Open %s\n", authCodeURL)
+		log.Debugf("Open %s\n", authCodeURL)
 
 		c.Redirect(http.StatusFound, authCodeURL)
 	}

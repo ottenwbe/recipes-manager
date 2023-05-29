@@ -3,6 +3,7 @@ package account
 import (
 	"crypto/rand"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 )
@@ -50,6 +51,10 @@ func (sm StateMap) CreateState(url string, signup bool) *State {
 	stateString := fmt.Sprintf("%x", stateSeed)
 
 	state := newState(url, signup, stateString)
+
+	v, _ := json.Marshal(state)
+	log.Info("State Stored: %s", string(v))
+
 	sm[stateString] = state
 	return state
 }
