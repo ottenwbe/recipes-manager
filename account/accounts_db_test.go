@@ -73,7 +73,7 @@ var _ = Describe("Account DB", func() {
 		accountName := "test_del_acc"
 
 		It("a stored account by a ID", func() {
-			idAccount, err := mongoDatabase.NewAccount(accountName, account.KEYCLOAK)
+			idAccount, _ := mongoDatabase.NewAccount(accountName, account.KEYCLOAK)
 			_ = mongoDatabase.DeleteAccountByID(idAccount.ID)
 			foundAcc, err := mongoDatabase.FindAccount(accountName)
 

@@ -111,7 +111,7 @@ func (db *MongoAccountService) getAccountsCollection() *mongo.Collection {
 	return db.DbClient.Client.Database("accounts").Collection("accounts")
 }
 
-func (db *MongoAccountService) ctx() context.Context {
+func (*MongoAccountService) ctx() context.Context {
 	return context.Background()
 }
 

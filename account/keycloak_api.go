@@ -107,12 +107,12 @@ func (a *AuthKeyCloakAPI) prepareAPI() {
 	v1 := a.handler.API(1)
 
 	v1.GET("/auth/keycloak/token", a.getKeyCloakToken(keyCloakConfig, provider))
-	v1.GET("/auth/keycloak/login", a.getKeyCloakLogin(keyCloakConfig, provider))
-	v1.GET("/auth/keycloak/logout", a.handleLogout(keyCloakConfig, provider))
+	v1.GET("/auth/keycloak/login", a.getKeyCloakLogin(keyCloakConfig))
+	v1.GET("/auth/keycloak/logout", a.handleLogout())
 	v1.GET("/oauth", a.handleOAUTHResponse(keyCloakConfig, provider))
 }
 
-func (a *AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error) {
+func (*AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error) {
 	provider, err := oidc.NewProvider(context.Background(), keycloakAddress)
 
 	keyCloakConfig := &oauth2.Config{
@@ -186,7 +186,7 @@ func (a *AuthKeyCloakAPI) tryStoreAccountIfSignup(idTokenClaim *IDTokenClaim, cu
 func getTokenFromKeyCloak(keyCloakConfig *oauth2.Config, code string) *Token {
 	token, err := keyCloakConfig.Exchange(context.Background(), code)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	s, err := json.Marshal(token)
@@ -197,7 +197,7 @@ func getTokenFromKeyCloak(keyCloakConfig *oauth2.Config, code string) *Token {
 
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok {
-		log.Fatal("id_token is missing")
+		log.Error("id_token is missing")
 	}
 
 	storedToken := NewToken(rawIDToken)
@@ -241,7 +241,7 @@ func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provid
 // @Produce json
 // @Success 200 {integer} number
 // @Router /auth/keycloak/login [get]
-func (a *AuthKeyCloakAPI) getKeyCloakLogin(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
+func (*AuthKeyCloakAPI) getKeyCloakLogin(keyCloakConfig *oauth2.Config) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 
 		signup := c.Query("signup")
@@ -263,7 +263,7 @@ func (a *AuthKeyCloakAPI) getKeyCloakLogin(keyCloakConfig *oauth2.Config, provid
 // @Produce json
 // @Success 200 {integer} number
 // @Router /auth/keycloak/logout [get]
-func (a *AuthKeyCloakAPI) handleLogout(config *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
+func (*AuthKeyCloakAPI) handleLogout() func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		DeleteTokenCookie(c)
 		c.JSON(http.StatusOK, nil)
