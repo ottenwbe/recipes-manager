@@ -53,7 +53,7 @@ func (sm StateMap) CreateState(url string, signup bool) *State {
 	state := newState(url, signup, stateString)
 
 	v, _ := json.Marshal(state)
-	log.Info("State Stored: %s", string(v))
+	log.Infof("State Stored: %s", string(v))
 
 	sm[stateString] = state
 	return state
