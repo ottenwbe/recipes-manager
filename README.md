@@ -1,6 +1,6 @@
  # recipes-manager
 
-[![Build Status](https://travis-ci.org/ottenwbe/recipes-manager.svg?branch=master)](https://travis-ci.org/ottenwbe/recipes-manager)
+[![CI](https://github.com/ottenwbe/recipes-manager/actions/workflows/go.yml/badge.svg)](https://github.com/ottenwbe/recipes-manager/actions/workflows/go.yml)
 
 Backend service to manage recipes. 
 Recipes-manager supports managing recipes via API while persisting them in a database.
@@ -63,6 +63,16 @@ drive: # To fetch recipes from Goolge Drive
     ingredients: <name of ingredients section in the drive files>
     instructions: <name of the instructions section in the drive files>
 
+keycloak:
+  address: <address of keycloak sever>
+  clientSecret: <client secret>
+  clientID: <client id>
+  host: <host name>
+  enabled: <enable or disable keycloak feature>
+
+log:
+  level: <log level>
+    
 source:
   host: <source host, i.e., aka host of ui>
 ```

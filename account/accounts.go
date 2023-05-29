@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Beate Ottenwälder
+ * Copyright (c) 2023 Beate Ottenwälder
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,22 +22,32 @@
  * SOFTWARE.
  */
 
-package core
+package account
 
-import "net/http"
+import "github.com/google/uuid"
 
-// AddCoreAPIToHandler constructs an API for recipes
-func AddCoreAPIToHandler(handler Handler) {
-	v1 := handler.API(1)
-	v1.GET("/version", prepareVersionRoutes)
+type Type int64
+
+const (
+	// KEYCLOAK type
+	KEYCLOAK Type = 0
+)
+
+// Account document that can be stored in the database
+type Account struct {
+	Name string `json:"name"`
+	ID   AccID  `json:"id"`
+	Type Type   `json:"type"`
 }
 
-// Version example
-// @Summary Get the curent version
-// @Description get the current version
-// @Produce  json
-// @Success 200 {object} Version
-// @Router /version [get]
-func prepareVersionRoutes(c *APICallContext) {
-	c.JSON(http.StatusOK, AppVersion())
+// AccID identifies the account uniquely
+type AccID uuid.UUID
+
+// NewAccount is created with a specific name (eMail ID) and type (e.g., KEYCLOAK)
+func NewAccount(name string, accountType Type) *Account {
+	return &Account{
+		Name: name,
+		ID:   AccID(uuid.New()),
+		Type: accountType,
+	}
 }

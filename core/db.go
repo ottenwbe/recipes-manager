@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Beate Ottenwälder
+ * Copyright (c) 2023 Beate Ottenwälder
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,20 +24,17 @@
 
 package core
 
-import "net/http"
+import "io"
 
-// AddCoreAPIToHandler constructs an API for recipes
-func AddCoreAPIToHandler(handler Handler) {
-	v1 := handler.API(1)
-	v1.GET("/version", prepareVersionRoutes)
+// DB is the interface that all DB implementations have to expose
+type DB interface {
+	io.Closer
+	Ping() error
 }
 
-// Version example
-// @Summary Get the curent version
-// @Description get the current version
-// @Produce  json
-// @Success 200 {object} Version
-// @Router /version [get]
-func prepareVersionRoutes(c *APICallContext) {
-	c.JSON(http.StatusOK, AppVersion())
+// NewDatabaseClient builds a client to communicate with a database
+func NewDatabaseClient() (DB, error) {
+	m := &MongoClient{}
+	err := m.StartDB()
+	return m, err
 }

@@ -25,6 +25,7 @@
 package main
 
 import (
+	"github.com/ottenwbe/recipes-manager/account"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/ottenwbe/recipes-manager/core"
@@ -86,6 +87,9 @@ func addAPIsToServer(handler core.Handler, recipesDB recipes.RecipeDB, srcReposi
 	sourcesAPI.PrepareAPI(handler, srcRepository, recipesDB)
 	core.AddCoreAPIToHandler(handler)
 
+	//TODO: Refactor and merge with recipes.DB
+	db, _ := core.NewDatabaseClient()
+	account.AddAuthAPIsToHandler(handler, db)
 }
 
 func newSources() sources.Sources {
