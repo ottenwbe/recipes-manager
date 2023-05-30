@@ -1,6 +1,8 @@
  # recipes-manager
 
 [![CI](https://github.com/ottenwbe/recipes-manager/actions/workflows/go.yml/badge.svg)](https://github.com/ottenwbe/recipes-manager/actions/workflows/go.yml)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ottenwbe/recipes-manager/blob/master/LICENSE)
+[![Known Vulnerabilities](https://snyk.io/test/github/ottenwbe/recipes-manager/badge.svg)](https://snyk.io/test/github/ottenwbe/recipes-manager)
 
 Backend service to manage recipes. 
 Recipes-manager supports managing recipes via API while persisting them in a database.
