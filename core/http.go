@@ -223,8 +223,9 @@ func NewServerA(addr string, handler http.Handler) Server {
 	return Server{
 		Address: addr,
 		server: &http.Server{
-			Addr:    addr,
-			Handler: handler,
+			Addr:        addr,
+			Handler:     handler,
+			ReadTimeout: 30 * time.Second,
 		},
 		stopWaitGroup: &sync.WaitGroup{}}
 }
