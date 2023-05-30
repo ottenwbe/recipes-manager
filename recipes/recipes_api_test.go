@@ -78,7 +78,7 @@ var _ = Describe("recipesAPI", func() {
 
 			createRandomRecipes(5, recipes)
 			expectedID := createAndPersistDefaultRecipe(recipes)
-			defer func() { //delete recently created recipe
+			defer func() { // delete recently created recipe
 				recipes.Remove(expectedID)
 			}()
 
@@ -97,7 +97,7 @@ var _ = Describe("recipesAPI", func() {
 
 			createRandomRecipes(5, recipes)
 			expectedID := createAndPersistDefaultRecipe(recipes)
-			defer func() { //delete recently created recipe
+			defer func() { // delete recently created recipe
 				recipes.Remove(expectedID)
 			}()
 
@@ -116,11 +116,11 @@ var _ = Describe("recipesAPI", func() {
 
 			createRandomRecipes(5, recipes) //add noise
 			expectedID1 := createAndPersistNewRecipe("search", "none", Ingredients{Name: "hi"}, recipes)
-			defer func() { //delete recently created recipe
+			defer func() { // delete recently created recipe
 				recipes.Remove(expectedID1)
 			}()
 			expectedID2 := createAndPersistNewRecipe("none", "find", Ingredients{Name: "hi"}, recipes)
-			defer func() { //delete recently created recipe
+			defer func() { // delete recently created recipe
 				recipes.Remove(expectedID2)
 			}()
 
@@ -140,7 +140,7 @@ var _ = Describe("recipesAPI", func() {
 
 			createRandomRecipes(5, recipes) //add noise
 			expectedID := createAndPersistNewRecipe("search", "test", Ingredients{Name: "hi"}, recipes)
-			defer func() { //delete recently created recipe
+			defer func() { // delete recently created recipe
 				recipes.Remove(expectedID)
 			}()
 

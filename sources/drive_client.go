@@ -313,8 +313,11 @@ func (c *DriveClient) tokenFromFile() (*oauth2.Token, error) {
 	}
 	tok := &oauth2.Token{}
 	err = json.NewDecoder(f).Decode(tok)
-	defer f.Close()
-	return tok, err
+	if err != nil {
+		return tok, err
+	}
+	return tok, f.Close()
+
 }
 
 // saveToken uses a file path to create a file and store the

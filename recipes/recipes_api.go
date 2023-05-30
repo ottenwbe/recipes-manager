@@ -87,28 +87,28 @@ func (rAPI *API) prepareV1API() {
 
 	v1 := rAPI.handler.API(1)
 
-	//GET the list of recipes
+	// GET the list of recipes
 	v1.GET("/recipes", rAPI.getRecipes)
 
-	//POST a new recipe
+	// POST a new recipe
 	v1.POST("/recipes", rAPI.postRecipes)
 
-	//GET a random recipe
+	// GET a random recipe
 	v1.GET("/recipes/rand", rAPI.getRandomRecipe)
 
-	//GET the number of recipe
+	// GET the number of recipe
 	v1.GET("/recipes/num", rAPI.getNumberOfRecipes)
 
-	//GET a specific recipe
+	// GET a specific recipe
 	v1.GET("/recipes/r/:recipe", rAPI.getRecipe)
 
-	//PUT updates a specific recipe
+	// PUT updates a specific recipe
 	v1.PUT("/recipes/r/:recipe", rAPI.putRecipe)
 
-	//PUT updates a specific recipe
+	// PUT updates a specific recipe
 	v1.DELETE("/recipes/r/:recipe", rAPI.deleteRecipe)
 
-	//GET a specific recipe's picture
+	// GET a specific recipe's picture
 	v1.GET("/recipes/r/:recipe/pictures/:name", rAPI.getRecipePicture)
 
 }
