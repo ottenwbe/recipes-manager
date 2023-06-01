@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/coreos/go-oidc/v3 v3.6.0
 	github.com/gin-gonic/contrib v0.0.0-20221130124618-7e01895a63f2
-	github.com/gin-gonic/gin v1.9.0
+	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.3.0
 	github.com/onsi/ginkgo/v2 v2.9.5
 	github.com/onsi/gomega v1.27.7
