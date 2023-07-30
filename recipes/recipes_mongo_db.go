@@ -34,7 +34,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"go.mongodb.org/mongo-driver/x/bsonx"
 	"strings"
 	"sync"
 
@@ -377,14 +376,9 @@ func (m *MongoRecipeDB) StopDB() (err error) {
 
 func (m *MongoRecipeDB) connectToDB() (err error) {
 	log.WithField("addr", mongoAddress).Info("Connecting to DB")
-	m.mongoClient, err = mongo.NewClient(options.Client().ApplyURI(mongoAddress))
+	m.mongoClient, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoAddress))
 	if err != nil {
-		log.WithError(err).Info("Could not create MongoDB client")
-		return
-	}
-	err = m.mongoClient.Connect(ctx())
-	if err != nil {
-		log.WithError(err).Info("Could not connect to MongoDB")
+		log.WithError(err).Info("Could not create MongoDB client and Connect")
 		return
 	}
 	err = m.Ping()
@@ -448,10 +442,10 @@ func (m *MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
 
 func (m *MongoRecipeDB) createTextIndex(c *mongo.Collection) error {
 	textIndex := mongo.IndexModel{
-		Keys: bsonx.Doc{
-			{Key: "name", Value: bsonx.String("text")},
-			{Key: "description", Value: bsonx.String("text")},
-			{Key: "ingredients.name", Value: bsonx.String("text")},
+		Keys: bson.D{
+			{Key: "name", Value: 1},
+			{Key: "description", Value: 1},
+			{Key: "ingredients.name", Value: 1},
 		},
 		Options: options.Index().SetUnique(false),
 	}
