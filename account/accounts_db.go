@@ -31,7 +31,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
 // MongoAccountService stores and manipulates stored accounts in a DB
@@ -120,9 +119,7 @@ func (db *MongoAccountService) createTextIndex() error {
 	c := db.getAccountsCollection()
 
 	textIndex := mongo.IndexModel{
-		Keys: bsonx.Doc{
-			{Key: EMAIL, Value: bsonx.String("text")},
-		},
+		Keys:    bson.D{{EMAIL, 1}},
 		Options: options.Index().SetUnique(true),
 	}
 

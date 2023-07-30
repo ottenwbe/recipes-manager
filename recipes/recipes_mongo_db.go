@@ -34,7 +34,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"go.mongodb.org/mongo-driver/x/bsonx"
 	"strings"
 	"sync"
 
@@ -448,10 +447,10 @@ func (m *MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
 
 func (m *MongoRecipeDB) createTextIndex(c *mongo.Collection) error {
 	textIndex := mongo.IndexModel{
-		Keys: bsonx.Doc{
-			{Key: "name", Value: bsonx.String("text")},
-			{Key: "description", Value: bsonx.String("text")},
-			{Key: "ingredients.name", Value: bsonx.String("text")},
+		Keys: bson.D{
+			{"name", 1},
+			{"description", 1},
+			{"ingredients.name", 1},
 		},
 		Options: options.Index().SetUnique(false),
 	}
