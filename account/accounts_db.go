@@ -119,7 +119,7 @@ func (db *MongoAccountService) createTextIndex() error {
 	c := db.getAccountsCollection()
 
 	textIndex := mongo.IndexModel{
-		Keys:    bson.D{{EMAIL, 1}},
+		Keys:    bson.D{{Key: EMAIL, Value: 1}},
 		Options: options.Index().SetUnique(true),
 	}
 

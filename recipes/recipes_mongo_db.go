@@ -448,9 +448,9 @@ func (m *MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
 func (m *MongoRecipeDB) createTextIndex(c *mongo.Collection) error {
 	textIndex := mongo.IndexModel{
 		Keys: bson.D{
-			{"name", 1},
-			{"description", 1},
-			{"ingredients.name", 1},
+			{Key: "name", Value: 1},
+			{Key: "description", Value: 1},
+			{Key: "ingredients.name", Value: 1},
 		},
 		Options: options.Index().SetUnique(false),
 	}
