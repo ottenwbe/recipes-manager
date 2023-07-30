@@ -9,10 +9,11 @@ Recipes-manager supports managing recipes via API while persisting them in a dat
 
 ## Related projects
 
-|Tool|URL|
-|---|---|
-| Web Frontend  |  https://github.com/ottenwbe/recipes-manager-ui |
-| Deployment    |  https://github.com/ottenwbe/recipes-manager-deployment |
+| Tool         |URL|
+|--------------|---|
+| Web Frontend |  https://github.com/ottenwbe/recipes-manager-ui |
+| Recommender  |  https://github.com/ottenwbe/recipes-manager-recommender |
+| Deployment   |  https://github.com/ottenwbe/recipes-manager-deployment |
 
 ## How to Use?
 

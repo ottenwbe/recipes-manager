@@ -39,7 +39,7 @@ import (
 	"github.com/ottenwbe/recipes-manager/utils"
 )
 
-// driveRecipeParser enumerates all states of the driveRecipeParser
+// driveRecipeParser parses an html document to identify recipes
 type driveRecipeParser struct {
 	descriptionBuffer bytes.Buffer
 	recipe            *recipes.Recipe
