@@ -376,14 +376,9 @@ func (m *MongoRecipeDB) StopDB() (err error) {
 
 func (m *MongoRecipeDB) connectToDB() (err error) {
 	log.WithField("addr", mongoAddress).Info("Connecting to DB")
-	m.mongoClient, err = mongo.NewClient(options.Client().ApplyURI(mongoAddress))
+	m.mongoClient, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoAddress))
 	if err != nil {
-		log.WithError(err).Info("Could not create MongoDB client")
-		return
-	}
-	err = m.mongoClient.Connect(ctx())
-	if err != nil {
-		log.WithError(err).Info("Could not connect to MongoDB")
+		log.WithError(err).Info("Could not create MongoDB client and Connect")
 		return
 	}
 	err = m.Ping()
