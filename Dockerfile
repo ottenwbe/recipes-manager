@@ -1,7 +1,7 @@
 # Build container for the application.
 # Eases up the process of building
 # for different target architectures.
-FROM docker.io/golang:1.20 AS builder
+FROM docker.io/golang:1.21 AS builder
 ARG APP=recipes-manager
 COPY . /build
 
