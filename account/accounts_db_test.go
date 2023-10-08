@@ -17,14 +17,8 @@ var _ = Describe("Account DB", func() {
 		err           error
 	)
 
-	BeforeEach(func() {
-		database, err = core.NewDatabaseClient()
-		mongoDatabase = account.NewMongoAccountService(database)
-	})
-
-	AfterEach(func() {
-		_ = database.Close()
-	})
+	database, err = core.NewDatabaseClient()
+	mongoDatabase = account.NewMongoAccountService(database)
 
 	Context("client", func() {
 		It("can be connected to w/o an error", func() {

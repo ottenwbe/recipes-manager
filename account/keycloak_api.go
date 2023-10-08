@@ -56,6 +56,7 @@ var (
 type AuthKeyCloakAPI struct {
 	handler core.Handler
 	db      *MongoAccountService
+	states  *StateService
 }
 
 var (
@@ -88,6 +89,7 @@ func AddAuthAPIsToHandler(handler core.Handler, db core.DB) {
 		authKeyCloakApi = &AuthKeyCloakAPI{
 			handler: handler,
 			db:      NewMongoAccountService(db),
+			states:  NewStateService(db),
 		}
 		authKeyCloakApi.prepareAPI()
 	} else {
@@ -144,7 +146,7 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 			WithField("session", sessionState).
 			Info("code")
 
-		if currentState := States.FindAndDelete(state); currentState != nil {
+		if currentState := a.states.FindAndDelete(state); currentState != nil {
 
 			token := getTokenFromKeyCloak(keyCloakConfig, code)
 
@@ -162,18 +164,18 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 			if _, err := a.db.FindAccount(idTokenClaim.Email); err == nil {
 				c.Redirect(http.StatusFound, "/")
 			} else {
-				c.Redirect(http.StatusNotFound, "/401")
+				c.Redirect(http.StatusNotFound, "/404")
 			}
 		} else {
 			log.Debug("State not found")
-			c.Redirect(http.StatusNotFound, "/401")
+			c.Redirect(http.StatusNotFound, "/404")
 		}
 	}
 }
 
 func (a *AuthKeyCloakAPI) tryStoreAccountIfSignup(idTokenClaim *IDTokenClaim, currentState *State) {
 
-	log.Infof("Signup request %v", currentState.Signup)
+	log.WithField("method", "tryStoreAccountIfSignup").Infof("Signup request, %v", currentState.Signup)
 
 	if currentState.Signup {
 		_, err := a.db.NewAccount(idTokenClaim.Email, KEYCLOAK)
@@ -215,7 +217,7 @@ func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provid
 	return func(c *core.APICallContext) {
 
 		if token, err := GetTokenFromCookie(c, provider, keyCloakConfig); err != nil {
-			c.String(http.StatusNotFound, "you have to login first")
+			c.String(http.StatusNotFound, "You have to login first")
 		} else {
 			idTokenClaim, err := GetClaims(provider, keyCloakConfig, token)
 			if err != nil {
@@ -241,15 +243,15 @@ func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provid
 // @Produce json
 // @Success 200 {integer} number
 // @Router /auth/keycloak/login [get]
-func (*AuthKeyCloakAPI) getKeyCloakLogin(keyCloakConfig *oauth2.Config) func(c *core.APICallContext) {
+func (a *AuthKeyCloakAPI) getKeyCloakLogin(keyCloakConfig *oauth2.Config) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 
 		signup := c.Query("signup")
 		url := c.Query("returnTo")
 
-		state := States.CreateState(url, signup == "true")
+		state := a.states.CreateState(url, signup == "true")
 
-		authCodeURL := keyCloakConfig.AuthCodeURL(state.StateString)
+		authCodeURL := keyCloakConfig.AuthCodeURL(state.State)
 		log.Debugf("Open %s\n", authCodeURL)
 
 		c.Redirect(http.StatusFound, authCodeURL)

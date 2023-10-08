@@ -34,7 +34,7 @@ import (
 
 const cookieTokenName = "token"
 
-// Token document
+// Token document that can be stored, i.e., in a cookie
 type Token struct {
 	Token string `json:"token"`
 }

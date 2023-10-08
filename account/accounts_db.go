@@ -27,10 +27,11 @@ package account
 import (
 	"context"
 	"github.com/ottenwbe/recipes-manager/core"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"sync"
 )
 
 // MongoAccountService stores and manipulates stored accounts in a DB
@@ -45,16 +46,25 @@ const (
 	ID = "id"
 )
 
+var (
+	accountServiceOnce sync.Once
+	accountDB          *MongoAccountService
+)
+
 // NewMongoAccountService is created and configured
 func NewMongoAccountService(db core.DB) *MongoAccountService {
 
-	accountDB := &MongoAccountService{
-		DbClient: db.(*core.MongoClient),
-	}
+	if (db != nil) && (accountDB == nil) {
+		accountServiceOnce.Do(func() {
+			accountDB = &MongoAccountService{
+				DbClient: db.(*core.MongoClient),
+			}
 
-	err := accountDB.createTextIndex()
-	if err != nil {
-		logrus.Error("Error creating Index", err)
+			err := accountDB.createTextIndex()
+			if err != nil {
+				log.Error("Error creating Account DB Index", err)
+			}
+		})
 	}
 
 	return accountDB
