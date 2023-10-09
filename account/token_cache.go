@@ -72,7 +72,6 @@ func GetTokenFromCookie(c *core.APICallContext, provider *oidc.Provider, config 
 // DeleteTokenCookie by setting the cookie maxAge to -1
 func DeleteTokenCookie(c *core.APICallContext) {
 	c.SetCookie(cookieTokenName, "", -1, "/", keyCloakHost, false, false)
-
 }
 
 // WriteTokenToCookie stores the token in a cookie

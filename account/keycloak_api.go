@@ -103,6 +103,7 @@ func (a *AuthKeyCloakAPI) prepareAPI() {
 
 	provider, keyCloakConfig, err := a.prepareConfig()
 	if err != nil {
+		log.WithError(err).Error("Account Management Configuration Error")
 		panic(err)
 	}
 
@@ -150,8 +151,6 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 
 			token := getTokenFromKeyCloak(keyCloakConfig, code)
 
-			WriteTokenToCookie(c, keyCloakConfig, provider, token)
-
 			idTokenClaim, err := GetClaims(provider, keyCloakConfig, token)
 			if err != nil {
 				log.Error("Signup error", err)
@@ -161,7 +160,8 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 
 			a.tryStoreAccountIfSignup(idTokenClaim, currentState)
 
-			if _, err := a.db.FindAccount(idTokenClaim.Email); err == nil {
+			if _, err := a.db.FindAccount(idTokenClaim.Email, KEYCLOAK); err == nil {
+				WriteTokenToCookie(c, keyCloakConfig, provider, token)
 				c.Redirect(http.StatusFound, "/")
 			} else {
 				c.Redirect(http.StatusNotFound, "/404")
@@ -224,7 +224,7 @@ func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provid
 				log.Error("Token Claims Not Found", err)
 				c.String(http.StatusNotFound, "try and login or signup again")
 			} else {
-				if _, err := a.db.FindAccount(idTokenClaim.Email); err == nil {
+				if _, err := a.db.FindAccount(idTokenClaim.Email, KEYCLOAK); err == nil {
 					log.Debug("Token Reused")
 					c.JSON(http.StatusOK, token)
 				} else {

@@ -23,12 +23,12 @@ type State struct {
 	URL       string `json:"url"`
 	Signup    bool   `json:"signup"`
 	State     string `json:"state"`
-	CreatedAt string `json:"created_at"`
+	CreatedAt int64  `json:"created_at"`
 }
 
 // StateService type to interact with (cached) states for authentication
 type StateService struct {
-	DbClient *core.MongoClient
+	dbClient *core.MongoClient
 }
 
 var (
@@ -40,7 +40,7 @@ func NewStateService(db core.DB) *StateService {
 
 	if (db != nil) && (stateService == nil) {
 		once.Do(func() {
-			stateService = &StateService{DbClient: db.(*core.MongoClient)}
+			stateService = &StateService{dbClient: db.(*core.MongoClient)}
 
 			err := stateService.createTextIndex()
 			if err != nil {
@@ -53,7 +53,7 @@ func NewStateService(db core.DB) *StateService {
 }
 
 func (sm *StateService) getStatusCollection() *mongo.Collection {
-	return sm.DbClient.Client.Database("accounts").Collection("status")
+	return sm.dbClient.Client.Database("accounts").Collection("status")
 }
 
 func (*StateService) ctx() context.Context {
@@ -132,6 +132,6 @@ func newState(url string, signup bool, stateString string) *State {
 		State:     stateString,
 		URL:       url,
 		Signup:    signup,
-		CreatedAt: time.Now().String(),
+		CreatedAt: time.Now().UnixNano(), //TODO: need to delete outdated entries
 	}
 }

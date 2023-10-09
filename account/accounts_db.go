@@ -44,6 +44,8 @@ const (
 	EMAIL = "name"
 	// ID key
 	ID = "id"
+	// TYPE key
+	TYPE = "type"
 )
 
 var (
@@ -104,11 +106,11 @@ func (db *MongoAccountService) NewAccount(name string, t Type) (*Account, error)
 }
 
 // FindAccount by Name
-func (db *MongoAccountService) FindAccount(name string) (*Account, error) {
+func (db *MongoAccountService) FindAccount(name string, accountType Type) (*Account, error) {
 	collection := db.getAccountsCollection()
 	var result Account
 
-	err := collection.FindOne(db.ctx(), bson.M{EMAIL: name}).Decode(&result)
+	err := collection.FindOne(db.ctx(), bson.M{EMAIL: name, TYPE: accountType}).Decode(&result)
 	if err != nil {
 		return nil, err
 	}

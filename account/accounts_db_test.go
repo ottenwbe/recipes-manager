@@ -54,7 +54,7 @@ var _ = Describe("Account DB", func() {
 
 			logrus.Info(json.Marshal(a))
 
-			bAcc, err := mongoDatabase.FindAccount(accountName)
+			bAcc, err := mongoDatabase.FindAccount(accountName, account.KEYCLOAK)
 
 			Expect(err).To(BeNil())
 			Expect(bAcc.Name).To(Equal(accountName))
@@ -69,7 +69,7 @@ var _ = Describe("Account DB", func() {
 		It("a stored account by a ID", func() {
 			idAccount, _ := mongoDatabase.NewAccount(accountName, account.KEYCLOAK)
 			_ = mongoDatabase.DeleteAccountByID(idAccount.ID)
-			foundAcc, err := mongoDatabase.FindAccount(accountName)
+			foundAcc, err := mongoDatabase.FindAccount(accountName, account.KEYCLOAK)
 
 			Expect(err).ToNot(BeNil())
 			Expect(foundAcc).To(BeNil())
@@ -78,7 +78,7 @@ var _ = Describe("Account DB", func() {
 		It("a stored account by a name", func() {
 			_, err = mongoDatabase.NewAccount(accountName, account.KEYCLOAK)
 			_ = mongoDatabase.DeleteAccountByName(accountName)
-			foundAcc, err := mongoDatabase.FindAccount(accountName)
+			foundAcc, err := mongoDatabase.FindAccount(accountName, account.KEYCLOAK)
 
 			Expect(err).ToNot(BeNil())
 			Expect(foundAcc).To(BeNil())
