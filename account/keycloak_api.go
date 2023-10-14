@@ -27,6 +27,7 @@ package account
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
 	"github.com/ottenwbe/recipes-manager/core"
@@ -101,7 +102,7 @@ func (a *AuthKeyCloakAPI) prepareAPI() {
 
 	log.WithField("addr", keycloakAddress).Info("Prepare Keycloak API")
 
-	provider, keyCloakConfig, err := a.prepareConfig()
+	config, err := a.prepareConfig()
 	if err != nil {
 		log.WithError(err).Error("Account Management Configuration Error")
 		panic(err)
@@ -109,23 +110,22 @@ func (a *AuthKeyCloakAPI) prepareAPI() {
 
 	v1 := a.handler.API(1)
 
-	v1.GET("/auth/keycloak/token", a.getKeyCloakToken(keyCloakConfig, provider))
-	v1.GET("/auth/keycloak/login", a.getKeyCloakLogin(keyCloakConfig))
+	v1.GET("/auth/keycloak/login", a.getKeyCloakLogin(config))
 	v1.GET("/auth/keycloak/logout", a.handleLogout())
-	v1.GET("/oauth", a.handleOAUTHResponse(keyCloakConfig, provider))
+	v1.GET("/oauth", a.handleOAUTHResponse(config))
 }
 
-func (*AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error) {
+func (*AuthKeyCloakAPI) prepareConfig() (*TokenMeta, error) {
 	provider, err := oidc.NewProvider(context.Background(), keycloakAddress)
 
 	keyCloakConfig := &oauth2.Config{
 		ClientID:     keyCloakClientID,
 		ClientSecret: keyCloakClientSecret,
-		RedirectURL:  keyCloakHost + "/api/v1/oauth",
+		RedirectURL:  fmt.Sprintf("%v/api/v1/oauth", keyCloakHost),
 		Endpoint:     provider.Endpoint(),
 		Scopes:       []string{oidc.ScopeOpenID, "email"},
 	}
-	return provider, keyCloakConfig, err
+	return &TokenMeta{Provider: provider, Config: keyCloakConfig}, err
 }
 
 // handleOAUTHResponse documentation
@@ -135,7 +135,7 @@ func (*AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error) 
 // @Produce json
 // @Success 200 {integer} number
 // @Router /oauth [get]
-func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *gin.Context) {
+func (a *AuthKeyCloakAPI) handleOAUTHResponse(config *TokenMeta) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		log.Info("Return Auth response")
 
@@ -149,9 +149,9 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 
 		if currentState := a.states.FindAndDelete(state); currentState != nil {
 
-			token := getTokenFromKeyCloak(keyCloakConfig, code)
+			token := getTokenFromKeyCloak(config.Config, code)
 
-			idTokenClaim, err := GetClaims(provider, keyCloakConfig, token)
+			idTokenClaim, err := config.GetClaims(token)
 			if err != nil {
 				log.Error("Signup error", err)
 				c.Redirect(http.StatusUnauthorized, "/401")
@@ -161,8 +161,7 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 			a.tryStoreAccountIfSignup(idTokenClaim, currentState)
 
 			if _, err := a.db.FindAccount(idTokenClaim.Email, KEYCLOAK); err == nil {
-				WriteTokenToCookie(c, keyCloakConfig, provider, token)
-				c.Redirect(http.StatusFound, "/")
+				c.Redirect(http.StatusFound, fmt.Sprintf("/login?token=%v", token.Token))
 			} else {
 				c.Redirect(http.StatusNotFound, "/404")
 			}
@@ -207,51 +206,21 @@ func getTokenFromKeyCloak(keyCloakConfig *oauth2.Config, code string) *Token {
 }
 
 // getKeyCloakToken documentation
-// @Summary Get the token
-// @Description Get the token for a user
-// @Tags Auth
-// @Produce json
-// @Success 200 {integer} number
-// @Router /auth/keycloak/token [get]
-func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
-	return func(c *core.APICallContext) {
-
-		if token, err := GetTokenFromCookie(c, provider, keyCloakConfig); err != nil {
-			c.String(http.StatusNotFound, "You have to login first")
-		} else {
-			idTokenClaim, err := GetClaims(provider, keyCloakConfig, token)
-			if err != nil {
-				log.Error("Token Claims Not Found", err)
-				c.String(http.StatusNotFound, "try and login or signup again")
-			} else {
-				if _, err := a.db.FindAccount(idTokenClaim.Email, KEYCLOAK); err == nil {
-					log.Debug("Token Reused")
-					c.JSON(http.StatusOK, token)
-				} else {
-					log.Error("Token Could Not Be Reused", err)
-					c.String(http.StatusNotFound, "you have to signup first")
-				}
-			}
-		}
-	}
-}
-
-// getKeyCloakToken documentation
 // @Summary Login by creating a token
 // @Description Login by creating a token
 // @Tags Auth
 // @Produce json
 // @Success 200 {integer} number
 // @Router /auth/keycloak/login [get]
-func (a *AuthKeyCloakAPI) getKeyCloakLogin(keyCloakConfig *oauth2.Config) func(c *core.APICallContext) {
+func (a *AuthKeyCloakAPI) getKeyCloakLogin(config *TokenMeta) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 
 		signup := c.Query("signup")
-		url := c.Query("returnTo")
+		url := c.Query("returnTo") //TODO: remove returnto
 
 		state := a.states.CreateState(url, signup == "true")
 
-		authCodeURL := keyCloakConfig.AuthCodeURL(state.State)
+		authCodeURL := config.Config.AuthCodeURL(state.State)
 		log.Debugf("Open %s\n", authCodeURL)
 
 		c.Redirect(http.StatusFound, authCodeURL)
@@ -267,7 +236,7 @@ func (a *AuthKeyCloakAPI) getKeyCloakLogin(keyCloakConfig *oauth2.Config) func(c
 // @Router /auth/keycloak/logout [get]
 func (*AuthKeyCloakAPI) handleLogout() func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
-		DeleteTokenCookie(c)
+		//TODO: implement me
 		c.JSON(http.StatusOK, nil)
 	}
 }

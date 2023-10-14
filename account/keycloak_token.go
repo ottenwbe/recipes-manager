@@ -27,12 +27,15 @@ package account
 import (
 	"context"
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/ottenwbe/recipes-manager/core"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
-const cookieTokenName = "token"
+// TokenMeta information about the token provider and configuration
+type TokenMeta struct {
+	Provider *oidc.Provider
+	Config   *oauth2.Config
+}
 
 // Token document that can be stored, i.e., in a cookie
 type Token struct {
@@ -51,51 +54,16 @@ type IDTokenClaim struct {
 	Email string `json:"email"`
 }
 
-// GetTokenFromCookie returns the token or an error
-func GetTokenFromCookie(c *core.APICallContext, provider *oidc.Provider, config *oauth2.Config) (*Token, error) {
-	cookie, err := c.Cookie(cookieTokenName)
-
-	if err != nil {
-		return nil, err
-	}
-
-	verifier := provider.Verifier(&oidc.Config{ClientID: config.ClientID})
-	_, err = verifier.Verify(context.Background(), cookie)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-
-	return NewToken(cookie), err
-}
-
-// DeleteTokenCookie by setting the cookie maxAge to -1
-func DeleteTokenCookie(c *core.APICallContext) {
-	c.SetCookie(cookieTokenName, "", -1, "/", keyCloakHost, false, false)
-}
-
-// WriteTokenToCookie stores the token in a cookie
-func WriteTokenToCookie(c *core.APICallContext, config *oauth2.Config, provider *oidc.Provider, token *Token) {
-
-	idToken, err := ValidateToken(provider, config, token)
-	if err != nil {
-		log.WithField("Token", "WriteTokenToCookie").Error(err)
-	} else {
-		c.SetCookie(cookieTokenName, token.Token, 3600, "/", keyCloakHost, false, false)
-	}
-
-	log.Debugf("Cookie value: %s \n", idToken)
-}
-
 // ValidateToken ensures the validity of the token
-func ValidateToken(provider *oidc.Provider, config *oauth2.Config, token *Token) (*oidc.IDToken, error) {
-	verifier := provider.Verifier(&oidc.Config{ClientID: config.ClientID})
+func (t *TokenMeta) ValidateToken(token *Token) (*oidc.IDToken, error) {
+	verifier := t.Provider.Verifier(&oidc.Config{ClientID: t.Config.ClientID})
 	idToken, err := verifier.Verify(context.Background(), token.Token)
 	return idToken, err
 }
 
-func GetClaims(provider *oidc.Provider, config *oauth2.Config, token *Token) (*IDTokenClaim, error) {
-	idToken, err := ValidateToken(provider, config, token)
+// GetClaims from token
+func (t *TokenMeta) GetClaims(token *Token) (*IDTokenClaim, error) {
+	idToken, err := t.ValidateToken(token)
 	if err != nil {
 		log.Error("Could Not Validate ID Token", err)
 		return nil, err
