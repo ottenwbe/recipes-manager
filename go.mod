@@ -15,7 +15,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.3
 	go.mongodb.org/mongo-driver v1.14.0
-	golang.org/x/net v0.22.0
+	golang.org/x/net v0.23.0
 	golang.org/x/oauth2 v0.18.0
 	google.golang.org/api v0.170.0
 )
