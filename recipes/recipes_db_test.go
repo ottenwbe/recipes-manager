@@ -222,6 +222,7 @@ var _ = Describe("recipes db", func() {
 			err = db.Insert(testInput)
 			Expect(err).To(BeNil())
 			err := db.Remove(testInput.ID)
+			Expect(err).To(BeNil())
 
 			// Try to find it after it has been removed ...
 			recipe, err := db.GetByName(testInput.Name)
@@ -240,6 +241,7 @@ var _ = Describe("recipes db", func() {
 			err = db.Insert(testInput)
 			Expect(err).To(BeNil())
 			err := db.RemoveByName(testInput.Name)
+			Expect(err).To(BeNil())
 
 			// Try to find it after it has been removed ...
 			recipe, err := db.GetByName(testInput.Name)

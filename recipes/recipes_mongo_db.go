@@ -43,11 +43,11 @@ import (
 )
 
 const (
-	//DATABASE name
+	// DATABASE name
 	DATABASE = "recipes-manager"
-	//RECIPES index
+	// RECIPES index
 	RECIPES = "recipes"
-	//PICTURES index
+	// PICTURES index
 	PICTURES = "pics"
 )
 
@@ -60,7 +60,7 @@ func getMongoAddress() string {
 // MongoRecipeDB implements the Recipe interface to read and write Recipes to and from a Mongo DB
 type MongoRecipeDB struct {
 	mongoClient *mongo.Client
-	//mtx avoids race conditions while connecting to the database and while closing the connection
+	// mtx avoids race conditions while connecting to the database and while closing the connection
 	mtx sync.Mutex
 }
 
@@ -121,7 +121,7 @@ func RecipeToBsonM(searchQuery *RecipeSearchFilter) bson.M {
 	if searchQuery.Description != "" {
 		queryPart = append(queryPart, bson.M{"description": bson.M{"$regex": searchQuery.Description}})
 	}
-	if searchQuery.Ingredient != nil && len(searchQuery.Ingredient) > 0 {
+	if len(searchQuery.Ingredient) > 0 {
 		rgx := fmt.Sprintf("(%v)", strings.Join(searchQuery.Ingredient, "|"))
 		queryPart = append(queryPart, bson.M{"description": bson.M{"$regex": rgx}})
 	}
@@ -146,7 +146,7 @@ func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) RecipeList {
 	dbSearch := RecipeToBsonM(searchQuery)
 
 	findOptions := options.Find()
-	findOptions.SetProjection(bson.M{"id": 1}) //only get id field
+	findOptions.SetProjection(bson.M{"id": 1}) // only get id field
 
 	bsonS, _ := json.Marshal(dbSearch)
 	log.WithField("json", string(bsonS)).Debug("Query for IDs")
