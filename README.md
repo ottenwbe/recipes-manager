@@ -28,7 +28,7 @@ We briefly describe two deployment options. First, a Kubernetes-based deployment
     1. Prepare a configuration file (see next section).
     1. Start a database
 
-            docker run -d --name=db-recipes-manager -p 27018:27017 mongo:6
+            docker run -d --name=db-recipes-manager -p 27018:27017 mongo:8
 
     1. Run the container
         
@@ -88,7 +88,7 @@ By prepending all variables (see file-based configuration) with ```GO_COOK_``` t
 
 ### Dependencies
 
-* Go >= 1.19
+* Go >= 1.22
   
 * For testing install ``ginkgo``
     ```

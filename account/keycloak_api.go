@@ -27,13 +27,14 @@ package account
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
 	"github.com/ottenwbe/recipes-manager/core"
 	"github.com/ottenwbe/recipes-manager/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
-	"net/http"
 )
 
 const (
@@ -89,19 +90,20 @@ func AddAuthAPIsToHandler(handler core.Handler, db core.DB) {
 			handler: handler,
 			db:      NewMongoAccountService(db),
 		}
-		authKeyCloakApi.prepareAPI()
+		if err := authKeyCloakApi.prepareAPI(); err != nil {
+			log.WithField("Component", "Auth Keycloak API").Fatalf("Failed to prepare API: %v", err)
+		}
 	} else {
 		log.WithField("Component", "Auth Keycloak API").Info("Keycloak API disabled")
 	}
 }
 
-func (a *AuthKeyCloakAPI) prepareAPI() {
-
+func (a *AuthKeyCloakAPI) prepareAPI() error {
 	log.WithField("addr", keycloakAddress).Info("Prepare Keycloak API")
 
 	provider, keyCloakConfig, err := a.prepareConfig()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	v1 := a.handler.API(1)
@@ -110,6 +112,7 @@ func (a *AuthKeyCloakAPI) prepareAPI() {
 	v1.GET("/auth/keycloak/login", a.getKeyCloakLogin(keyCloakConfig))
 	v1.GET("/auth/keycloak/logout", a.handleLogout())
 	v1.GET("/oauth", a.handleOAUTHResponse(keyCloakConfig, provider))
+	return nil
 }
 
 func (*AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error) {

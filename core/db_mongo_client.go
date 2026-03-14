@@ -27,18 +27,20 @@ package core
 import (
 	"context"
 	"errors"
+	"sync"
+	"time"
+
 	"github.com/ottenwbe/recipes-manager/utils"
 	log "github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"sync"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 )
 
-var mongoAddress string
-
-func init() {
-	mongoAddress = utils.Config.GetString("recipeDB.host")
+// getMongoAddress returns the configured database host.
+// Retrieving it dynamically avoids issues with package initialization order.
+func getMongoAddress() string {
+	return utils.Config.GetString("recipeDB.host")
 }
 
 // MongoClient to connect to the mongo database
@@ -95,15 +97,15 @@ func (m *MongoClient) StopDB() (err error) {
 }
 
 func (m *MongoClient) connectToDB() (err error) {
-	log.WithField("addr", mongoAddress).Info("Connecting to DB")
-	m.Client, err = mongo.NewClient(options.Client().ApplyURI(mongoAddress))
-	if err != nil {
-		log.WithError(err).Info("Could not create MongoDB client")
-		return
+	addr := getMongoAddress()
+	if addr == "" {
+		log.Warn("MongoDB address is empty, check configuration")
 	}
-	err = m.Client.Connect(ctx())
+
+	log.WithField("addr", addr).Info("Connecting to DB")
+	m.Client, err = mongo.Connect(options.Client().ApplyURI(addr))
 	if err != nil {
-		log.WithError(err).Info("Could not connect to MongoDB")
+		log.WithError(err).Info("Could not create and connect MongoDB client")
 		return
 	}
 	err = m.Ping()
@@ -116,6 +118,6 @@ func (m *MongoClient) connectToDB() (err error) {
 }
 
 func ctx() context.Context {
-	defaultContext := context.Background()
-	return defaultContext
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	return ctx
 }

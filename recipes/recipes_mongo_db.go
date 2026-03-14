@@ -29,13 +29,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"strings"
 	"sync"
+	"time"
+
+	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 
 	"github.com/ottenwbe/recipes-manager/utils"
 )
@@ -49,10 +51,10 @@ const (
 	PICTURES = "pics"
 )
 
-var mongoAddress string
-
-func init() {
-	mongoAddress = utils.Config.GetString("recipeDB.host")
+// getMongoAddress returns the configured database host.
+// Retrieving it dynamically avoids issues with package initialization order.
+func getMongoAddress() string {
+	return utils.Config.GetString("recipeDB.host")
 }
 
 // MongoRecipeDB implements the Recipe interface to read and write Recipes to and from a Mongo DB
@@ -375,8 +377,13 @@ func (m *MongoRecipeDB) StopDB() (err error) {
 }
 
 func (m *MongoRecipeDB) connectToDB() (err error) {
-	log.WithField("addr", mongoAddress).Info("Connecting to DB")
-	m.mongoClient, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoAddress))
+	addr := getMongoAddress()
+	if addr == "" {
+		log.Warn("MongoDB address is empty, check configuration")
+	}
+
+	log.WithField("addr", addr).Info("Connecting to DB")
+	m.mongoClient, err = mongo.Connect(options.Client().ApplyURI(addr))
 	if err != nil {
 		log.WithError(err).Info("Could not create MongoDB client and Connect")
 		return
@@ -482,6 +489,6 @@ func (m *MongoRecipeDB) getPictureCollection() *mongo.Collection {
 }
 
 func ctx() context.Context {
-	defaultContext := context.Background()
-	return defaultContext
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	return ctx
 }

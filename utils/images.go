@@ -26,18 +26,22 @@ package utils
 
 import (
 	"encoding/base64"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"os"
+	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const metaData = "data:image/jpeg;base64,"
 
 // DownloadIMGAsBase64 will download an image from an url. It returns a base64 encoded image.
 func DownloadIMGAsBase64(url string) (base64img string, err error) {
-
-	response, err := http.Get(url)
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	response, err := client.Get(url)
 	if err != nil {
 		//log.WithError(err).WithField("url", url).Error("Could not download image...")
 		return "", err
