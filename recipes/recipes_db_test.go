@@ -69,8 +69,12 @@ var _ = Describe("recipes db", func() {
 
 		AfterEach(func() {
 			// clean db for testing
-			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(ctx())
-			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(ctx())
+			c, cancel := ctx()
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(c)
+			cancel()
+			c, cancel = ctx()
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(c)
+			cancel()
 			err = db.Close()
 		})
 
@@ -107,8 +111,12 @@ var _ = Describe("recipes db", func() {
 
 		AfterEach(func() {
 			// clean db for testing
-			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(ctx())
-			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(ctx())
+			c, cancel := ctx()
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(c)
+			cancel()
+			c, cancel = ctx()
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(c)
+			cancel()
 			db.Close()
 		})
 
@@ -189,8 +197,12 @@ var _ = Describe("recipes db", func() {
 
 		AfterEach(func() {
 			// clean db for testing
-			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(ctx())
-			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(ctx())
+			c, cancel := ctx()
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(c)
+			cancel()
+			c, cancel = ctx()
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(c)
+			cancel()
 
 			db.Close()
 		})

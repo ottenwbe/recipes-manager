@@ -26,6 +26,8 @@ package account
 
 import (
 	"context"
+	"time"
+
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/ottenwbe/recipes-manager/core"
 	log "github.com/sirupsen/logrus"
@@ -60,7 +62,10 @@ func GetTokenFromCookie(c *core.APICallContext, provider *oidc.Provider, config 
 	}
 
 	verifier := provider.Verifier(&oidc.Config{ClientID: config.ClientID})
-	_, err = verifier.Verify(context.Background(), cookie)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = verifier.Verify(ctx, cookie)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -91,7 +96,10 @@ func WriteTokenToCookie(c *core.APICallContext, config *oauth2.Config, provider 
 // ValidateToken ensures the validity of the token
 func ValidateToken(provider *oidc.Provider, config *oauth2.Config, token *Token) (*oidc.IDToken, error) {
 	verifier := provider.Verifier(&oidc.Config{ClientID: config.ClientID})
-	idToken, err := verifier.Verify(context.Background(), token.Token)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	idToken, err := verifier.Verify(ctx, token.Token)
 	return idToken, err
 }
 

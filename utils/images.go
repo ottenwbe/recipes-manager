@@ -43,7 +43,7 @@ func DownloadIMGAsBase64(url string) (base64img string, err error) {
 	}
 	response, err := client.Get(url)
 	if err != nil {
-		//log.WithError(err).WithField("url", url).Error("Could not download image...")
+		// log.WithError(err).WithField("url", url).Error("Could not download image...")
 		return "", err
 	}
 	defer func() { _ = response.Body.Close() }()

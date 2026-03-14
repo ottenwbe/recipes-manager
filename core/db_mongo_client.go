@@ -59,7 +59,9 @@ func (m *MongoClient) Close() error {
 func (m *MongoClient) Ping() error {
 
 	if m.Client != nil {
-		return m.Client.Ping(ctx(), readpref.Primary())
+		c, cancel := ctx()
+		defer cancel()
+		return m.Client.Ping(c, readpref.Primary())
 	}
 	return errors.New("cannot ping since it is not connected")
 }
@@ -89,7 +91,9 @@ func (m *MongoClient) StopDB() (err error) {
 	defer m.mtx.Unlock()
 
 	if m.Client != nil {
-		err = m.Client.Disconnect(ctx())
+		c, cancel := ctx()
+		defer cancel()
+		err = m.Client.Disconnect(c)
 	}
 	m.Client = nil
 
@@ -117,7 +121,6 @@ func (m *MongoClient) connectToDB() (err error) {
 	return
 }
 
-func ctx() context.Context {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	return ctx
+func ctx() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), 10*time.Second)
 }
