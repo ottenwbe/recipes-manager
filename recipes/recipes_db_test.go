@@ -27,7 +27,7 @@ package recipes
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var _ = Describe("recipes db", func() {
@@ -69,8 +69,12 @@ var _ = Describe("recipes db", func() {
 
 		AfterEach(func() {
 			// clean db for testing
-			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(ctx())
-			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(ctx())
+			c, cancel := ctx()
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(c)
+			cancel()
+			c, cancel = ctx()
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(c)
+			cancel()
 			err = db.Close()
 		})
 
@@ -107,8 +111,12 @@ var _ = Describe("recipes db", func() {
 
 		AfterEach(func() {
 			// clean db for testing
-			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(ctx())
-			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(ctx())
+			c, cancel := ctx()
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(c)
+			cancel()
+			c, cancel = ctx()
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(c)
+			cancel()
 			db.Close()
 		})
 
@@ -189,8 +197,12 @@ var _ = Describe("recipes db", func() {
 
 		AfterEach(func() {
 			// clean db for testing
-			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(ctx())
-			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(ctx())
+			c, cancel := ctx()
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("pics").Drop(c)
+			cancel()
+			c, cancel = ctx()
+			db.(*MongoRecipeDB).mongoClient.Database("recipes-manager").Collection("recipes").Drop(c)
+			cancel()
 
 			db.Close()
 		})
@@ -222,6 +234,7 @@ var _ = Describe("recipes db", func() {
 			err = db.Insert(testInput)
 			Expect(err).To(BeNil())
 			err := db.Remove(testInput.ID)
+			Expect(err).To(BeNil())
 
 			// Try to find it after it has been removed ...
 			recipe, err := db.GetByName(testInput.Name)
@@ -240,6 +253,7 @@ var _ = Describe("recipes db", func() {
 			err = db.Insert(testInput)
 			Expect(err).To(BeNil())
 			err := db.RemoveByName(testInput.Name)
+			Expect(err).To(BeNil())
 
 			// Try to find it after it has been removed ...
 			recipe, err := db.GetByName(testInput.Name)

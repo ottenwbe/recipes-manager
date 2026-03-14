@@ -9,13 +9,18 @@ echo "Prepare tests..."
 docker stop test-db | true
 docker rm -v test-db | true
 # run a mongo-db
-docker run -d --name=test-db -p 27018:27017 mongo:6
+docker run -d --name=test-db -p 27018:27017 mongo:8
+
+echo "Waiting for MongoDB to be ready..."
+until docker exec test-db mongosh --port 27017 --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+  sleep 1
+done
 
 mkdir -p ~/.recipes-manager
 
 {
     echo "recipeDB:"
-    echo "  host: mongodb://localhost:27018"
+    echo "  host: mongodb://127.0.0.1:27018"
 } > ~/.recipes-manager/recipes-manager-config.yml
 
 echo "Testing..."

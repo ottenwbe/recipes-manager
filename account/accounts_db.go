@@ -26,11 +26,13 @@ package account
 
 import (
 	"context"
+	"time"
+
 	"github.com/ottenwbe/recipes-manager/core"
 	"github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 // MongoAccountService stores and manipulates stored accounts in a DB
@@ -63,7 +65,9 @@ func NewMongoAccountService(db core.DB) *MongoAccountService {
 // DeleteAccountByID deletes an account indefinitely
 func (db *MongoAccountService) DeleteAccountByID(id AccID) error {
 	collection := db.getAccountsCollection()
-	_, err := collection.DeleteOne(db.ctx(), bson.M{ID: id})
+	ctx, cancel := db.ctx()
+	defer cancel()
+	_, err := collection.DeleteOne(ctx, bson.M{ID: id})
 	if err != nil {
 		return err
 	}
@@ -73,7 +77,9 @@ func (db *MongoAccountService) DeleteAccountByID(id AccID) error {
 // DeleteAccountByName deletes an account indefinitely
 func (db *MongoAccountService) DeleteAccountByName(name string) error {
 	collection := db.getAccountsCollection()
-	_, err := collection.DeleteOne(db.ctx(), bson.M{EMAIL: name})
+	ctx, cancel := db.ctx()
+	defer cancel()
+	_, err := collection.DeleteOne(ctx, bson.M{EMAIL: name})
 	if err != nil {
 		return err
 	}
@@ -86,7 +92,9 @@ func (db *MongoAccountService) NewAccount(name string, t Type) (*Account, error)
 
 	acc := NewAccount(name, t)
 
-	_, err := collection.InsertOne(db.ctx(), acc)
+	ctx, cancel := db.ctx()
+	defer cancel()
+	_, err := collection.InsertOne(ctx, acc)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +106,9 @@ func (db *MongoAccountService) FindAccount(name string) (*Account, error) {
 	collection := db.getAccountsCollection()
 	var result Account
 
-	err := collection.FindOne(db.ctx(), bson.M{EMAIL: name}).Decode(&result)
+	ctx, cancel := db.ctx()
+	defer cancel()
+	err := collection.FindOne(ctx, bson.M{EMAIL: name}).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
@@ -110,8 +120,8 @@ func (db *MongoAccountService) getAccountsCollection() *mongo.Collection {
 	return db.DbClient.Client.Database("accounts").Collection("accounts")
 }
 
-func (*MongoAccountService) ctx() context.Context {
-	return context.Background()
+func (*MongoAccountService) ctx() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), 10*time.Second)
 }
 
 func (db *MongoAccountService) createTextIndex() error {
@@ -123,7 +133,9 @@ func (db *MongoAccountService) createTextIndex() error {
 		Options: options.Index().SetUnique(true),
 	}
 
-	_, err := c.Indexes().CreateOne(db.ctx(), textIndex)
+	ctx, cancel := db.ctx()
+	defer cancel()
+	_, err := c.Indexes().CreateOne(ctx, textIndex)
 
 	return err
 }
