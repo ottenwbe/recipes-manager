@@ -167,6 +167,9 @@ func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) RecipeList {
 	}
 	defer func() { _ = cursor.Close(c) }()
 	err = cursor.All(c, &recipes)
+	if err != nil {
+		log.WithError(err).Info("Error while finding recipe")
+	}
 
 	log.Debugf("Found %v recipes", len(recipes))
 
