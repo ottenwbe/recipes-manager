@@ -30,14 +30,13 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
+	"github.com/ottenwbe/recipes-manager/core"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
-	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 
 	"github.com/ottenwbe/recipes-manager/utils"
 )
@@ -51,17 +50,14 @@ const (
 	PICTURES = "pics"
 )
 
-// getMongoAddress returns the configured database host.
-// Retrieving it dynamically avoids issues with package initialization order.
-func getMongoAddress() string {
-	return utils.Config.GetString("recipeDB.host")
-}
-
 // MongoRecipeDB implements the Recipe interface to read and write Recipes to and from a Mongo DB
 type MongoRecipeDB struct {
-	mongoClient *mongo.Client
-	// mtx avoids race conditions while connecting to the database and while closing the connection
-	mtx sync.Mutex
+	mongoClient *core.MongoClient
+}
+
+// MongoClient returns the underlying core.MongoClient
+func (m *MongoRecipeDB) MongoClient() *core.MongoClient {
+	return m.mongoClient
 }
 
 // Clear drops all collections
@@ -344,9 +340,7 @@ func (m *MongoRecipeDB) Insert(recipe *Recipe) error {
 
 // Ping MongoDB
 func (m *MongoRecipeDB) Ping() error {
-	c, cancel := ctx()
-	defer cancel()
-	return m.mongoClient.Ping(c, readpref.Primary())
+	return m.mongoClient.Ping()
 }
 
 // RemoveByName a recipe by name
@@ -381,18 +375,24 @@ func (m *MongoRecipeDB) Close() error {
 
 // StartDB initializes the database connection
 func (m *MongoRecipeDB) StartDB() error {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
 	if m.mongoClient == nil {
+		m.mongoClient = &core.MongoClient{}
+	}
 
-		err := m.connectToDB()
-		if err != nil {
-			log.WithError(err).Error("Database is not connected")
-			return errors.New("database is not connected")
-		}
-	} else {
-		return errors.New("database is already running")
+	err := m.mongoClient.StartDB()
+	if err != nil {
+		return err
+	}
+
+	err = m.ensureRecipeIndex()
+	if err != nil {
+		log.WithError(err).Info("Could not create mongo db recipe index")
+		return err
+	}
+	err = m.ensurePictureIndex()
+	if err != nil {
+		log.WithError(err).Info("Could not create mongo db picture index")
+		return err
 	}
 
 	return nil
@@ -400,49 +400,7 @@ func (m *MongoRecipeDB) StartDB() error {
 
 // StopDB closes the connection to the db
 func (m *MongoRecipeDB) StopDB() (err error) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
-	if m.mongoClient != nil {
-		c, cancel := ctx()
-		defer cancel()
-		err = m.mongoClient.Disconnect(c)
-	}
-	m.mongoClient = nil
-
-	return
-}
-
-func (m *MongoRecipeDB) connectToDB() (err error) {
-	addr := getMongoAddress()
-	if addr == "" {
-		log.Warn("MongoDB address is empty, check configuration")
-	}
-
-	log.WithField("addr", addr).Info("Connecting to DB")
-	m.mongoClient, err = mongo.Connect(options.Client().ApplyURI(addr))
-	if err != nil {
-		log.WithError(err).Info("Could not create MongoDB client and Connect")
-		return
-	}
-	err = m.Ping()
-	if err != nil {
-		log.WithError(err).Info("Could not ping MongoDB")
-		return
-	}
-
-	err = m.ensureRecipeIndex()
-	if err != nil {
-		log.WithError(err).Info("Could not create mongo db recipe index")
-		return
-	}
-	err = m.ensurePictureIndex()
-	if err != nil {
-		log.WithError(err).Info("Could not create mongo db picture index")
-		return
-	}
-
-	return
+	return m.mongoClient.StopDB()
 }
 
 func (m *MongoRecipeDB) ensureRecipeIndex() error {
@@ -524,11 +482,11 @@ func (m *MongoRecipeDB) ensurePictureIndex() error {
 }
 
 func (m *MongoRecipeDB) getRecipesCollection() *mongo.Collection {
-	return m.mongoClient.Database(DATABASE).Collection(RECIPES)
+	return m.mongoClient.Client.Database(DATABASE).Collection(RECIPES)
 }
 
 func (m *MongoRecipeDB) getPictureCollection() *mongo.Collection {
-	return m.mongoClient.Database(DATABASE).Collection(PICTURES)
+	return m.mongoClient.Client.Database(DATABASE).Collection(PICTURES)
 }
 
 func ctx() (context.Context, context.CancelFunc) {

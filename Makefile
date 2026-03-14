@@ -38,8 +38,7 @@ RECIPES_MANAGER_DOCKER_PARAMS	= \
 release: ; $(info $(M) building executable…) @ ## Build the app's binary release version
 	@$(GO) build \
 		-tags release \
-		-ldflags "-s -w" \
-		-ldflags "-X $(VERSIONPKG)=$(RECIPES_MANAGER_VERSION)" \
+		-ldflags "-s -w -X $(VERSIONPKG)=$(RECIPES_MANAGER_VERSION)" \
 		-o $(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION) \
 		*.go
 
@@ -69,15 +68,11 @@ mod-verify: ; $(info $(M) verifying modules…) @ ## Run go mod verify
 
 .PHONY: vet
 vet: ; $(info $(M) running vet…) @ ## Run go vet
-	@for d in $$($(GO) list ./...); do \
-		$(GOVET) $${d};  \
-	done
+	@$(GOVET) ./...
 
 .PHONY: fmt
 fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
-	@for d in $$($(GO) list -f '{{.Dir}}' ./...); do \
-		$(GOFMT)  -l -w $$d/*.go  ; \
-	 done
+	@$(GOFMT) -s -l -w .
 
 .PHONY: test
 test: ; $(info $(M) running tests…) @ ## Run tests
