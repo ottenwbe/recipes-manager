@@ -1,33 +1,14 @@
 /*
  * MIT License
- *
- * Copyright (c) 2020 Beate Ottenwälder
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
  */
 
 package config
 
 import (
+	"strings"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"strings"
 )
 
 // RecipeConfig allows the recipe application to retrieve configuration data
@@ -52,63 +33,65 @@ func init() {
 	Config = NewViperConfig(defaultConfigName, defaultPaths)
 }
 
-type viperConfig struct{}
+type viperConfig struct {
+	v *viper.Viper
+}
 
 // NewViperConfig creates a configuration based on the viper framework
 func NewViperConfig(name string, paths []string) RecipeConfig {
-	c := &viperConfig{}
+	c := &viperConfig{
+		v: viper.New(),
+	}
 	c.config(name, paths)
 	return c
 }
 
 // GetBool returns a boolean for the given key
-func (*viperConfig) GetBool(key string) bool {
-	return viper.GetBool(key)
+func (c *viperConfig) GetBool(key string) bool {
+	return c.v.GetBool(key)
 }
 
 // GetString returns a string for the given key
-func (*viperConfig) GetString(key string) string {
-	return viper.GetString(key)
+func (c *viperConfig) GetString(key string) string {
+	return c.v.GetString(key)
 }
 
 // GetInt64 returns an integer for the given key
-func (*viperConfig) GetInt64(key string) int64 {
-	return viper.GetInt64(key)
+func (c *viperConfig) GetInt64(key string) int64 {
+	return c.v.GetInt64(key)
 }
 
 // SetDefault sets the default value for a key
-func (*viperConfig) SetDefault(key string, val interface{}) {
-	viper.SetDefault(key, val)
+func (c *viperConfig) SetDefault(key string, val interface{}) {
+	c.v.SetDefault(key, val)
 }
 
 // BindEnv binds a key to an environment variable
-func (*viperConfig) BindEnv(key string) {
-	viper.BindEnv(key)
+func (c *viperConfig) BindEnv(key string) {
+	c.v.BindEnv(key)
 }
 
-func (*viperConfig) configEnv() {
-	viper.SetEnvPrefix("go_cook")
-	viper.AutomaticEnv()
+func (c *viperConfig) configEnv() {
+	c.v.SetEnvPrefix("go_cook")
+	c.v.AutomaticEnv()
 	replacer := strings.NewReplacer(".", "_")
-	viper.SetEnvKeyReplacer(replacer)
+	c.v.SetEnvKeyReplacer(replacer)
 }
 
-func (v *viperConfig) config(name string, paths []string) {
-
-	v.configEnv()
-
-	viper.SetConfigName(name) // name of config file (without extension)
+func (c *viperConfig) config(name string, paths []string) {
+	c.configEnv()
+	c.v.SetConfigName(name) // name of config file (without extension)
 	for i := range paths {
-		viper.AddConfigPath(paths[i])
+		c.v.AddConfigPath(paths[i])
 	}
 
-	err := viper.ReadInConfig() // Find and read the config file
-	if err != nil {             // Handle errors reading the config file
+	err := c.v.ReadInConfig() // Find and read the config file
+	if err != nil {           // Handle errors reading the config file
 		log.WithError(err).Error("Error while reading config file ")
 	}
 }
 
 // Debug prints all configurations
-func (*viperConfig) Debug() {
-	viper.Debug()
+func (c *viperConfig) Debug() {
+	c.v.Debug()
 }
