@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package utils
+package sources
 
 import (
 	"encoding/base64"

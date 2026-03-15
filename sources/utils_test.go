@@ -22,16 +22,18 @@
  * SOFTWARE.
  */
 
-package utils_test
+package sources
 
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"testing"
 )
 
-func TestUtils(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Utils Suite")
-}
+var _ = Describe("Utils", func() {
+	Context("CBytes", func() {
+		It("should transform a byte array to an comma separated string", func() {
+			bytes := []byte{100, 200, 50}
+			Expect(CBytes(bytes)).To(Equal("[100,200,50]"))
+		})
+	})
+})

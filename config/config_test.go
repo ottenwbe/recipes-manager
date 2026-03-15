@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package utils
+package config
 
 import (
 	. "github.com/onsi/ginkgo/v2"

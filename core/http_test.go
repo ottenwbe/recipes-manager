@@ -30,14 +30,14 @@ import (
 
 	"reflect"
 
-	"github.com/ottenwbe/recipes-manager/utils"
+	"github.com/ottenwbe/recipes-manager/config"
 )
 
 var _ = Describe("http", func() {
 
 	Context("configuration of the http components", func() {
 		It("should use the default ADDRESS if no address is given", func() {
-			Expect(utils.Config.GetString(addressCfg)).To(Equal(":8080"))
+			Expect(config.Config.GetString(addressCfg)).To(Equal(":8080"))
 		})
 	})
 
@@ -51,7 +51,7 @@ var _ = Describe("http", func() {
 	Context("creation of the server", func() {
 		It("should set the configured ADDRESS", func() {
 			s := NewServer()
-			Expect(s.Address).To(Equal(utils.Config.GetString(addressCfg)))
+			Expect(s.Address).To(Equal(config.Config.GetString(addressCfg)))
 		})
 	})
 

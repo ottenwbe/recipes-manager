@@ -31,8 +31,8 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/core"
-	"github.com/ottenwbe/recipes-manager/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -65,14 +65,14 @@ var (
 
 func init() {
 
-	utils.Config.SetDefault(keycloakEnabledCfg, false)
+	config.Config.SetDefault(keycloakEnabledCfg, false)
 
-	keycloakEnabled = utils.Config.GetBool(keycloakEnabledCfg)
+	keycloakEnabled = config.Config.GetBool(keycloakEnabledCfg)
 	if keycloakEnabled {
-		keycloakAddress = utils.Config.GetString(keycloakAddressCfg)
-		keyCloakClientSecret = utils.Config.GetString(keycloakClientSecretCfg)
-		keyCloakClientID = utils.Config.GetString(keyCloakClientIDCfg)
-		keyCloakHost = utils.Config.GetString(keyCloakHostCfg)
+		keycloakAddress = config.Config.GetString(keycloakAddressCfg)
+		keyCloakClientSecret = config.Config.GetString(keycloakClientSecretCfg)
+		keyCloakClientID = config.Config.GetString(keyCloakClientIDCfg)
+		keyCloakHost = config.Config.GetString(keyCloakHostCfg)
 	}
 }
 

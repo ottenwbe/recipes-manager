@@ -35,8 +35,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/html"
 
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/recipes"
-	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 // driveRecipeParser parses an html document to identify recipes
@@ -158,7 +158,7 @@ func extractImg(hasMore bool, tokenizer *html.Tokenizer) (string, string) {
 		if string(key) == "alt" {
 			name = string(val)
 		} else if string(key) == "src" {
-			img64, err = utils.DownloadIMGAsBase64(string(val))
+			img64, err = DownloadIMGAsBase64(string(val))
 			if err != nil {
 				log.WithError(err).Error("Could not download image")
 			}
@@ -245,9 +245,9 @@ var (
 )
 
 func init() {
-	utils.Config.SetDefault(driveParserIngredientsTitle, "Zutaten")
-	utils.Config.SetDefault(driveRecipeInstructionsTitle, "Zubereitung")
+	config.Config.SetDefault(driveParserIngredientsTitle, "Zutaten")
+	config.Config.SetDefault(driveRecipeInstructionsTitle, "Zubereitung")
 
-	ingredients = utils.Config.GetString(driveParserIngredientsTitle)
-	instruction = utils.Config.GetString(driveRecipeInstructionsTitle)
+	ingredients = config.Config.GetString(driveParserIngredientsTitle)
+	instruction = config.Config.GetString(driveRecipeInstructionsTitle)
 }

@@ -27,10 +27,10 @@ package sources
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 var _ = Describe("SourceClient", func() {
@@ -55,7 +55,7 @@ var _ = Describe("SourceClient", func() {
 			id := uuid.New()
 			meta := NewSourceDescription(SourceID(id), "name", "test", nil)
 			bs, _ := id.MarshalBinary()
-			expected := fmt.Sprintf("{\"id\":%v,\"name\":\"name\",\"connected\":true,\"version\":\"test\"}", utils.CBytes(bs))
+			expected := fmt.Sprintf("{\"id\":%v,\"name\":\"name\",\"connected\":true,\"version\":\"test\"}", CBytes(bs))
 
 			b, err := json.Marshal(meta)
 

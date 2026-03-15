@@ -31,9 +31,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/core"
 	"github.com/ottenwbe/recipes-manager/recipes"
-	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 // SourceResponse describes a sourceClient in detail
@@ -272,6 +272,6 @@ var (
 )
 
 func init() {
-	utils.Config.SetDefault(SOURCEREDIRECT, "http://localhost:8080/#!/src")
-	host = utils.Config.GetString(SOURCEREDIRECT)
+	config.Config.SetDefault(SOURCEREDIRECT, "http://localhost:8080/#!/src")
+	host = config.Config.GetString(SOURCEREDIRECT)
 }

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package utils
+package recipes
 
 import (
 	. "github.com/onsi/ginkgo/v2"
@@ -30,10 +30,16 @@ import (
 )
 
 var _ = Describe("Utils", func() {
-	Context("CBytes", func() {
-		It("should transform a byte array to an comma separated string", func() {
-			bytes := []byte{100, 200, 50}
-			Expect(CBytes(bytes)).To(Equal("[100,200,50]"))
+	Context("UniqueSlice", func() {
+		It("should remove duplicates from a slice of strings", func() {
+			input := []string{"a", "b", "a", "c", "b"}
+			expected := []string{"a", "b", "c"}
+			Expect(UniqueSlice(input)).To(Equal(expected))
+		})
+
+		It("should return an empty slice when input is empty", func() {
+			input := []string{}
+			Expect(UniqueSlice(input)).To(BeEmpty())
 		})
 	})
 })
