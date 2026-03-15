@@ -7,19 +7,21 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/core"
 )
 
 var (
 	db      core.DB
-	server  core.Server
+	server  *core.Server
 	handler core.Handler
 )
 
 var _ = Describe("Keycloak API", func() {
 	BeforeEach(func() {
-		handler = core.NewHandler()
-		db, _ = core.NewDatabaseClient()
+		handler = core.NewHandler("*")
+		addr := config.Config.GetString("recipeDB.host")
+		db, _ = core.NewDatabaseClient(addr)
 	})
 
 	AfterEach(func() {

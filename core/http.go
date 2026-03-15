@@ -19,29 +19,11 @@ import (
 
 	// based on swagger documentation
 	_ "github.com/ottenwbe/recipes-manager/docs"
-
-	"github.com/ottenwbe/recipes-manager/config"
 )
 
 const (
-	addressCfg         = "html.address"
-	corsAllowOriginCfg = "html.cors.origin"
-
 	baseAPIPath = "api"
 )
-
-var (
-	defaultAddress string
-	corsOrigin     string
-)
-
-// init configures the handler for api calls when the core package is initialized
-func init() {
-	config.Config.SetDefault(addressCfg, ":8080")
-	config.Config.SetDefault(corsAllowOriginCfg, "*")
-	defaultAddress = config.Config.GetString(addressCfg)
-	corsOrigin = config.Config.GetString(corsAllowOriginCfg)
-}
 
 // Routes is managing a set of API endpoints.
 // Routes implementation(s) call handler function to perform typical CRUD operations (GET, 	POST, PATCH, ...).
@@ -75,10 +57,11 @@ type APICallContext = gin.Context
 type H = gin.H
 
 // NewHandler creates a handler for API calls with a pre-configured ADDRESS
-func NewHandler() Handler {
+func NewHandler(corsOrigin string) Handler {
 	handler := &ginHandler{
-		gin.New(),
-		make(map[string]Routes),
+		handler:      gin.New(),
+		routerGroups: make(map[string]Routes),
+		corsOrigin:   corsOrigin,
 	}
 	handler.configure()
 	return handler
@@ -94,6 +77,7 @@ func NewHandler() Handler {
 type ginHandler struct {
 	handler      *gin.Engine
 	routerGroups map[string]Routes
+	corsOrigin   string
 }
 
 func (g *ginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
@@ -180,7 +164,7 @@ func (g *ginRoutes) Path() string {
 
 func (g *ginHandler) corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", corsOrigin)
+		c.Writer.Header().Set("Access-Control-Allow-Origin", g.corsOrigin)
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, PATCH, POST, PUT, DELETE")
@@ -199,11 +183,12 @@ type Server struct {
 	Address       string
 	server        *http.Server
 	stopWaitGroup *sync.WaitGroup
+	closeOnce     sync.Once
 }
 
 // NewServerWithAddress creates a new server using a given address to listen to
-func NewServerWithAddress(addr string, handler http.Handler) Server {
-	return Server{
+func NewServerWithAddress(addr string, handler http.Handler) *Server {
+	return &Server{
 		Address: addr,
 		server: &http.Server{
 			Addr:        addr,
@@ -213,18 +198,8 @@ func NewServerWithAddress(addr string, handler http.Handler) Server {
 		stopWaitGroup: &sync.WaitGroup{}}
 }
 
-// NewServerWithHandler creates a new server using the default address with a custom handler
-func NewServerWithHandler(handler http.Handler) Server {
-	return NewServerWithAddress(defaultAddress, handler)
-}
-
-// NewServer creates a new server to listen on the defaultAddress
-func NewServer() Server {
-	return NewServerWithAddress(defaultAddress, NewHandler())
-}
-
 // Run the server for the API
-func (s Server) Run() *sync.WaitGroup {
+func (s *Server) Run() *sync.WaitGroup {
 	s.stopWaitGroup.Add(1)
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil {
@@ -236,9 +211,12 @@ func (s Server) Run() *sync.WaitGroup {
 }
 
 // Close the server
-func (s Server) Close() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-	err := s.server.Shutdown(ctx)
+func (s *Server) Close() error {
+	var err error
+	s.closeOnce.Do(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		err = s.server.Shutdown(ctx)
+	})
 	return err
 }

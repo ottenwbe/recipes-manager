@@ -35,13 +35,16 @@ type API struct {
 }
 
 // AddRecipesAPIToHandler constructs an API for recipes
-func AddRecipesAPIToHandler(handler core.Handler, recipes RecipeDB) {
+func AddRecipesAPIToHandler(handler core.Handler, recipesDB RecipeDB) error {
+
 	api := &API{
 		handler,
-		recipes,
+		recipesDB,
 	}
 
 	api.prepareAPI()
+
+	return nil
 }
 
 // prepareAPI registers all api endpoints for recipes

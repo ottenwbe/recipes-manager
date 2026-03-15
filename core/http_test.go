@@ -29,35 +29,27 @@ import (
 	. "github.com/onsi/gomega"
 
 	"reflect"
-
-	"github.com/ottenwbe/recipes-manager/config"
 )
 
 var _ = Describe("http", func() {
 
-	Context("configuration of the http components", func() {
-		It("should use the default ADDRESS if no address is given", func() {
-			Expect(config.Config.GetString(addressCfg)).To(Equal(":8080"))
-		})
-	})
-
 	Context("creation of the http handler", func() {
 		It("should be of type Handler", func() {
-			r := NewHandler()
+			r := NewHandler("*")
 			Expect(reflect.TypeOf(r)).To(Equal(reflect.TypeOf(&ginHandler{})))
 		})
 	})
 
 	Context("creation of the server", func() {
 		It("should set the configured ADDRESS", func() {
-			s := NewServer()
-			Expect(s.Address).To(Equal(config.Config.GetString(addressCfg)))
+			s := NewServerWithAddress(":8080", NewHandler("*"))
+			Expect(s.Address).To(Equal(":8080"))
 		})
 	})
 
 	Context("routes", func() {
 		It("should create and cache a versioned api route", func() {
-			r := NewHandler()
+			r := NewHandler("*")
 			v1 := r.API(1)
 			Expect(v1).ToNot(BeNil())
 			Expect(v1.Path()).To(Equal("/api/v1"))

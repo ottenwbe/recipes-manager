@@ -5,15 +5,19 @@
 package main
 
 import (
-	"github.com/ottenwbe/recipes-manager/account"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/core"
 	"github.com/ottenwbe/recipes-manager/recipes"
 	"github.com/ottenwbe/recipes-manager/sources"
 )
 
 func init() {
+	config.Config.SetDefault("html.address", ":8080")
+	config.Config.SetDefault("html.cors.origin", "*")
+	config.Config.SetDefault("recipeDB.host", "mongodb://127.0.0.1:27017")
+
 	log.Infof("Initializing cooking application version=%v API=%v", core.AppVersion().App, core.AppVersion().API)
 }
 
@@ -28,12 +32,15 @@ func init() {
 func main() {
 
 	// configure the cooking app
-	recipesDB := newCloseableDatabase()
-	defer closeDatabase(recipesDB)
+	coreDB := newCoreDatabase()
+	defer closeDatabase(coreDB)
+
+	recipesDB := newRecipeDatabase(coreDB)
 
 	srcRepository := newSources()
 
 	server := newServer(recipesDB, srcRepository)
+	defer closeServer(server)
 
 	// start the application
 	waitForStop := server.Run()
@@ -41,20 +48,39 @@ func main() {
 	log.Info("Stopping Application")
 }
 
-func newCloseableDatabase() recipes.RecipeDB {
-	recipesDB, err := recipes.NewDatabaseClient()
+func newCoreDatabase() core.DB {
+	addr := config.Config.GetString("recipeDB.host")
+	db, err := core.NewDatabaseClient(addr)
+	failOnError(err)
+	return db
+}
+
+func newRecipeDatabase(db core.DB) recipes.RecipeDB {
+	recipesDB, err := recipes.NewRecipeDB(db)
 	failOnError(err)
 	return recipesDB
 }
 
-func closeDatabase(recipesDB recipes.RecipeDB) {
-	err := recipesDB.Close()
-	logOnError(err, "Could not close database ...")
+func closeDatabase(db core.DB) {
+	if db != nil {
+		err := db.Close()
+		logOnError(err, "Could not close database")
+	}
 }
 
-func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) core.Server {
-	handler := core.NewHandler()
-	server := core.NewServerWithHandler(handler)
+func closeServer(server *core.Server) {
+	if server != nil {
+		err := server.Close()
+		logOnError(err, "Error closing server")
+	}
+}
+
+func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) *core.Server {
+	corsOrigin := config.Config.GetString("html.cors.origin")
+	handler := core.NewHandler(corsOrigin)
+
+	address := config.Config.GetString("html.address")
+	server := core.NewServerWithAddress(address, handler)
 
 	addAPIsToServer(handler, recipesDB, srcRepository)
 
@@ -62,16 +88,11 @@ func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) core.S
 }
 
 func addAPIsToServer(handler core.Handler, recipesDB recipes.RecipeDB, srcRepository sources.Sources) {
-	recipes.AddRecipesAPIToHandler(handler, recipesDB)
-	sourcesAPI := sources.NewSourceAPI(srcRepository, recipesDB)
-	sourcesAPI.PrepareAPI(handler, srcRepository, recipesDB)
+	err := recipes.AddRecipesAPIToHandler(handler, recipesDB)
+	failOnError(err)
+	err = sources.AddSourcesAPIToHandler(handler, srcRepository, recipesDB)
+	failOnError(err)
 	core.AddCoreAPIToHandler(handler)
-
-	if mongoDB, ok := recipesDB.(*recipes.MongoRecipeDB); ok {
-		account.AddAuthAPIsToHandler(handler, mongoDB.MongoClient())
-	} else {
-		log.Warn("Account API not enabled: underlying database is not MongoDB")
-	}
 }
 
 func newSources() sources.Sources {
@@ -108,6 +129,6 @@ func warnOnError(err error, message string) {
 
 func failOnError(err error) {
 	if err != nil {
-		log.WithError(err).Fatal("Cannot open database connection ...")
+		log.WithError(err).Fatal("Fatal Error")
 	}
 }

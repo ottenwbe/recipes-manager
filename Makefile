@@ -116,21 +116,28 @@ endif
 docker-network:
 	@docker network inspect $(DOCKER_NETWORK_NAME) >/dev/null 2>&1 || docker network create $(DOCKER_NETWORK_NAME)
 
-.PHONY: docker-start
-docker-start: docker-dev docker-network ; $(info $(M) starting docker containers...) @ ## Build and start dev containers (app and db)
+.PHONY: docker-start-db
+docker-start-db: docker-network ; $(info $(M) starting mongodb...) @ ## Start mongodb container
 	@docker run -d --name=$(DB_CONTAINER_NAME) --network=$(DOCKER_NETWORK_NAME) -p 27018:27017 mongo:8
 	@echo "Waiting for MongoDB to be ready..."
 	@until docker exec $(DB_CONTAINER_NAME) mongosh --port 27017 --eval "db.adminCommand('ping')" >/dev/null 2>&1; do sleep 1; done
+
+.PHONY: docker-start
+docker-start: docker-dev docker-start-db ; $(info $(M) starting docker containers...) @ ## Build and start dev containers (app and db)
 	@docker run -d --name=$(APP_CONTAINER_NAME) --network=$(DOCKER_NETWORK_NAME) -p 8080:8080 \
 		-e GO_COOK_RECIPEDB_HOST=mongodb://$(DB_CONTAINER_NAME):27017 \
 		$(RECIPES_MANAGER_DOCKER_IMAGE):development
+
+.PHONY: docker-stop-db
+docker-stop-db: ; $(info $(M) stopping mongodb...) @ ## Stop and remove mongodb container
+	@docker stop $(DB_CONTAINER_NAME) >/dev/null 2>&1 || true
+	@docker rm $(DB_CONTAINER_NAME) >/dev/null 2>&1 || true
 
 .PHONY: docker-stop
 docker-stop: ; $(info $(M) stopping docker containers...) @ ## Stop and remove running dev containers
 	@docker stop $(APP_CONTAINER_NAME) >/dev/null 2>&1 || true
 	@docker rm $(APP_CONTAINER_NAME) >/dev/null 2>&1 || true
-	@docker stop $(DB_CONTAINER_NAME) >/dev/null 2>&1 || true
-	@docker rm $(DB_CONTAINER_NAME) >/dev/null 2>&1 || true
+	@$(MAKE) docker-stop-db
 
 .PHONY: docker-login
 docker-login: ; $(info $(M) login to docker hub...) @ ## Login to Dockerhub

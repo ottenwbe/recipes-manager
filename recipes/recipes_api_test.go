@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/core"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -18,14 +19,21 @@ import (
 )
 
 var (
-	server  core.Server
+	server  *core.Server
+	db      core.DB
 	recipes RecipeDB
 )
 
 var _ = BeforeSuite(func() {
-	handler := core.NewHandler()
-	recipes, _ = NewDatabaseClient()
-	AddRecipesAPIToHandler(handler, recipes)
+	handler := core.NewHandler("*")
+	var err error
+	addr := config.Config.GetString("recipeDB.host")
+	db, err = core.NewDatabaseClient(addr)
+	Expect(err).ToNot(HaveOccurred())
+	recipes, err = NewRecipeDB(db)
+	Expect(err).ToNot(HaveOccurred())
+	err = AddRecipesAPIToHandler(handler, recipes)
+	Expect(err).ToNot(HaveOccurred())
 	server = core.NewServerWithAddress(":8080", handler)
 	server.Run()
 	time.Sleep(500 * time.Millisecond)
@@ -36,7 +44,7 @@ var _ = AfterSuite(func() {
 	if err != nil {
 		Fail(err.Error())
 	}
-	err = recipes.Close()
+	err = db.Close()
 	if err != nil {
 		Fail(err.Error())
 	}

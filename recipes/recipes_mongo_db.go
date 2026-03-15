@@ -41,13 +41,13 @@ func (m *MongoRecipeDB) MongoClient() *core.MongoClient {
 // Clear drops all collections
 func (m *MongoRecipeDB) Clear() {
 	c := m.getRecipesCollection()
-	co, cancel := ctx()
+	co, cancel := createContext()
 	if err := c.Drop(co); err != nil {
 		log.WithError(err).Error("Could not drop recipes from MongoDB")
 	}
 	cancel()
 	r := m.getPictureCollection()
-	co, cancel = ctx()
+	co, cancel = createContext()
 	defer cancel()
 	if err := r.Drop(co); err != nil {
 		log.WithError(err).Error("Could not drop pictures from MongoDB")
@@ -60,7 +60,7 @@ func (m *MongoRecipeDB) List() (recipes []*Recipe) {
 	collection := m.getRecipesCollection()
 
 	recipes = make([]*Recipe, 0)
-	c, cancel := ctx()
+	c, cancel := createContext()
 	defer cancel()
 	cursor, err := collection.Find(c, bson.M{})
 	if err != nil {
@@ -81,7 +81,7 @@ func (m *MongoRecipeDB) Num() int64 {
 
 	collection := m.getRecipesCollection()
 
-	c, cancel := ctx()
+	c, cancel := createContext()
 	defer cancel()
 	num, err := collection.CountDocuments(c, bson.M{})
 	if err != nil {
@@ -133,7 +133,7 @@ func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) RecipeList {
 	bsonS, _ := json.Marshal(dbSearch)
 	log.WithField("json", string(bsonS)).Debug("Query for IDs")
 
-	c, cancel := ctx()
+	c, cancel := createContext()
 	defer cancel()
 	cursor, err := collection.Find(c, dbSearch, findOptions)
 	if err != nil {
@@ -160,7 +160,7 @@ func (m *MongoRecipeDB) Get(id RecipeID) *Recipe {
 	collection := m.getRecipesCollection()
 
 	recipe := NewInvalidRecipe()
-	c, cancel := ctx()
+	c, cancel := createContext()
 	defer cancel()
 	result := collection.FindOne(c, bson.M{"id": id})
 
@@ -180,7 +180,7 @@ func (m *MongoRecipeDB) Pictures(id RecipeID) map[string]*RecipePicture {
 	recipePictures := make([]*RecipePicture, 0)
 	result := make(map[string]*RecipePicture, 0)
 
-	c, cancel := ctx()
+	c, cancel := createContext()
 	defer cancel()
 	cursor, err := collection.Find(c, bson.M{"id": id})
 	if err != nil {
@@ -206,7 +206,7 @@ func (m *MongoRecipeDB) Pictures(id RecipeID) map[string]*RecipePicture {
 func (m *MongoRecipeDB) Remove(id RecipeID) error {
 	c := m.getRecipesCollection()
 
-	ctx, cancel := ctx()
+	ctx, cancel := createContext()
 	defer cancel()
 	_, err := c.DeleteOne(ctx, bson.M{"id": id})
 
@@ -219,7 +219,7 @@ func (m *MongoRecipeDB) Picture(id RecipeID, name string) *RecipePicture {
 	collection := m.getPictureCollection()
 
 	recipePicture := NewInvalidRecipePicture()
-	c, cancel := ctx()
+	c, cancel := createContext()
 	defer cancel()
 	dbResult := collection.FindOne(c, bson.M{"id": id, "name": name})
 
@@ -249,7 +249,7 @@ func (m *MongoRecipeDB) AddPicture(pic *RecipePicture) error {
 		return err
 	}
 
-	c, cancel := ctx()
+	c, cancel := createContext()
 	defer cancel()
 	_, err = collection.InsertOne(c, *pic)
 	if err != nil {
@@ -265,7 +265,7 @@ func (m *MongoRecipeDB) Random() *Recipe {
 
 	collection := m.getRecipesCollection()
 
-	c, cancel := ctx()
+	c, cancel := createContext()
 	defer cancel()
 	cursor, err := collection.Aggregate(c, []bson.M{{"$sample": bson.M{"size": 1}}})
 	if err != nil {
@@ -289,7 +289,7 @@ func (m *MongoRecipeDB) Update(id RecipeID, recipe *Recipe) error {
 
 	collection := m.getRecipesCollection()
 
-	c, cancel := ctx()
+	c, cancel := createContext()
 	defer cancel()
 	_, err := collection.ReplaceOne(c, bson.M{"id": id}, recipe)
 	if err != nil {
@@ -305,7 +305,7 @@ func (m *MongoRecipeDB) Insert(recipe *Recipe) error {
 
 	collection := m.getRecipesCollection()
 
-	c, cancel := ctx()
+	c, cancel := createContext()
 	defer cancel()
 	_, err := collection.InsertOne(c, *recipe)
 	if err != nil {
@@ -325,7 +325,7 @@ func (m *MongoRecipeDB) Ping() error {
 func (m *MongoRecipeDB) RemoveByName(name string) error {
 	c := m.getRecipesCollection()
 
-	ctx, cancel := ctx()
+	ctx, cancel := createContext()
 	defer cancel()
 	_, err := c.DeleteOne(ctx, bson.M{"name": name})
 
@@ -338,7 +338,7 @@ func (m *MongoRecipeDB) GetByName(name string) (*Recipe, error) {
 	collection := m.getRecipesCollection()
 
 	recipe := *NewInvalidRecipe()
-	c, cancel := ctx()
+	c, cancel := createContext()
 	defer cancel()
 	cur := collection.FindOne(c, bson.M{"name": name})
 	err := cur.Decode(&recipe)
@@ -356,24 +356,7 @@ func (m *MongoRecipeDB) StartDB(addr string) error {
 	if m.mongoClient == nil {
 		m.mongoClient = &core.MongoClient{}
 	}
-
-	err := m.mongoClient.StartDB(addr)
-	if err != nil {
-		return err
-	}
-
-	err = m.ensureRecipeIndex()
-	if err != nil {
-		log.WithError(err).Info("Could not create mongo db recipe index")
-		return err
-	}
-	err = m.ensurePictureIndex()
-	if err != nil {
-		log.WithError(err).Info("Could not create mongo db picture index")
-		return err
-	}
-
-	return nil
+	return m.mongoClient.StartDB(addr)
 }
 
 // StopDB closes the connection to the db
@@ -381,8 +364,7 @@ func (m *MongoRecipeDB) StopDB() (err error) {
 	return m.mongoClient.StopDB()
 }
 
-func (m *MongoRecipeDB) ensureRecipeIndex() error {
-
+func (m *MongoRecipeDB) ensureIndexes() error {
 	c := m.getRecipesCollection()
 
 	err := m.createTextIndex(c)
@@ -395,7 +377,17 @@ func (m *MongoRecipeDB) ensureRecipeIndex() error {
 		return err
 	}
 
-	return nil
+	cPic := m.getPictureCollection()
+	index := mongo.IndexModel{
+		Keys: bson.M{
+			"name": 1, // index in ascending order
+		},
+		Options: options.Index().SetUnique(false).SetSparse(true),
+	}
+	ctx, cancel := createContext()
+	defer cancel()
+	_, err = cPic.Indexes().CreateOne(ctx, index)
+	return err
 }
 
 func (*MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
@@ -413,7 +405,7 @@ func (*MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
 		Options: options.Index().SetUnique(true).SetSparse(true),
 	}
 
-	ctx, cancel := ctx()
+	ctx, cancel := createContext()
 	defer cancel()
 	_, err := c.Indexes().CreateMany(ctx, []mongo.IndexModel{indexID, indexName})
 	if err != nil {
@@ -432,31 +424,11 @@ func (*MongoRecipeDB) createTextIndex(c *mongo.Collection) error {
 		Options: options.Index().SetUnique(false),
 	}
 
-	ctx, cancel := ctx()
+	ctx, cancel := createContext()
 	defer cancel()
 	_, err := c.Indexes().CreateOne(ctx, textIndex)
 
 	return err
-}
-
-func (m *MongoRecipeDB) ensurePictureIndex() error {
-
-	c := m.getPictureCollection()
-	index := mongo.IndexModel{
-		Keys: bson.M{
-			"name": 1, // index in ascending order
-		},
-		Options: options.Index().SetUnique(false).SetSparse(true),
-	}
-	ctx, cancel := ctx()
-	defer cancel()
-	_, err := c.Indexes().CreateOne(ctx, index)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (m *MongoRecipeDB) getRecipesCollection() *mongo.Collection {
@@ -467,6 +439,6 @@ func (m *MongoRecipeDB) getPictureCollection() *mongo.Collection {
 	return m.mongoClient.Client.Database(DATABASE).Collection(PICTURES)
 }
 
-func ctx() (context.Context, context.CancelFunc) {
+func createContext() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), 10*time.Second)
 }

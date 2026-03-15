@@ -7,6 +7,8 @@ package recipes
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/ottenwbe/recipes-manager/config"
+	"github.com/ottenwbe/recipes-manager/core"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -39,23 +41,29 @@ var _ = Describe("recipes db", func() {
 
 	Context("connection", func() {
 		var (
-			err error
-			db  RecipeDB
+			err    error
+			coreDB core.DB
+			db     RecipeDB
 		)
 
 		BeforeEach(func() {
-			db, err = NewDatabaseClient()
+			addr := config.Config.GetString("recipeDB.host")
+			coreDB, err = core.NewDatabaseClient(addr)
+			Expect(err).ToNot(HaveOccurred())
+			db, err = NewRecipeDB(coreDB)
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		AfterEach(func() {
 			// clean db for testing
-			c, cancel := ctx()
+			c, cancel := createContext()
 			db.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("pics").Drop(c)
 			cancel()
-			c, cancel = ctx()
+			c, cancel = createContext()
 			db.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("recipes").Drop(c)
 			cancel()
-			err = db.Close()
+			err = coreDB.Close()
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("can be established", func() {
@@ -72,6 +80,7 @@ var _ = Describe("recipes db", func() {
 	Context("picture collection", func() {
 		var (
 			err         error
+			coreDB      core.DB
 			db          RecipeDB
 			testRecipe1 *Recipe
 			testRecipe2 *Recipe
@@ -79,25 +88,32 @@ var _ = Describe("recipes db", func() {
 
 		prepareTestRecipes := func() {
 			testRecipe1 = NewRecipe(NewRecipeID())
-			db.Insert(testRecipe1)
+			err := db.Insert(testRecipe1)
+			Expect(err).ToNot(HaveOccurred())
 			testRecipe2 = NewRecipe(NewRecipeID())
-			db.Insert(testRecipe2)
+			err = db.Insert(testRecipe2)
+			Expect(err).ToNot(HaveOccurred())
 		}
 
 		BeforeEach(func() {
-			db, err = NewDatabaseClient()
+			addr := config.Config.GetString("recipeDB.host")
+			coreDB, err = core.NewDatabaseClient(addr)
+			Expect(err).ToNot(HaveOccurred())
+			db, err = NewRecipeDB(coreDB)
+			Expect(err).ToNot(HaveOccurred())
 			prepareTestRecipes()
 		})
 
 		AfterEach(func() {
 			// clean db for testing
-			c, cancel := ctx()
+			c, cancel := createContext()
 			db.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("pics").Drop(c)
 			cancel()
-			c, cancel = ctx()
+			c, cancel = createContext()
 			db.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("recipes").Drop(c)
 			cancel()
-			db.Close()
+			err = coreDB.Close()
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("can insert a Picture and then read it", func() {
@@ -167,24 +183,30 @@ var _ = Describe("recipes db", func() {
 	Context("recipes collection", func() {
 
 		var (
-			err error
-			db  RecipeDB
+			err    error
+			coreDB core.DB
+			db     RecipeDB
 		)
 
 		BeforeEach(func() {
-			db, err = NewDatabaseClient()
+			addr := config.Config.GetString("recipeDB.host")
+			coreDB, err = core.NewDatabaseClient(addr)
+			Expect(err).ToNot(HaveOccurred())
+			db, err = NewRecipeDB(coreDB)
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		AfterEach(func() {
 			// clean db for testing
-			c, cancel := ctx()
+			c, cancel := createContext()
 			db.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("pics").Drop(c)
 			cancel()
-			c, cancel = ctx()
+			c, cancel = createContext()
 			db.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("recipes").Drop(c)
 			cancel()
 
-			db.Close()
+			err = coreDB.Close()
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("can insert a Recipe and then read it", func() {

@@ -5,13 +5,12 @@
 package recipes
 
 import (
-	"io"
+	"github.com/ottenwbe/recipes-manager/core"
 )
 
 // RecipeDB is the interface that all DB implementations have to expose
 type RecipeDB interface {
-	io.Closer
+	core.DB
 	Recipes
-	Ping() error
 	Clear()
 }

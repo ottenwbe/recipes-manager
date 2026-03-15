@@ -65,14 +65,16 @@ type API struct {
 	recipes recipes.RecipeDB
 }
 
-// NewSourceAPI creates the API for sources
-func NewSourceAPI(sources Sources, recipes recipes.RecipeDB) API {
-	return API{sources, recipes}
+// AddSourcesAPIToHandler creates the API for sources
+func AddSourcesAPIToHandler(handler core.Handler, sources Sources, recipesDB recipes.RecipeDB) error {
+	sourcesAPI := API{sources, recipesDB}
+	sourcesAPI.PrepareAPI(handler)
+	return nil
 }
 
 // PrepareAPI registers all api endpoints
-func (s API) PrepareAPI(router core.Handler, sources Sources, recipes recipes.RecipeDB) {
-	s.prepareV1API(router, sources, recipes)
+func (s API) PrepareAPI(router core.Handler) {
+	s.prepareV1API(router, s.sources, s.recipes)
 }
 
 func (s API) prepareV1API(router core.Handler, sources Sources, recipes recipes.RecipeDB) {

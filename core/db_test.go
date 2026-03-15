@@ -4,13 +4,15 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/core"
 )
 
 var _ = Describe("MongoDB", func() {
 	Context("can be connected to and", func() {
 
-		m, err := core.NewDatabaseClient()
+		addr := config.Config.GetString("recipeDB.host")
+		m, err := core.NewDatabaseClient(addr)
 
 		It("does not result in an error", func() {
 			Expect(err).To(BeNil())
@@ -21,7 +23,8 @@ var _ = Describe("MongoDB", func() {
 		})
 
 		It("cannot be created twice", func() {
-			_, err := core.NewDatabaseClient()
+			addr := config.Config.GetString("recipeDB.host")
+			_, err := core.NewDatabaseClient(addr)
 			Expect(err).To(BeNil())
 		})
 
@@ -29,7 +32,8 @@ var _ = Describe("MongoDB", func() {
 
 	Context("can be close", func() {
 
-		m, _ := core.NewDatabaseClient()
+		addr := config.Config.GetString("recipeDB.host")
+		m, _ := core.NewDatabaseClient(addr)
 
 		It("does not result in an error", func() {
 			errClose := m.Close()
