@@ -77,16 +77,18 @@ func addAPIsToServer(handler core.Handler, recipesDB recipes.RecipeDB, srcReposi
 func newSources() sources.Sources {
 	srcRepository := sources.NewSources()
 
-	source := sources.OpenNewGoogleDriveConnection()
-	cfg, err := source.OAuthLoginConfig()
-	if err != nil {
-		log.WithError(err).Warn("Could not create OAuth Config")
-	} else {
-		err = srcRepository.Add(
-			sources.NewSourceDescription(source.ID(), source.Name(), source.Version(), cfg),
-			source,
-		)
-		warnOnError(err, "Could not add source")
+	if sources.IsDriveEnabled() {
+		source := sources.OpenNewGoogleDriveConnection()
+		cfg, err := source.OAuthLoginConfig()
+		if err != nil {
+			log.WithError(err).Warn("Could not create OAuth Config")
+		} else {
+			err = srcRepository.Add(
+				sources.NewSourceDescription(source.ID(), source.Name(), source.Version(), cfg),
+				source,
+			)
+			warnOnError(err, "Could not add source")
+		}
 	}
 
 	return srcRepository

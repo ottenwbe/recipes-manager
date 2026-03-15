@@ -13,6 +13,7 @@ coverage.out
 *.coverprofile
 *junit.xml
 results/
+coverprofile.out
 
 # Misc
 tmp/
