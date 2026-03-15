@@ -24,9 +24,12 @@
 
 package recipes
 
+import "github.com/ottenwbe/recipes-manager/utils"
+
 // NewDatabaseClient builds a client to communicate with a database
 func NewDatabaseClient() (RecipeDB, error) {
 	m := &MongoRecipeDB{}
-	err := m.StartDB()
+	addr := utils.Config.GetString("recipeDB.host")
+	err := m.StartDB(addr)
 	return m, err
 }

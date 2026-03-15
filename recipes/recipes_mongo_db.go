@@ -374,12 +374,12 @@ func (m *MongoRecipeDB) Close() error {
 }
 
 // StartDB initializes the database connection
-func (m *MongoRecipeDB) StartDB() error {
+func (m *MongoRecipeDB) StartDB(addr string) error {
 	if m.mongoClient == nil {
 		m.mongoClient = &core.MongoClient{}
 	}
 
-	err := m.mongoClient.StartDB()
+	err := m.mongoClient.StartDB(addr)
 	if err != nil {
 		return err
 	}

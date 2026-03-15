@@ -24,7 +24,11 @@
 
 package core
 
-import "io"
+import (
+	"io"
+
+	"github.com/ottenwbe/recipes-manager/utils"
+)
 
 // DB is the interface that all DB implementations have to expose
 type DB interface {
@@ -35,6 +39,7 @@ type DB interface {
 // NewDatabaseClient builds a client to communicate with a database
 func NewDatabaseClient() (DB, error) {
 	m := &MongoClient{}
-	err := m.StartDB()
+	addr := utils.Config.GetString("recipeDB.host")
+	err := m.StartDB(addr)
 	return m, err
 }
