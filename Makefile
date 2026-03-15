@@ -74,6 +74,10 @@ mod-verify: ; $(info $(M) verifying modules…) @ ## Run go mod verify
 vet: ; $(info $(M) running vet…) @ ## Run go vet
 	@$(GOVET) ./...
 
+.PHONY: sbom
+sbom: ; $(info $(M) creating SBOM...) @ ## Create SBOM
+	@$(GO) run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest app -json -output recipes-manager.bom.json .
+
 .PHONY: fmt
 fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
 	@$(GOFMT) -s -l -w .

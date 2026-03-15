@@ -20,4 +20,5 @@ pics/
 helper/
 vendor/
 .test-config
+recipes-manager.bom.json
 
