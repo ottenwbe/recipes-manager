@@ -67,7 +67,11 @@ func addAPIsToServer(handler core.Handler, recipesDB recipes.RecipeDB, srcReposi
 	sourcesAPI.PrepareAPI(handler, srcRepository, recipesDB)
 	core.AddCoreAPIToHandler(handler)
 
-	account.AddAuthAPIsToHandler(handler, recipesDB.(*recipes.MongoRecipeDB).MongoClient())
+	if mongoDB, ok := recipesDB.(*recipes.MongoRecipeDB); ok {
+		account.AddAuthAPIsToHandler(handler, mongoDB.MongoClient())
+	} else {
+		log.Warn("Account API not enabled: underlying database is not MongoDB")
+	}
 }
 
 func newSources() sources.Sources {

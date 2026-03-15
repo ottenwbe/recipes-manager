@@ -1,7 +1,7 @@
 # Build container for the application.
 # Eases up the process of building
 # for different target architectures.
-FROM docker.io/golang:1.25-alpine AS builder
+FROM docker.io/golang:1.25.8-alpine AS builder
 ARG APP=recipes-manager
 
 # Install build dependencies
@@ -13,7 +13,7 @@ WORKDIR /build
 # build the app binary
 RUN make release
 
-FROM docker.io/alpine:3.23
+FROM docker.io/alpine:3.23.3
 
 ARG APP=recipes-manager
 ENV GIN_MODE release
