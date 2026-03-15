@@ -176,7 +176,7 @@ paths:
       - application/json
       responses:
         "201":
-          description: ""
+          description: Created
       summary: Add a new Recipe
       tags:
       - Recipes
@@ -208,7 +208,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
+        "204":
+          description: No Content
       summary: Delete a Recipe
       tags:
       - Recipes
@@ -254,7 +256,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
+        "204":
+          description: No Content
       summary: Update a specific Recipe
       tags:
       - Recipes
@@ -366,7 +370,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       summary: Download Recipes from a Source
       tags:
       - Sources

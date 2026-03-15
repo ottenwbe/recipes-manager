@@ -4,9 +4,10 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/ottenwbe/recipes-manager/core"
 	"net/http"
 	"time"
+
+	"github.com/ottenwbe/recipes-manager/core"
 )
 
 var (
@@ -39,7 +40,7 @@ var _ = Describe("Keycloak API", func() {
 		It("disables keycloak endpoints endpoints (by default)", func() {
 
 			AddAuthAPIsToHandler(handler, db)
-			server = core.NewServerA(":8090", handler)
+			server = core.NewServerWithAddress(":8090", handler)
 			server.Run()
 			time.Sleep(500 * time.Millisecond)
 

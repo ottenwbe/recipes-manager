@@ -54,7 +54,7 @@ func closeDatabase(recipesDB recipes.RecipeDB) {
 
 func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) core.Server {
 	handler := core.NewHandler()
-	server := core.NewServerH(handler)
+	server := core.NewServerWithHandler(handler)
 
 	addAPIsToServer(handler, recipesDB, srcRepository)
 

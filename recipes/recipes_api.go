@@ -54,13 +54,9 @@ type API struct {
 	recipes RecipeDB
 }
 
-var (
-	api *API
-)
-
 // AddRecipesAPIToHandler constructs an API for recipes
 func AddRecipesAPIToHandler(handler core.Handler, recipes RecipeDB) {
-	api = &API{
+	api := &API{
 		handler,
 		recipes,
 	}
@@ -140,7 +136,7 @@ func (rAPI *API) getRecipePicture(c *core.APICallContext) {
 	name := c.Param(NAME)
 	picture := rAPI.recipes.Picture(recipeID, name)
 	if picture.ID == InvalidRecipeID() {
-		c.String(http.StatusNotFound, "No such picture")
+		c.JSON(http.StatusNotFound, core.H{"error": "picture not found", "id": recipeID, "name": name})
 	} else {
 		c.JSON(http.StatusOK, picture)
 	}
@@ -165,7 +161,7 @@ func (rAPI *API) getRandomRecipe(c *core.APICallContext) {
 	}
 
 	if recipe.ID == InvalidRecipeID() {
-		c.String(http.StatusNotFound, "No such recipe")
+		c.JSON(http.StatusNotFound, core.H{"error": "no recipes found"})
 	} else {
 		c.JSON(http.StatusOK, recipe)
 	}
@@ -216,7 +212,7 @@ func (rAPI *API) getRecipe(c *core.APICallContext) {
 	}
 
 	if recipe.ID == InvalidRecipeID() {
-		c.String(http.StatusNotFound, "No such recipe: %v", recipeIDS)
+		c.JSON(http.StatusNotFound, core.H{"error": "recipe not found", "id": recipeIDS})
 	} else {
 		c.JSON(http.StatusOK, recipe)
 	}
@@ -231,26 +227,32 @@ func (rAPI *API) getRecipe(c *core.APICallContext) {
 // @Accept json
 // @Produce json
 // @Success 200
+// @Success 204
 // @Router /recipes/r/{recipe} [put]
 func (rAPI *API) putRecipe(c *core.APICallContext) {
 
-	recipeIDS := c.Param(RECIPE)
-	recipeID := NewRecipeIDFromString(recipeIDS)
+	recipeID := NewRecipeIDFromString(c.Param(RECIPE))
+	log.WithField("id", recipeID).Debug("Put Recipe called")
 
-	log.Error("Put Recipes called")
+	// 1. Check if recipe exists
+	if rAPI.recipes.Get(recipeID).ID == InvalidRecipeID() {
+		c.JSON(http.StatusNotFound, core.H{"error": "recipe not found", "id": recipeID})
+		return
+	}
 
+	// 2. Bind the request body
 	var recipe Recipe
-	err := c.BindJSON(&recipe)
-	if err != nil || rAPI.recipes.Get(recipeID).ID == InvalidRecipeID() {
-		c.String(http.StatusBadRequest, "Could not read JSON input")
+	if err := c.BindJSON(&recipe); err != nil {
+		c.JSON(http.StatusBadRequest, core.H{"error": "invalid json format"})
+		return
+	}
+
+	// 3. Perform the update
+	recipe.ID = recipeID // Ensure the ID from the URL is used, not from the body
+	if err := rAPI.recipes.Update(recipeID, &recipe); err != nil {
+		c.JSON(http.StatusInternalServerError, core.H{"error": "could not update recipe"})
 	} else {
-		recipe.ID = recipeID
-		err = rAPI.recipes.Update(recipeID, &recipe)
-		if err != nil {
-			c.String(http.StatusInternalServerError, "Could not persist Recipe")
-		} else {
-			c.Status(http.StatusNoContent)
-		}
+		c.Status(http.StatusNoContent)
 	}
 }
 
@@ -265,17 +267,16 @@ func (rAPI *API) putRecipe(c *core.APICallContext) {
 // @Router /recipes [post]
 func (rAPI *API) postRecipes(c *core.APICallContext) {
 	var recipe Recipe
-	err := c.BindJSON(&recipe)
-	if err != nil {
-		c.String(http.StatusBadRequest, "Could not read JSON input")
+	if err := c.BindJSON(&recipe); err != nil {
+		c.JSON(http.StatusBadRequest, core.H{"error": "invalid json format"})
+		return
+	}
+
+	recipe.ID = NewRecipeID() // Assign a new ID, ignoring any client-provided ID
+	if err := rAPI.recipes.Insert(&recipe); err != nil {
+		c.JSON(http.StatusInternalServerError, core.H{"error": "could not persist recipe"})
 	} else {
-		recipe.ID = NewRecipeID()
-		err = rAPI.recipes.Insert(&recipe)
-		if err != nil {
-			c.String(http.StatusInternalServerError, "Could not persist Recipe")
-		} else {
-			c.Status(http.StatusCreated)
-		}
+		c.Status(http.StatusCreated)
 	}
 }
 
@@ -287,15 +288,16 @@ func (rAPI *API) postRecipes(c *core.APICallContext) {
 // @Accept json
 // @Produce json
 // @Success 200
+// @Success 204
 // @Router /recipes/r/{recipe} [delete]
 func (rAPI *API) deleteRecipe(c *core.APICallContext) {
-	recipeIDS := c.Param(RECIPE)
-	recipeID := NewRecipeIDFromString(recipeIDS)
+	recipeID := NewRecipeIDFromString(c.Param(RECIPE))
 	if err := rAPI.recipes.Remove(recipeID); err != nil {
-		c.String(http.StatusNotFound, "Recipe not found")
+		// Assuming the DB layer returns an error when the item is not found.
+		c.JSON(http.StatusNotFound, core.H{"error": "recipe not found", "id": recipeID})
 		log.WithError(err).Debug("Could not Delete Recipe")
 	} else {
-		c.Status(http.StatusOK)
+		c.Status(http.StatusNoContent) // 204 is more idiomatic for a successful DELETE with no body
 	}
 }
 

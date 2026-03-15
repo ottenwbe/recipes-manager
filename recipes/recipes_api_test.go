@@ -47,7 +47,7 @@ var _ = BeforeSuite(func() {
 	handler := core.NewHandler()
 	recipes, _ = NewDatabaseClient()
 	AddRecipesAPIToHandler(handler, recipes)
-	server = core.NewServerA(":8080", handler)
+	server = core.NewServerWithAddress(":8080", handler)
 	server.Run()
 	time.Sleep(500 * time.Millisecond)
 })
@@ -294,7 +294,7 @@ var _ = Describe("recipesAPI", func() {
 			request, err := http.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/recipes/r/"+id.String(), bytes.NewBuffer(nil))
 			response, err := client.Do(request)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(response.StatusCode).To(Equal(http.StatusOK))
+			Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 		})
 	})
 

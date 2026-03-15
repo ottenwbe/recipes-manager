@@ -1,25 +1,5 @@
 /*
  * MIT License
- *
- * Copyright (c) 2020 Beate Ottenwälder
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
  */
 
 package core
@@ -35,7 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
-	"github.com/swaggo/gin-swagger"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	// based on swagger documentation
 	_ "github.com/ottenwbe/recipes-manager/docs"
@@ -90,6 +70,9 @@ type Handler interface {
 
 // APICallContext is a facade for any concrete Context, e.g. gins
 type APICallContext = gin.Context
+
+// H is a facade for the response map
+type H = gin.H
 
 // NewHandler creates a handler for API calls with a pre-configured ADDRESS
 func NewHandler() Handler {
@@ -200,7 +183,7 @@ func (g *ginHandler) corsMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", corsOrigin)
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, PATCH, POST, PUT")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, PATCH, POST, PUT, DELETE")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
@@ -218,8 +201,8 @@ type Server struct {
 	stopWaitGroup *sync.WaitGroup
 }
 
-// NewServerA creates a new server using a given address to listen to
-func NewServerA(addr string, handler http.Handler) Server {
+// NewServerWithAddress creates a new server using a given address to listen to
+func NewServerWithAddress(addr string, handler http.Handler) Server {
 	return Server{
 		Address: addr,
 		server: &http.Server{
@@ -230,14 +213,14 @@ func NewServerA(addr string, handler http.Handler) Server {
 		stopWaitGroup: &sync.WaitGroup{}}
 }
 
-// NewServerH creates a new server using the default address with a custom handler
-func NewServerH(handler http.Handler) Server {
-	return NewServerA(defaultAddress, handler)
+// NewServerWithHandler creates a new server using the default address with a custom handler
+func NewServerWithHandler(handler http.Handler) Server {
+	return NewServerWithAddress(defaultAddress, handler)
 }
 
 // NewServer creates a new server to listen on the defaultAddress
 func NewServer() Server {
-	return NewServerA(defaultAddress, NewHandler())
+	return NewServerWithAddress(defaultAddress, NewHandler())
 }
 
 // Run the server for the API
