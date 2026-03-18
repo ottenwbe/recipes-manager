@@ -139,7 +139,12 @@ func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) RecipeList {
 	if err != nil {
 		log.WithError(err).Info("Error while finding recipe")
 	}
-	defer func() { _ = cursor.Close(c) }()
+	defer func() {
+		closeErr := cursor.Close(c)
+		if closeErr != nil {
+			log.WithError(closeErr).Info("Error while closing cursor")
+		}
+	}()
 	err = cursor.All(c, &recipes)
 	if err != nil {
 		log.WithError(err).Info("Error while finding recipe")
