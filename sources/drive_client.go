@@ -50,7 +50,7 @@ func cacheDriveRecipesFromFiles(driveService *drive.Service, fileList *drive.Fil
 		if err != nil {
 			log.WithError(err).Error("Could not download html...")
 		} else {
-			recipe, pictures, err := ParseRecipe(htmlFile, recipes.NewRecipeID())
+			recipe, pictures, err := ParseRecipe(htmlFile, recipes.NewConsistentRecipeID(file.Id))
 			if err != nil {
 				log.WithError(err).Errorf("could not parse recipe")
 			}
@@ -247,7 +247,7 @@ func (c *DriveClient) ConnectOAuth(code string) (err error) {
 }
 
 func (c *DriveClient) getToken(code string) (*oauth2.Token, error) {
-	log.WithField("code", code).Debugf("Fetching token from google ...")
+	log.Debugf("Fetching token from google ...")
 	tok, err := c.oAuthConfig.Exchange(context.Background(), code)
 	if err != nil {
 		return nil, err

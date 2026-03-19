@@ -122,26 +122,44 @@ func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 			return
 		}
 		stateParts := strings.Split(string(decodedState), "|")
-		if len(stateParts) != 2 || stateParts[0] != sourceID {
-			c.String(http.StatusBadRequest, "Invalid state or source mismatch")
+		if len(stateParts) != 2 {
+			c.String(http.StatusBadRequest, "Invalid state format")
+			return
+		}
+
+		redirectURL := stateParts[1]
+		if stateParts[0] != sourceID {
+			redirectWithError(c, redirectURL, "source_mismatch")
 			return
 		}
 
 		src, err := sourceClient(sourceID, sources)
 		if err != nil {
-			c.String(http.StatusNotFound, "Invalid Source tried to connect")
+			redirectWithError(c, redirectURL, "invalid_source")
 			return
 		}
 
 		err = src.ConnectOAuth(code)
 		if err != nil {
-			c.String(http.StatusBadRequest, "Cannot connect to Source")
-			log.Error(err)
+			log.WithError(err).Error("Cannot connect to source")
+			redirectWithError(c, redirectURL, "connection_failed")
 			return
 		}
 
 		c.Redirect(http.StatusFound, stateParts[1])
 	}
+}
+
+func redirectWithError(c *core.APICallContext, target string, errorMsg string) {
+	u, err := url.Parse(target)
+	if err != nil {
+		c.String(http.StatusBadRequest, "Invalid redirect url in state")
+		return
+	}
+	q := u.Query()
+	q.Set("error", errorMsg)
+	u.RawQuery = q.Encode()
+	c.Redirect(http.StatusFound, u.String())
 }
 
 // oAuthHandler example
@@ -166,7 +184,7 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 			return
 		}
 
-		config, err := src.OAuthLoginConfig()
+		oauthConfig, err := src.OAuthLoginConfig()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
@@ -176,7 +194,7 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 
 		oAuthResponse := SourceOAuthConnectResponse{
 			ID:       sourceID,
-			OAuthURL: config.AuthCodeURL(state, oauth2.AccessTypeOffline),
+			OAuthURL: oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("prompt", "consent")),
 		}
 
 		c.JSON(http.StatusOK, oAuthResponse)
@@ -225,11 +243,14 @@ func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c 
 			return
 		}
 
+		count := 0
 		for _, recipe := range src.Recipes().List() {
 			log.WithField("sourceID", sourceID).Infof("Inserted New Recipe: %v", recipe.String())
-			err = recipes.Insert(recipe)
-			if err != nil {
-				log.WithError(err).Error("Could not synchronize a recipe to the db")
+			// Try to insert; if it fails (duplicate ID), update it instead.
+			if err := recipes.Insert(recipe); err != nil {
+				if updateErr := recipes.Update(recipe.ID, recipe); updateErr != nil {
+					log.WithError(updateErr).Error("Could not synchronize (insert/update) a recipe to the db")
+				}
 			}
 			for _, pic := range src.Recipes().Pictures(recipe.ID) {
 				log.Infof("Inserted New Recipe Picture: %v", pic.Name)
@@ -238,9 +259,10 @@ func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c 
 					log.WithError(err).Error("Could not synchronize a picture to the db")
 				}
 			}
+			count++
 		}
 
-		c.String(http.StatusOK, "")
+		c.JSON(http.StatusOK, core.H{"synced": count})
 	}
 }
 

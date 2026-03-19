@@ -63,6 +63,11 @@ func NewRecipeID() RecipeID {
 	return RecipeID(uuid.New().String())
 }
 
+// NewConsistentRecipeID returns a deterministic recipe id based on a given string
+func NewConsistentRecipeID(id string) RecipeID {
+	return RecipeID(uuid.NewSHA1(uuid.NameSpaceURL, []byte(id)).String())
+}
+
 // NewRecipeIDFromString converts a string to a recipe id and returns this recipe id.
 // Returns the InvalidRecipeID iff the recipe id cannot be converted
 func NewRecipeIDFromString(recipeID string) (result RecipeID) {
