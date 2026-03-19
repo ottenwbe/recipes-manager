@@ -25,8 +25,10 @@
 package sources
 
 import (
+	"encoding/base64"
 	"net/http"
 	"net/url"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -106,10 +108,22 @@ func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sourceID := c.Param("source")
 
-		query := c.Request.URL.Query()
-		state := query["state"][0]
-		if state != sourceID {
-			c.String(http.StatusNotFound, "Invalid source tried to connect")
+		state := c.Query("state")
+		code := c.Query("code")
+
+		if state == "" || code == "" {
+			c.String(http.StatusBadRequest, "Missing state or code parameter")
+			return
+		}
+
+		decodedState, err := base64.URLEncoding.DecodeString(state)
+		if err != nil {
+			c.String(http.StatusBadRequest, "Invalid state encoding")
+			return
+		}
+		stateParts := strings.Split(string(decodedState), "|")
+		if len(stateParts) != 2 || stateParts[0] != sourceID {
+			c.String(http.StatusBadRequest, "Invalid state or source mismatch")
 			return
 		}
 
@@ -119,8 +133,6 @@ func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 			return
 		}
 
-		code := query["code"][0]
-
 		err = src.ConnectOAuth(code)
 		if err != nil {
 			c.String(http.StatusBadRequest, "Cannot connect to Source")
@@ -128,7 +140,7 @@ func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 			return
 		}
 
-		c.Redirect(http.StatusMovedPermanently, host)
+		c.Redirect(http.StatusFound, stateParts[1])
 	}
 }
 
@@ -146,7 +158,7 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 		log.Infof("Exchange Token with Source %v", sourceID)
 
 		query := c.Request.URL.Query()
-		host = extractSourceRedirectOrDefault(query)
+		redirectURL := extractSourceRedirectOrDefault(query)
 
 		src, err := sourceClient(sourceID, sources)
 		if err != nil {
@@ -160,9 +172,11 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 			return
 		}
 
+		state := base64.URLEncoding.EncodeToString([]byte(sourceID + "|" + redirectURL))
+
 		oAuthResponse := SourceOAuthConnectResponse{
 			ID:       sourceID,
-			OAuthURL: config.AuthCodeURL(sourceID, oauth2.AccessTypeOffline),
+			OAuthURL: config.AuthCodeURL(state, oauth2.AccessTypeOffline),
 		}
 
 		c.JSON(http.StatusOK, oAuthResponse)
