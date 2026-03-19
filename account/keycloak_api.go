@@ -30,7 +30,6 @@ import (
 	"net/http"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/gin-gonic/gin"
 	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/core"
 	log "github.com/sirupsen/logrus"
@@ -38,19 +37,16 @@ import (
 )
 
 const (
-	keycloakAddressCfg      = "keycloak.address"
-	keycloakClientSecretCfg = "keycloak.clientSecret"
-	keyCloakClientIDCfg     = "keycloak.clientID"
-	keyCloakHostCfg         = "keycloak.host"
-	keycloakEnabledCfg      = "keycloak.enabled"
-)
-
-var (
-	keycloakEnabled      bool
-	keycloakAddress      string
-	keyCloakClientSecret string
-	keyCloakClientID     string
-	keyCloakHost         string
+	// KeycloakAddressCfg key for configuration
+	KeycloakAddressCfg = "keycloak.address"
+	// KeycloakClientSecretCfg key for configuration
+	KeycloakClientSecretCfg = "keycloak.clientSecret"
+	// KeyCloakClientIDCfg key for configuration
+	KeyCloakClientIDCfg = "keycloak.clientID"
+	// KeyCloakHostCfg key for configuration
+	KeyCloakHostCfg = "keycloak.host"
+	// KeycloakEnabledCfg key for configuration
+	KeycloakEnabledCfg = "keycloak.enabled"
 )
 
 // AuthKeyCloakAPI for authorization
@@ -59,26 +55,10 @@ type AuthKeyCloakAPI struct {
 	db      *MongoAccountService
 }
 
-var (
-	authKeyCloakApi *AuthKeyCloakAPI
-)
-
-func init() {
-
-	config.Config.SetDefault(keycloakEnabledCfg, false)
-
-	keycloakEnabled = config.Config.GetBool(keycloakEnabledCfg)
-	if keycloakEnabled {
-		keycloakAddress = config.Config.GetString(keycloakAddressCfg)
-		keyCloakClientSecret = config.Config.GetString(keycloakClientSecretCfg)
-		keyCloakClientID = config.Config.GetString(keyCloakClientIDCfg)
-		keyCloakHost = config.Config.GetString(keyCloakHostCfg)
-	}
-}
-
 // AddAuthAPIsToHandler constructs an API for recipes
 func AddAuthAPIsToHandler(handler core.Handler, db core.DB) {
 
+	keycloakEnabled := config.Config.GetBool(KeycloakEnabledCfg)
 	if keycloakEnabled {
 
 		if handler == nil {
@@ -86,7 +66,7 @@ func AddAuthAPIsToHandler(handler core.Handler, db core.DB) {
 			return
 		}
 
-		authKeyCloakApi = &AuthKeyCloakAPI{
+		authKeyCloakApi := &AuthKeyCloakAPI{
 			handler: handler,
 			db:      NewMongoAccountService(db),
 		}
@@ -99,6 +79,7 @@ func AddAuthAPIsToHandler(handler core.Handler, db core.DB) {
 }
 
 func (a *AuthKeyCloakAPI) prepareAPI() error {
+	keycloakAddress := config.Config.GetString(KeycloakAddressCfg)
 	log.WithField("addr", keycloakAddress).Info("Prepare Keycloak API")
 
 	provider, keyCloakConfig, err := a.prepareConfig()
@@ -116,6 +97,16 @@ func (a *AuthKeyCloakAPI) prepareAPI() error {
 }
 
 func (*AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error) {
+	keycloakAddress := config.Config.GetString(KeycloakAddressCfg)
+	keyCloakClientID := config.Config.GetString(KeyCloakClientIDCfg)
+	keyCloakClientSecret := config.Config.GetString(KeycloakClientSecretCfg)
+	keyCloakHost := config.Config.GetString(KeyCloakHostCfg)
+
+	// Ensure redirect URL has a scheme
+	if len(keyCloakHost) > 0 && keyCloakHost[0] != 'h' {
+		keyCloakHost = "http://" + keyCloakHost
+	}
+
 	provider, err := oidc.NewProvider(context.Background(), keycloakAddress)
 
 	keyCloakConfig := &oauth2.Config{
@@ -135,8 +126,8 @@ func (*AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error) 
 // @Produce json
 // @Success 200 {integer} number
 // @Router /oauth [get]
-func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *gin.Context) {
-	return func(c *gin.Context) {
+func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
+	return func(c *core.APICallContext) {
 		log.Info("Return Auth response")
 
 		state := c.Query("state")
@@ -149,7 +140,11 @@ func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, pro
 
 		if currentState := States.FindAndDelete(state); currentState != nil {
 
-			token := getTokenFromKeyCloak(keyCloakConfig, code)
+			token, err := getTokenFromKeyCloak(keyCloakConfig, code)
+			if err != nil {
+				c.Redirect(http.StatusUnauthorized, "/401")
+				return
+			}
 
 			WriteTokenToCookie(c, keyCloakConfig, provider, token)
 
@@ -186,10 +181,11 @@ func (a *AuthKeyCloakAPI) tryStoreAccountIfSignup(idTokenClaim *IDTokenClaim, cu
 	}
 }
 
-func getTokenFromKeyCloak(keyCloakConfig *oauth2.Config, code string) *Token {
+func getTokenFromKeyCloak(keyCloakConfig *oauth2.Config, code string) (*Token, error) {
 	token, err := keyCloakConfig.Exchange(context.Background(), code)
 	if err != nil {
 		log.Error(err)
+		return nil, err
 	}
 
 	s, err := json.Marshal(token)
@@ -204,7 +200,7 @@ func getTokenFromKeyCloak(keyCloakConfig *oauth2.Config, code string) *Token {
 	}
 
 	storedToken := NewToken(rawIDToken)
-	return storedToken
+	return storedToken, nil
 }
 
 // getKeyCloakToken documentation

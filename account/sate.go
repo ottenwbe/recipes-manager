@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"sync"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -16,33 +18,39 @@ type State struct {
 }
 
 // StateMap type to cache all states
-type StateMap map[string]*State
+type StateMap struct {
+	sync.Mutex
+	m map[string]*State
+}
 
 // States cached for reuse
-var States StateMap
+var States *StateMap
 
 func init() {
-	States = make(StateMap)
+	States = &StateMap{m: make(map[string]*State)}
 }
 
 // Get the state by key
-func (sm StateMap) Get(key string) (*State, bool) {
-	result, ok := sm[key]
+func (sm *StateMap) Get(key string) (*State, bool) {
+	sm.Lock()
+	defer sm.Unlock()
+	result, ok := sm.m[key]
 	return result, ok
 }
 
 // FindAndDelete returns the state for a given key and deletes the entry of the StateMap
-func (sm StateMap) FindAndDelete(key string) *State {
-
-	if result, ok := sm[key]; ok {
-		delete(sm, key)
+func (sm *StateMap) FindAndDelete(key string) *State {
+	sm.Lock()
+	defer sm.Unlock()
+	if result, ok := sm.m[key]; ok {
+		delete(sm.m, key)
 		return result
 	}
 	return nil
 }
 
 // CreateState to reuse later
-func (sm StateMap) CreateState(url string, signup bool) *State {
+func (sm *StateMap) CreateState(url string, signup bool) *State {
 	var stateSeed uint64
 	err := binary.Read(rand.Reader, binary.LittleEndian, &stateSeed)
 	if err != nil {
@@ -55,7 +63,9 @@ func (sm StateMap) CreateState(url string, signup bool) *State {
 	v, _ := json.Marshal(state)
 	log.Infof("State Stored: %s", string(v))
 
-	sm[stateString] = state
+	sm.Lock()
+	defer sm.Unlock()
+	sm.m[stateString] = state
 	return state
 }
 

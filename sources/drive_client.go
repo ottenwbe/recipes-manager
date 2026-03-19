@@ -169,14 +169,12 @@ func (r *driveRecipes) List() []*recipes.Recipe {
 }
 
 const (
-	driveEnabledCfg           = "drive.enabled"
-	driveConnectionSecretCfg  = "drive.connection.secret.file"
-	driveRecipesFolderNameCfg = "drive.recipes.folder"
-)
-
-var (
-	clientSecretFile  string
-	recipesFolderName string
+	// DriveEnabledCfg key for the configuration
+	DriveEnabledCfg = "drive.enabled"
+	// DriveConnectionSecretCfg key for the configuration
+	DriveConnectionSecretCfg = "drive.connection.secret.file"
+	// DriveRecipesFolderNameCfg key for the configuration
+	DriveRecipesFolderNameCfg = "drive.recipes.folder"
 )
 
 // DriveClient is handling the interaction with Drive
@@ -267,7 +265,7 @@ func (c *DriveClient) configureDriveConnection(token *oauth2.Token) (err error) 
 }
 
 func (c *DriveClient) oAuthLoginConfig() (*oauth2.Config, error) {
-	b, err := os.ReadFile(clientSecretFile)
+	b, err := os.ReadFile(config.Config.GetString(DriveConnectionSecretCfg))
 	if err != nil {
 		return nil, err
 	}
@@ -323,6 +321,8 @@ func getRecipesList(srv *drive.Service) *drive.FileList {
 	if err != nil {
 		log.WithError(err).Fatalf("Unable to retrieve files from drive")
 	}
+
+	recipesFolderName := config.Config.GetString(DriveRecipesFolderNameCfg)
 	recipesID := ""
 	for len(recipesID) == 0 {
 
@@ -361,14 +361,5 @@ func downloadHTML(srv *drive.Service, id string) (io.Reader, error) {
 
 // IsDriveEnabled checks if the google drive integration is enabled
 func IsDriveEnabled() bool {
-	return config.Config.GetBool(driveEnabledCfg)
-}
-
-func init() {
-	config.Config.SetDefault(driveEnabledCfg, false)
-	config.Config.SetDefault(driveConnectionSecretCfg, "client_secret.json")
-	config.Config.SetDefault(driveRecipesFolderNameCfg, "Rezepte Test")
-
-	clientSecretFile = config.Config.GetString(driveConnectionSecretCfg)
-	recipesFolderName = config.Config.GetString(driveRecipesFolderNameCfg)
+	return config.Config.GetBool(DriveEnabledCfg)
 }

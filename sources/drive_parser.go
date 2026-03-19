@@ -169,18 +169,27 @@ func extractImg(hasMore bool, tokenizer *html.Tokenizer) (string, string) {
 }
 
 func (p *driveRecipeParser) handleText(text string) {
-	if strings.HasPrefix(text, ingredients) {
+	ingredients := config.Config.GetString(DriveParserIngredientsTitle)
+	instruction := config.Config.GetString(DriveRecipeInstructionsTitle)
+
+	trimmedText := strings.TrimSpace(text)
+
+	if ingredients != "" && strings.HasPrefix(trimmedText, ingredients) {
 		log.Debug("Now parsing ingredients...")
 		p.nextState(ingredientState)
-	} else if strings.HasPrefix(text, instruction) {
+	} else if instruction != "" && strings.HasPrefix(trimmedText, instruction) {
 		log.Debug("Now parsing the description...")
 		p.nextState(descriptionState)
 	} else if p.parseState == titleState {
 		log.Debugf("Title - add: %v", text)
-		p.recipe.Name = text
+		if strings.TrimSpace(text) != "" {
+			p.recipe.Name = text
+		}
 	} else if p.parseState == ingredientState {
 		log.Debugf("Ingredient - add: %v", text)
-		handleIngredient(p, text)
+		if strings.TrimSpace(text) != "" {
+			handleIngredient(p, strings.TrimSpace(text))
+		}
 	} else if p.parseState == descriptionState {
 		log.Debugf("Description - add: %v", text)
 		p.descriptionBuffer.WriteString(text)
@@ -235,19 +244,8 @@ func (p *driveRecipeParser) handleParsingError(recipe *recipes.Recipe, err error
 }
 
 const (
-	driveParserIngredientsTitle  = "drive.recipes.ingredients"
-	driveRecipeInstructionsTitle = "drive.recipes.instructions"
+	// DriveParserIngredientsTitle key for configuration
+	DriveParserIngredientsTitle = "drive.recipes.ingredients"
+	// DriveRecipeInstructionsTitle key for configuration
+	DriveRecipeInstructionsTitle = "drive.recipes.instructions"
 )
-
-var (
-	ingredients = ""
-	instruction = ""
-)
-
-func init() {
-	config.Config.SetDefault(driveParserIngredientsTitle, "Zutaten")
-	config.Config.SetDefault(driveRecipeInstructionsTitle, "Zubereitung")
-
-	ingredients = config.Config.GetString(driveParserIngredientsTitle)
-	instruction = config.Config.GetString(driveRecipeInstructionsTitle)
-}

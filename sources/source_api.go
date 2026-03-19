@@ -295,7 +295,7 @@ func extractSourceRedirectOrDefault(query url.Values) string {
 		log.Debugf("Got Redirect to %v", query[REDIRECT][0])
 		return query[REDIRECT][0]
 	}
-	return host
+	return config.Config.GetString(SOURCEREDIRECT)
 }
 
 const (
@@ -304,12 +304,3 @@ const (
 	//REDIRECT represents a query parameter that can be set to change source.redirect
 	REDIRECT = "redirect"
 )
-
-var (
-	host string
-)
-
-func init() {
-	config.Config.SetDefault(SOURCEREDIRECT, "http://localhost:8080/#!/src")
-	host = config.Config.GetString(SOURCEREDIRECT)
-}
