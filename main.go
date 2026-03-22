@@ -1,39 +1,33 @@
 /*
- * MIT License
- *
- * Copyright (c) 2020 Beate Ottenwälder
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * MIT License - see LICENSE file for details
  */
 
 package main
 
 import (
-	"github.com/ottenwbe/recipes-manager/account"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/ottenwbe/recipes-manager/account"
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/core"
 	"github.com/ottenwbe/recipes-manager/recipes"
 	"github.com/ottenwbe/recipes-manager/sources"
 )
 
 func init() {
+	config.Config.SetDefault("html.address", ":8080")
+	config.Config.SetDefault("html.cors.origin", "*")
+	config.Config.SetDefault("recipeDB.host", "mongodb://127.0.0.1:27017")
+	config.Config.SetDefault(sources.SOURCEREDIRECT, "http://localhost:8080/#!/src")
+	config.Config.SetDefault(sources.DriveEnabledCfg, false)
+	config.Config.SetDefault(sources.DriveConnectionSecretCfg, "client_secret.json")
+	config.Config.SetDefault(sources.DriveRecipesFolderNameCfg, "Rezepte Test")
+	config.Config.SetDefault(sources.DriveParserIngredientsTitle, "Zutaten")
+	config.Config.SetDefault(sources.DriveRecipeInstructionsTitle, "Zubereitung")
+	config.Config.SetDefault(account.KeycloakEnabledCfg, false)
+	config.Config.SetDefault(account.KeycloakAddressCfg, "http://localhost:8081/auth/realms/recipes")
+	config.Config.SetDefault(account.KeyCloakHostCfg, "localhost")
+
 	log.Infof("Initializing cooking application version=%v API=%v", core.AppVersion().App, core.AppVersion().API)
 }
 
@@ -48,33 +42,56 @@ func init() {
 func main() {
 
 	// configure the cooking app
-	recipesDB := newCloseableDatabase()
-	defer closeDatabase(recipesDB)
+	coreDB := newCoreDatabase()
+	defer closeDatabase(coreDB)
+
+	recipesDB := newRecipeDatabase(coreDB)
 
 	srcRepository := newSources()
 
 	server := newServer(recipesDB, srcRepository)
+	defer closeServer(server)
 
 	// start the application
 	waitForStop := server.Run()
+
 	waitForStop.Wait()
-	log.Info("Stopping Application")
+	log.Info("Stopping cooking application")
 }
 
-func newCloseableDatabase() recipes.RecipeDB {
-	recipesDB, err := recipes.NewDatabaseClient()
+func newCoreDatabase() core.DB {
+	addr := config.Config.GetString("recipeDB.host")
+	db, err := core.NewDatabaseClient(addr)
+	failOnError(err)
+	return db
+}
+
+func newRecipeDatabase(db core.DB) recipes.RecipeDB {
+	recipesDB, err := recipes.NewRecipeDB(db)
 	failOnError(err)
 	return recipesDB
 }
 
-func closeDatabase(recipesDB recipes.RecipeDB) {
-	err := recipesDB.Close()
-	logOnError(err, "Could not close database ...")
+func closeDatabase(db core.DB) {
+	if db != nil {
+		err := db.Close()
+		logOnError(err, "Could not close database")
+	}
 }
 
-func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) core.Server {
-	handler := core.NewHandler()
-	server := core.NewServerH(handler)
+func closeServer(server *core.Server) {
+	if server != nil {
+		err := server.Close()
+		logOnError(err, "Error closing server")
+	}
+}
+
+func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) *core.Server {
+	corsOrigin := config.Config.GetString("html.cors.origin")
+	handler := core.NewHandler(corsOrigin)
+
+	address := config.Config.GetString("html.address")
+	server := core.NewServerWithAddress(address, handler)
 
 	addAPIsToServer(handler, recipesDB, srcRepository)
 
@@ -82,29 +99,29 @@ func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) core.S
 }
 
 func addAPIsToServer(handler core.Handler, recipesDB recipes.RecipeDB, srcRepository sources.Sources) {
-	recipes.AddRecipesAPIToHandler(handler, recipesDB)
-	sourcesAPI := sources.NewSourceAPI(srcRepository, recipesDB)
-	sourcesAPI.PrepareAPI(handler, srcRepository, recipesDB)
+	err := recipes.AddRecipesAPIToHandler(handler, recipesDB)
+	failOnError(err)
+	err = sources.AddSourcesAPIToHandler(handler, srcRepository, recipesDB)
+	failOnError(err)
 	core.AddCoreAPIToHandler(handler)
-
-	//TODO: Refactor and merge with recipes.DB
-	db, _ := core.NewDatabaseClient()
-	account.AddAuthAPIsToHandler(handler, db)
+	account.AddAuthAPIsToHandler(handler, recipesDB)
 }
 
 func newSources() sources.Sources {
 	srcRepository := sources.NewSources()
 
-	source := sources.OpenNewGoogleDriveConnection()
-	cfg, err := source.OAuthLoginConfig()
-	if err != nil {
-		log.WithError(err).Warn("Could not create OAuth Config")
-	} else {
-		err = srcRepository.Add(
-			sources.NewSourceDescription(source.ID(), source.Name(), source.Version(), cfg),
-			source,
-		)
-		warnOnError(err, "Could not add source")
+	if sources.IsDriveEnabled() {
+		source := sources.OpenNewGoogleDriveConnection()
+		cfg, err := source.OAuthLoginConfig()
+		if err != nil {
+			log.WithError(err).Warn("Could not create OAuth Config")
+		} else {
+			err = srcRepository.Add(
+				sources.NewSourceDescription(source.ID(), source.Name(), source.Version(), cfg),
+				source,
+			)
+			warnOnError(err, "Could not add source")
+		}
 	}
 
 	return srcRepository
@@ -124,6 +141,6 @@ func warnOnError(err error, message string) {
 
 func failOnError(err error) {
 	if err != nil {
-		log.WithError(err).Fatal("Cannot open database connection ...")
+		log.WithError(err).Fatal("Fatal Error")
 	}
 }

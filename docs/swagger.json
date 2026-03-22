@@ -156,7 +156,7 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": ""
+                        "description": "Created"
                     }
                 }
             }
@@ -247,7 +247,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "OK"
+                    },
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             },
@@ -274,7 +277,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "OK"
+                    },
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             }
@@ -445,7 +451,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "OK"
                     }
                 }
             }

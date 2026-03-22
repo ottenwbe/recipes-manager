@@ -13,10 +13,13 @@ coverage.out
 *.coverprofile
 *junit.xml
 results/
+coverprofile.out
 
 # Misc
 tmp/
 pics/
 helper/
 vendor/
+.test-config
+recipes-manager.bom.json
 

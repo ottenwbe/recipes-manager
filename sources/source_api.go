@@ -25,15 +25,17 @@
 package sources
 
 import (
+	"encoding/base64"
 	"net/http"
 	"net/url"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/core"
 	"github.com/ottenwbe/recipes-manager/recipes"
-	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 // SourceResponse describes a sourceClient in detail
@@ -65,14 +67,16 @@ type API struct {
 	recipes recipes.RecipeDB
 }
 
-// NewSourceAPI creates the API for sources
-func NewSourceAPI(sources Sources, recipes recipes.RecipeDB) API {
-	return API{sources, recipes}
+// AddSourcesAPIToHandler creates the API for sources
+func AddSourcesAPIToHandler(handler core.Handler, sources Sources, recipesDB recipes.RecipeDB) error {
+	sourcesAPI := API{sources, recipesDB}
+	sourcesAPI.PrepareAPI(handler)
+	return nil
 }
 
 // PrepareAPI registers all api endpoints
-func (s API) PrepareAPI(router core.Handler, sources Sources, recipes recipes.RecipeDB) {
-	s.prepareV1API(router, sources, recipes)
+func (s API) PrepareAPI(router core.Handler) {
+	s.prepareV1API(router, s.sources, s.recipes)
 }
 
 func (s API) prepareV1API(router core.Handler, sources Sources, recipes recipes.RecipeDB) {
@@ -104,30 +108,58 @@ func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 	return func(c *core.APICallContext) {
 		sourceID := c.Param("source")
 
-		query := c.Request.URL.Query()
-		state := query["state"][0]
-		if state != sourceID {
-			c.String(http.StatusNotFound, "Invalid source tried to connect")
+		state := c.Query("state")
+		code := c.Query("code")
+
+		if state == "" || code == "" {
+			c.String(http.StatusBadRequest, "Missing state or code parameter")
+			return
+		}
+
+		decodedState, err := base64.URLEncoding.DecodeString(state)
+		if err != nil {
+			c.String(http.StatusBadRequest, "Invalid state encoding")
+			return
+		}
+		stateParts := strings.Split(string(decodedState), "|")
+		if len(stateParts) != 2 {
+			c.String(http.StatusBadRequest, "Invalid state format")
+			return
+		}
+
+		redirectURL := stateParts[1]
+		if stateParts[0] != sourceID {
+			redirectWithError(c, redirectURL, "source_mismatch")
 			return
 		}
 
 		src, err := sourceClient(sourceID, sources)
 		if err != nil {
-			c.String(http.StatusNotFound, "Invalid Source tried to connect")
+			redirectWithError(c, redirectURL, "invalid_source")
 			return
 		}
-
-		code := query["code"][0]
 
 		err = src.ConnectOAuth(code)
 		if err != nil {
-			c.String(http.StatusBadRequest, "Cannot connect to Source")
-			log.Error(err)
+			log.WithError(err).Error("Cannot connect to source")
+			redirectWithError(c, redirectURL, "connection_failed")
 			return
 		}
 
-		c.Redirect(http.StatusMovedPermanently, host)
+		c.Redirect(http.StatusFound, stateParts[1])
 	}
+}
+
+func redirectWithError(c *core.APICallContext, target string, errorMsg string) {
+	u, err := url.Parse(target)
+	if err != nil {
+		c.String(http.StatusBadRequest, "Invalid redirect url in state")
+		return
+	}
+	q := u.Query()
+	q.Set("error", errorMsg)
+	u.RawQuery = q.Encode()
+	c.Redirect(http.StatusFound, u.String())
 }
 
 // oAuthHandler example
@@ -144,7 +176,7 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 		log.Infof("Exchange Token with Source %v", sourceID)
 
 		query := c.Request.URL.Query()
-		host = extractSourceRedirectOrDefault(query)
+		redirectURL := extractSourceRedirectOrDefault(query)
 
 		src, err := sourceClient(sourceID, sources)
 		if err != nil {
@@ -152,15 +184,17 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 			return
 		}
 
-		config, err := src.OAuthLoginConfig()
+		oauthConfig, err := src.OAuthLoginConfig()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
 
+		state := base64.URLEncoding.EncodeToString([]byte(sourceID + "|" + redirectURL))
+
 		oAuthResponse := SourceOAuthConnectResponse{
 			ID:       sourceID,
-			OAuthURL: config.AuthCodeURL(sourceID, oauth2.AccessTypeOffline),
+			OAuthURL: oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("prompt", "consent")),
 		}
 
 		c.JSON(http.StatusOK, oAuthResponse)
@@ -209,11 +243,14 @@ func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c 
 			return
 		}
 
+		count := 0
 		for _, recipe := range src.Recipes().List() {
 			log.WithField("sourceID", sourceID).Infof("Inserted New Recipe: %v", recipe.String())
-			err = recipes.Insert(recipe)
-			if err != nil {
-				log.WithError(err).Error("Could not synchronize a recipe to the db")
+			// Try to insert; if it fails (duplicate ID), update it instead.
+			if err := recipes.Insert(recipe); err != nil {
+				if updateErr := recipes.Update(recipe.ID, recipe); updateErr != nil {
+					log.WithError(updateErr).Error("Could not synchronize (insert/update) a recipe to the db")
+				}
 			}
 			for _, pic := range src.Recipes().Pictures(recipe.ID) {
 				log.Infof("Inserted New Recipe Picture: %v", pic.Name)
@@ -222,9 +259,10 @@ func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c 
 					log.WithError(err).Error("Could not synchronize a picture to the db")
 				}
 			}
+			count++
 		}
 
-		c.String(http.StatusOK, "")
+		c.JSON(http.StatusOK, core.H{"synced": count})
 	}
 }
 
@@ -257,7 +295,7 @@ func extractSourceRedirectOrDefault(query url.Values) string {
 		log.Debugf("Got Redirect to %v", query[REDIRECT][0])
 		return query[REDIRECT][0]
 	}
-	return host
+	return config.Config.GetString(SOURCEREDIRECT)
 }
 
 const (
@@ -266,12 +304,3 @@ const (
 	//REDIRECT represents a query parameter that can be set to change source.redirect
 	REDIRECT = "redirect"
 )
-
-var (
-	host string
-)
-
-func init() {
-	utils.Config.SetDefault(SOURCEREDIRECT, "http://localhost:8080/#!/src")
-	host = utils.Config.GetString(SOURCEREDIRECT)
-}

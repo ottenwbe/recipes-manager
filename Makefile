@@ -22,6 +22,10 @@ GOVET   = go vet
 
 M = $(shell printf "\033[34;1m▶\033[0m")
 
+DOCKER_NETWORK_NAME				?= recipes-manager-net
+DB_CONTAINER_NAME				?= db-recipes-manager
+APP_CONTAINER_NAME				?= backend-recipes-manager
+
 RECIPES_MANAGER_BUILD_DOCKER_HOST	?=
 
 RECIPES_MANAGER_DOCKER_IMAGE	= $(DOCKER_REGISTRY)/$(RECIPES_MANAGER_DOCKER_PREFIX)/$(RECIPES_MANAGER_APP)
@@ -38,8 +42,7 @@ RECIPES_MANAGER_DOCKER_PARAMS	= \
 release: ; $(info $(M) building executable…) @ ## Build the app's binary release version
 	@$(GO) build \
 		-tags release \
-		-ldflags "-s -w" \
-		-ldflags "-X $(VERSIONPKG)=$(RECIPES_MANAGER_VERSION)" \
+		-ldflags "-s -w -X $(VERSIONPKG)=$(RECIPES_MANAGER_VERSION)" \
 		-o $(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION) \
 		*.go
 
@@ -69,15 +72,15 @@ mod-verify: ; $(info $(M) verifying modules…) @ ## Run go mod verify
 
 .PHONY: vet
 vet: ; $(info $(M) running vet…) @ ## Run go vet
-	@for d in $$($(GO) list ./...); do \
-		$(GOVET) $${d};  \
-	done
+	@$(GOVET) ./...
+
+.PHONY: sbom
+sbom: ; $(info $(M) creating SBOM...) @ ## Create SBOM
+	@$(GO) run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest app -json -output recipes-manager.bom.json .
 
 .PHONY: fmt
 fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
-	@for d in $$($(GO) list -f '{{.Dir}}' ./...); do \
-		$(GOFMT)  -l -w $$d/*.go  ; \
-	 done
+	@$(GOFMT) -s -l -w .
 
 .PHONY: test
 test: ; $(info $(M) running tests…) @ ## Run tests
@@ -108,6 +111,33 @@ ifndef RECIPES_MANAGER_BUILD_DOCKER_HOST
 else
 	docker -H $(RECIPES_MANAGER_BUILD_DOCKER_HOST) build  $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):development -f Dockerfile .
 endif
+
+.PHONY: docker-network
+docker-network:
+	@docker network inspect $(DOCKER_NETWORK_NAME) >/dev/null 2>&1 || docker network create $(DOCKER_NETWORK_NAME)
+
+.PHONY: docker-start-db
+docker-start-db: docker-network ; $(info $(M) starting mongodb...) @ ## Start mongodb container
+	@docker run -d --name=$(DB_CONTAINER_NAME) --network=$(DOCKER_NETWORK_NAME) -p 27018:27017 mongo:7
+	@echo "Waiting for MongoDB to be ready..."
+	@until docker exec $(DB_CONTAINER_NAME) mongosh --port 27017 --eval "db.adminCommand('ping')" >/dev/null 2>&1; do sleep 1; done
+
+.PHONY: docker-start
+docker-start: docker-dev docker-start-db ; $(info $(M) starting docker containers...) @ ## Build and start dev containers (app and db)
+	@docker run -d --name=$(APP_CONTAINER_NAME) --network=$(DOCKER_NETWORK_NAME) -p 8080:8080 \
+		-e GO_COOK_RECIPEDB_HOST=mongodb://$(DB_CONTAINER_NAME):27017 \
+		$(RECIPES_MANAGER_DOCKER_IMAGE):development
+
+.PHONY: docker-stop-db
+docker-stop-db: ; $(info $(M) stopping mongodb...) @ ## Stop and remove mongodb container
+	@docker stop $(DB_CONTAINER_NAME) >/dev/null 2>&1 || true
+	@docker rm $(DB_CONTAINER_NAME) >/dev/null 2>&1 || true
+
+.PHONY: docker-stop
+docker-stop: ; $(info $(M) stopping docker containers...) @ ## Stop and remove running dev containers
+	@docker stop $(APP_CONTAINER_NAME) >/dev/null 2>&1 || true
+	@docker rm $(APP_CONTAINER_NAME) >/dev/null 2>&1 || true
+	@$(MAKE) docker-stop-db
 
 .PHONY: docker-login
 docker-login: ; $(info $(M) login to docker hub...) @ ## Login to Dockerhub

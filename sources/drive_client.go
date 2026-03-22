@@ -1,25 +1,5 @@
 /*
- * MIT License
- *
- * Copyright (c) 2020 Beate Ottenwälder
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * MIT License - see LICENSE file for details
  */
 
 package sources
@@ -40,8 +20,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/recipes"
-	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 // driveRecipes is a cache for recipes from Drive
@@ -70,7 +50,7 @@ func cacheDriveRecipesFromFiles(driveService *drive.Service, fileList *drive.Fil
 		if err != nil {
 			log.WithError(err).Error("Could not download html...")
 		} else {
-			recipe, pictures, err := ParseRecipe(htmlFile, recipes.NewRecipeID())
+			recipe, pictures, err := ParseRecipe(htmlFile, recipes.NewConsistentRecipeID(file.Id))
 			if err != nil {
 				log.WithError(err).Errorf("could not parse recipe")
 			}
@@ -189,13 +169,12 @@ func (r *driveRecipes) List() []*recipes.Recipe {
 }
 
 const (
-	driveConnectionSecretCfg  = "drive.connection.secret.file"
-	driveRecipesFolderNameCfg = "drive.recipes.folder"
-)
-
-var (
-	clientSecretFile  string
-	recipesFolderName string
+	// DriveEnabledCfg key for the configuration
+	DriveEnabledCfg = "drive.enabled"
+	// DriveConnectionSecretCfg key for the configuration
+	DriveConnectionSecretCfg = "drive.connection.secret.file"
+	// DriveRecipesFolderNameCfg key for the configuration
+	DriveRecipesFolderNameCfg = "drive.recipes.folder"
 )
 
 // DriveClient is handling the interaction with Drive
@@ -266,7 +245,7 @@ func (c *DriveClient) ConnectOAuth(code string) (err error) {
 }
 
 func (c *DriveClient) getToken(code string) (*oauth2.Token, error) {
-	log.WithField("code", code).Debugf("Fetching token from google ...")
+	log.Debugf("Fetching token from google ...")
 	tok, err := c.oAuthConfig.Exchange(context.Background(), code)
 	if err != nil {
 		return nil, err
@@ -286,7 +265,7 @@ func (c *DriveClient) configureDriveConnection(token *oauth2.Token) (err error) 
 }
 
 func (c *DriveClient) oAuthLoginConfig() (*oauth2.Config, error) {
-	b, err := os.ReadFile(clientSecretFile)
+	b, err := os.ReadFile(config.Config.GetString(DriveConnectionSecretCfg))
 	if err != nil {
 		return nil, err
 	}
@@ -342,6 +321,8 @@ func getRecipesList(srv *drive.Service) *drive.FileList {
 	if err != nil {
 		log.WithError(err).Fatalf("Unable to retrieve files from drive")
 	}
+
+	recipesFolderName := config.Config.GetString(DriveRecipesFolderNameCfg)
 	recipesID := ""
 	for len(recipesID) == 0 {
 
@@ -378,10 +359,7 @@ func downloadHTML(srv *drive.Service, id string) (io.Reader, error) {
 	return child.Body, err
 }
 
-func init() {
-	utils.Config.SetDefault(driveConnectionSecretCfg, "client_secret.json")
-	utils.Config.SetDefault(driveRecipesFolderNameCfg, "Rezepte Test")
-
-	clientSecretFile = utils.Config.GetString(driveConnectionSecretCfg)
-	recipesFolderName = utils.Config.GetString(driveRecipesFolderNameCfg)
+// IsDriveEnabled checks if the google drive integration is enabled
+func IsDriveEnabled() bool {
+	return config.Config.GetBool(DriveEnabledCfg)
 }

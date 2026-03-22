@@ -2,9 +2,11 @@ package account_test
 
 import (
 	"encoding/json"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/ottenwbe/recipes-manager/account"
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/core"
 	"github.com/sirupsen/logrus"
 )
@@ -18,7 +20,8 @@ var _ = Describe("Account DB", func() {
 	)
 
 	BeforeEach(func() {
-		database, err = core.NewDatabaseClient()
+		addr := config.Config.GetString("recipeDB.host")
+		database, err = core.NewDatabaseClient(addr)
 		mongoDatabase = account.NewMongoAccountService(database)
 	})
 

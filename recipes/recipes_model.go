@@ -1,25 +1,5 @@
 /*
- * MIT License
- *
- * Copyright (c) 2020 Beate Ottenwälder
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * MIT License - see LICENSE file for details
  */
 
 package recipes
@@ -31,20 +11,39 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Ingredients of a recipe
-type Ingredients struct {
-	//Name of the ingredient
-	Name string `json:"name"`
-	//Amount needed in a recipe of an ingredient
-	Amount float64 `json:"amount"`
-	//Unit of the Amount
-	Unit string `json:"unit"`
+const (
+	// NoAmountIngredient is the amount value for ingredients when this field is not used
+	NoAmountIngredient = -1.0
+	// NotSupportedError informs clients about operations that are not supported by a Recipes provider
+	NotSupportedError = "recipe operation not supported"
+)
+
+// Recipes interface is an abstraction for the provider of a collection of recipes, i.e., a data-base or a cache
+type Recipes interface {
+	List() []*Recipe
+	IDs(filterQuery *RecipeSearchFilter) RecipeList
+	Num() int64
+	Get(id RecipeID) *Recipe
+	GetByName(name string) (*Recipe, error)
+	Picture(id RecipeID, name string) *RecipePicture
+	Pictures(id RecipeID) map[string]*RecipePicture
+	Random() *Recipe
+	Insert(recipe *Recipe) error
+	Update(id RecipeID, recipe *Recipe) error
+	AddPicture(pic *RecipePicture) error
+	Remove(id RecipeID) error
+	RemoveByName(name string) error
 }
 
-const (
-	//NoAmountIngredient is the amount value for ingredients when this field is not used
-	NoAmountIngredient = -1.0
-)
+// Ingredients of a recipe
+type Ingredients struct {
+	// Name of the ingredient
+	Name string `json:"name"`
+	// Amount needed in a recipe of an ingredient
+	Amount float64 `json:"amount"`
+	// Unit of the Amount
+	Unit string `json:"unit"`
+}
 
 // RecipeID is a data type that provides a unique id for each recipe
 type RecipeID string
@@ -64,6 +63,11 @@ func NewRecipeID() RecipeID {
 	return RecipeID(uuid.New().String())
 }
 
+// NewConsistentRecipeID returns a deterministic recipe id based on a given string
+func NewConsistentRecipeID(id string) RecipeID {
+	return RecipeID(uuid.NewSHA1(uuid.NameSpaceURL, []byte(id)).String())
+}
+
 // NewRecipeIDFromString converts a string to a recipe id and returns this recipe id.
 // Returns the InvalidRecipeID iff the recipe id cannot be converted
 func NewRecipeIDFromString(recipeID string) (result RecipeID) {
@@ -75,26 +79,11 @@ func NewRecipeIDFromString(recipeID string) (result RecipeID) {
 	return
 }
 
-// Recipe model
-type Recipe struct {
-	ID          RecipeID      `json:"id"`
-	Name        string        `json:"name"`
-	Ingredients []Ingredients `json:"components"`
-	Description string        `json:"description"`
-	PictureLink []string      `json:"pictureLink"`
-	Servings    int8          `json:"servings"`
-}
-
 // RecipePicture model
 type RecipePicture struct {
 	ID      RecipeID `json:"id"`
 	Name    string   `json:"name"`
 	Picture string   `json:"picture"`
-}
-
-// RecipeList models a list of recipes by ID
-type RecipeList struct {
-	Recipes []string `json:"recipes"`
 }
 
 // NewInvalidRecipePicture returns an invalid picture
@@ -106,6 +95,11 @@ func NewInvalidRecipePicture() *RecipePicture {
 	}
 }
 
+// RecipeList models a list of recipes by ID
+type RecipeList struct {
+	Recipes []string `json:"recipes"`
+}
+
 // RecipeSearchFilter models a search query to filter recipes
 type RecipeSearchFilter struct {
 	Name        string   `json:"name"`
@@ -113,27 +107,15 @@ type RecipeSearchFilter struct {
 	Description string   `json:"description"`
 }
 
-// Recipes interface is an abstraction for the provider of a collection of recipes, i.e., a data-base or a cache
-type Recipes interface {
-	List() []*Recipe
-	IDs(filterQuery *RecipeSearchFilter) RecipeList
-	Num() int64
-	Get(id RecipeID) *Recipe
-	GetByName(name string) (*Recipe, error)
-	Picture(id RecipeID, name string) *RecipePicture
-	Pictures(id RecipeID) map[string]*RecipePicture
-	Random() *Recipe
-	Insert(recipe *Recipe) error
-	Update(id RecipeID, recipe *Recipe) error
-	AddPicture(pic *RecipePicture) error
-	Remove(id RecipeID) error
-	RemoveByName(name string) error
+// Recipe model
+type Recipe struct {
+	ID          RecipeID      `json:"id"`
+	Name        string        `json:"name"`
+	Ingredients []Ingredients `json:"components"`
+	Description string        `json:"description"`
+	PictureLink []string      `json:"pictureLink"`
+	Servings    int8          `json:"servings"`
 }
-
-const (
-	//NotSupportedError informs clients about operations that are not supported by a Recipes provider
-	NotSupportedError = "recipe operation not supported"
-)
 
 // NewInvalidRecipe returns an empty Recipe object. The ID of the returned Recipe is InvalidRecipeID.
 func NewInvalidRecipe() *Recipe {

@@ -1,25 +1,5 @@
 /*
  * MIT License
- *
- * Copyright (c) 2020 Beate Ottenwälder
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
  */
 
 package core
@@ -28,40 +8,25 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
-	"github.com/swaggo/gin-swagger"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	// based on swagger documentation
 	_ "github.com/ottenwbe/recipes-manager/docs"
-
-	"github.com/ottenwbe/recipes-manager/utils"
 )
 
 const (
-	addressCfg         = "html.address"
-	corsAllowOriginCfg = "html.cors.origin"
-
 	baseAPIPath = "api"
 )
-
-var (
-	defaultAddress string
-	corsOrigin     string
-)
-
-// init configures the handler for api calls when the core package is initialized
-func init() {
-	utils.Config.SetDefault(addressCfg, ":8080")
-	utils.Config.SetDefault(corsAllowOriginCfg, "*")
-	defaultAddress = utils.Config.GetString(addressCfg)
-	corsOrigin = utils.Config.GetString(corsAllowOriginCfg)
-}
 
 // Routes is managing a set of API endpoints.
 // Routes implementation(s) call handler function to perform typical CRUD operations (GET, 	POST, PATCH, ...).
@@ -91,26 +56,24 @@ type Handler interface {
 // APICallContext is a facade for any concrete Context, e.g. gins
 type APICallContext = gin.Context
 
+// H is a facade for the response map
+type H = gin.H
+
 // NewHandler creates a handler for API calls with a pre-configured ADDRESS
-func NewHandler() Handler {
+func NewHandler(corsOrigin string) Handler {
 	handler := &ginHandler{
-		gin.New(),
-		make(map[string]Routes),
+		handler:      gin.New(),
+		routerGroups: make(map[string]Routes),
+		corsOrigin:   corsOrigin,
 	}
 	handler.configure()
 	return handler
 }
 
-// @title recipes-manager API
-// @version 1.0
-// @description This is the recipes-manager api
-
-// @license.name MIT
-// @BasePath /api/v1
-
 type ginHandler struct {
 	handler      *gin.Engine
 	routerGroups map[string]Routes
+	corsOrigin   string
 }
 
 func (g *ginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
@@ -148,7 +111,7 @@ func (g *ginHandler) route(route string) Routes {
 // configure the default middleware with a logger and recovery (crash-free) middleware
 func (g *ginHandler) configure() {
 
-	url := ginSwagger.URL("doc.json") // The url pointing to API definition
+	url := ginSwagger.URL("/swagger/doc.json") // The url pointing to API definition
 	g.handler.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	g.handler.Use(ginrus.Ginrus(log.StandardLogger(), time.RFC3339, true))
@@ -197,10 +160,10 @@ func (g *ginRoutes) Path() string {
 
 func (g *ginHandler) corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", corsOrigin)
+		c.Writer.Header().Set("Access-Control-Allow-Origin", g.corsOrigin)
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, PATCH, POST, PUT")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, PATCH, POST, PUT, DELETE")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
@@ -216,46 +179,56 @@ type Server struct {
 	Address       string
 	server        *http.Server
 	stopWaitGroup *sync.WaitGroup
+	closeOnce     sync.Once
 }
 
-// NewServerA creates a new server using a given address to listen to
-func NewServerA(addr string, handler http.Handler) Server {
-	return Server{
+// NewServerWithAddress creates a new server using a given address to listen to
+func NewServerWithAddress(addr string, handler http.Handler) *Server {
+	return &Server{
 		Address: addr,
 		server: &http.Server{
-			Addr:        addr,
-			Handler:     handler,
-			ReadTimeout: 30 * time.Second,
+			Addr:         addr,
+			Handler:      handler,
+			ReadTimeout:  30 * time.Second,
+			WriteTimeout: 30 * time.Second,
+			IdleTimeout:  120 * time.Second,
 		},
 		stopWaitGroup: &sync.WaitGroup{}}
 }
 
-// NewServerH creates a new server using the default address with a custom handler
-func NewServerH(handler http.Handler) Server {
-	return NewServerA(defaultAddress, handler)
-}
-
-// NewServer creates a new server to listen on the defaultAddress
-func NewServer() Server {
-	return NewServerA(defaultAddress, NewHandler())
-}
-
 // Run the server for the API
-func (s Server) Run() *sync.WaitGroup {
-	s.stopWaitGroup.Add(1)
-	go func() {
-		if err := s.server.ListenAndServe(); err != nil {
-			log.Errorf("Server's not running: %s\n", err)
-		}
-		s.stopWaitGroup.Done()
-	}()
+func (s *Server) Run() *sync.WaitGroup {
+	s.listenAndServe()
+	s.ensureGracefulShutdown()
 	return s.stopWaitGroup
 }
 
 // Close the server
-func (s Server) Close() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-	err := s.server.Shutdown(ctx)
+func (s *Server) Close() error {
+	var err error
+	s.closeOnce.Do(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		err = s.server.Shutdown(ctx)
+	})
 	return err
+}
+
+func (s *Server) listenAndServe() {
+	s.stopWaitGroup.Go(
+		func() {
+			if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Errorf("Server's not running: %s\n", err)
+			}
+		})
+}
+
+func (s *Server) ensureGracefulShutdown() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		log.Info("Shutting down Application")
+		_ = s.Close()
+	}()
 }

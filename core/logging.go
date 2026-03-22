@@ -25,7 +25,7 @@
 package core
 
 import (
-	"github.com/ottenwbe/recipes-manager/utils"
+	"github.com/ottenwbe/recipes-manager/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -34,9 +34,9 @@ const (
 )
 
 func init() {
-	utils.Config.SetDefault(logLevelCFG, "info")
+	config.Config.SetDefault(logLevelCFG, "info")
 
-	logLevelStr := utils.Config.GetString(logLevelCFG)
+	logLevelStr := config.Config.GetString(logLevelCFG)
 
 	level, err := log.ParseLevel(logLevelStr)
 	if err != nil {

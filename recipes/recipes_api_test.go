@@ -1,37 +1,17 @@
 /*
- * MIT License
- *
- * Copyright (c) 2020 Beate Ottenwälder
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * MIT License - see LICENSE file for details
  */
-
 package recipes
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/core"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -39,15 +19,22 @@ import (
 )
 
 var (
-	server  core.Server
+	server  *core.Server
+	db      core.DB
 	recipes RecipeDB
 )
 
 var _ = BeforeSuite(func() {
-	handler := core.NewHandler()
-	recipes, _ = NewDatabaseClient()
-	AddRecipesAPIToHandler(handler, recipes)
-	server = core.NewServerA(":8080", handler)
+	handler := core.NewHandler("*")
+	var err error
+	addr := config.Config.GetString("recipeDB.host")
+	db, err = core.NewDatabaseClient(addr)
+	Expect(err).ToNot(HaveOccurred())
+	recipes, err = NewRecipeDB(db)
+	Expect(err).ToNot(HaveOccurred())
+	err = AddRecipesAPIToHandler(handler, recipes)
+	Expect(err).ToNot(HaveOccurred())
+	server = core.NewServerWithAddress(":8080", handler)
 	server.Run()
 	time.Sleep(500 * time.Millisecond)
 })
@@ -57,7 +44,7 @@ var _ = AfterSuite(func() {
 	if err != nil {
 		Fail(err.Error())
 	}
-	err = recipes.Close()
+	err = db.Close()
 	if err != nil {
 		Fail(err.Error())
 	}
@@ -234,7 +221,7 @@ var _ = Describe("recipesAPI", func() {
 			resp, err := http.Get("http://localhost:8080/api/v1/recipes/num")
 			Expect(err).ToNot(HaveOccurred())
 
-			result, err := ioutil.ReadAll(resp.Body)
+			result, err := io.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(resp.StatusCode).To(Equal(200))
@@ -247,7 +234,7 @@ var _ = Describe("recipesAPI", func() {
 			resp, err := http.Get("http://localhost:8080/api/v1/recipes/num")
 			Expect(err).ToNot(HaveOccurred())
 
-			result, err := ioutil.ReadAll(resp.Body)
+			result, err := io.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(resp.StatusCode).To(Equal(200))
@@ -294,7 +281,7 @@ var _ = Describe("recipesAPI", func() {
 			request, err := http.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/recipes/r/"+id.String(), bytes.NewBuffer(nil))
 			response, err := client.Do(request)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(response.StatusCode).To(Equal(http.StatusOK))
+			Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 		})
 	})
 

@@ -1,25 +1,5 @@
 /*
- * MIT License
- *
- * Copyright (c) 2023 Beate Ottenwälder
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * MIT License - see LICENSE file for details
  */
 
 package core
@@ -27,21 +7,15 @@ package core
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
-	"github.com/ottenwbe/recipes-manager/utils"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 )
-
-// getMongoAddress returns the configured database host.
-// Retrieving it dynamically avoids issues with package initialization order.
-func getMongoAddress() string {
-	return utils.Config.GetString("recipeDB.host")
-}
 
 // MongoClient to connect to the mongo database
 type MongoClient struct {
@@ -67,16 +41,15 @@ func (m *MongoClient) Ping() error {
 }
 
 // StartDB initializes the database connection
-func (m *MongoClient) StartDB() error {
+func (m *MongoClient) StartDB(addr string) error {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
 	if m.Client == nil {
 
-		err := m.connectToDB()
+		err := m.connectToDB(addr)
 		if err != nil {
-			log.WithError(err).Error("Database is not connected")
-			return errors.New("database is not connected")
+			return fmt.Errorf("database is not connected: %w", err)
 		}
 	} else {
 		return errors.New("database is already running")
@@ -100,8 +73,7 @@ func (m *MongoClient) StopDB() (err error) {
 	return
 }
 
-func (m *MongoClient) connectToDB() (err error) {
-	addr := getMongoAddress()
+func (m *MongoClient) connectToDB(addr string) (err error) {
 	if addr == "" {
 		log.Warn("MongoDB address is empty, check configuration")
 	}
@@ -109,13 +81,13 @@ func (m *MongoClient) connectToDB() (err error) {
 	log.WithField("addr", addr).Info("Connecting to DB")
 	m.Client, err = mongo.Connect(options.Client().ApplyURI(addr))
 	if err != nil {
-		log.WithError(err).Info("Could not create and connect MongoDB client")
-		return
+		log.WithError(err).Error("Could not create and connect MongoDB client")
+		return err
 	}
 	err = m.Ping()
 	if err != nil {
-		log.WithError(err).Info("Could not ping MongoDB")
-		return
+		log.WithError(err).Error("Could not ping MongoDB")
+		return err
 	}
 
 	return
