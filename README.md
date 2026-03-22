@@ -40,7 +40,7 @@ We briefly describe two deployment options. First, a Kubernetes-based deployment
 
     1. Details about the API can then be checked in a browser:
 
-            localhost:8080/swagger/swagger_index.html            
+            localhost:8080/swagger/index.html
 
 ### File-based Configuration 
 

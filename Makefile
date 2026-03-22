@@ -125,7 +125,7 @@ docker-start-db: docker-network ; $(info $(M) starting mongodb...) @ ## Start mo
 .PHONY: docker-start
 docker-start: docker-dev docker-start-db ; $(info $(M) starting docker containers...) @ ## Build and start dev containers (app and db)
 	@docker run -d --name=$(APP_CONTAINER_NAME) --network=$(DOCKER_NETWORK_NAME) -p 8080:8080 \
-		-e GO_COOK_RECIPEDB_HOST=mongodb://$(DB_CONTAINER_NAME):27018 \
+		-e GO_COOK_RECIPEDB_HOST=mongodb://$(DB_CONTAINER_NAME):27017 \
 		$(RECIPES_MANAGER_DOCKER_IMAGE):development
 
 .PHONY: docker-stop-db

@@ -70,13 +70,6 @@ func NewHandler(corsOrigin string) Handler {
 	return handler
 }
 
-// @title recipes-manager API
-// @version 1.0
-// @description This is the recipes-manager api
-
-// @license.name MIT
-// @BasePath /api/v1
-
 type ginHandler struct {
 	handler      *gin.Engine
 	routerGroups map[string]Routes
@@ -118,7 +111,7 @@ func (g *ginHandler) route(route string) Routes {
 // configure the default middleware with a logger and recovery (crash-free) middleware
 func (g *ginHandler) configure() {
 
-	url := ginSwagger.URL("doc.json") // The url pointing to API definition
+	url := ginSwagger.URL("/swagger/doc.json") // The url pointing to API definition
 	g.handler.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	g.handler.Use(ginrus.Ginrus(log.StandardLogger(), time.RFC3339, true))
