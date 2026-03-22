@@ -118,14 +118,14 @@ docker-network:
 
 .PHONY: docker-start-db
 docker-start-db: docker-network ; $(info $(M) starting mongodb...) @ ## Start mongodb container
-	@docker run -d --name=$(DB_CONTAINER_NAME) --network=$(DOCKER_NETWORK_NAME) -p 27018:27017 mongo:8
+	@docker run -d --name=$(DB_CONTAINER_NAME) --network=$(DOCKER_NETWORK_NAME) -p 27018:27017 mongo:7
 	@echo "Waiting for MongoDB to be ready..."
 	@until docker exec $(DB_CONTAINER_NAME) mongosh --port 27017 --eval "db.adminCommand('ping')" >/dev/null 2>&1; do sleep 1; done
 
 .PHONY: docker-start
 docker-start: docker-dev docker-start-db ; $(info $(M) starting docker containers...) @ ## Build and start dev containers (app and db)
 	@docker run -d --name=$(APP_CONTAINER_NAME) --network=$(DOCKER_NETWORK_NAME) -p 8080:8080 \
-		-e GO_COOK_RECIPEDB_HOST=mongodb://$(DB_CONTAINER_NAME):27017 \
+		-e GO_COOK_RECIPEDB_HOST=mongodb://$(DB_CONTAINER_NAME):27018 \
 		$(RECIPES_MANAGER_DOCKER_IMAGE):development
 
 .PHONY: docker-stop-db

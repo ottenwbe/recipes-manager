@@ -28,7 +28,7 @@ We briefly describe two deployment options. First, a Kubernetes-based deployment
     1. Prepare a configuration file (see next section).
     1. Start a database
 
-            docker run -d --name=db-recipes-manager -p 27018:27017 mongo:8
+            docker run -d --name=db-recipes-manager -p 27018:27017 mongo:7
 
     1. Run the container
         

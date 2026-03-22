@@ -18,15 +18,12 @@ func init() {
 	config.Config.SetDefault("html.address", ":8080")
 	config.Config.SetDefault("html.cors.origin", "*")
 	config.Config.SetDefault("recipeDB.host", "mongodb://127.0.0.1:27017")
-
 	config.Config.SetDefault(sources.SOURCEREDIRECT, "http://localhost:8080/#!/src")
-
 	config.Config.SetDefault(sources.DriveEnabledCfg, false)
 	config.Config.SetDefault(sources.DriveConnectionSecretCfg, "client_secret.json")
 	config.Config.SetDefault(sources.DriveRecipesFolderNameCfg, "Rezepte Test")
 	config.Config.SetDefault(sources.DriveParserIngredientsTitle, "Zutaten")
 	config.Config.SetDefault(sources.DriveRecipeInstructionsTitle, "Zubereitung")
-
 	config.Config.SetDefault(account.KeycloakEnabledCfg, false)
 	config.Config.SetDefault(account.KeycloakAddressCfg, "http://localhost:8081/auth/realms/recipes")
 	config.Config.SetDefault(account.KeyCloakHostCfg, "localhost")
@@ -57,8 +54,9 @@ func main() {
 
 	// start the application
 	waitForStop := server.Run()
+
 	waitForStop.Wait()
-	log.Info("Stopping Application")
+	log.Info("Stopping cooking application")
 }
 
 func newCoreDatabase() core.DB {

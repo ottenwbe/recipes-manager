@@ -8,7 +8,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/contrib/ginrus"
@@ -191,22 +194,19 @@ func NewServerWithAddress(addr string, handler http.Handler) *Server {
 	return &Server{
 		Address: addr,
 		server: &http.Server{
-			Addr:        addr,
-			Handler:     handler,
-			ReadTimeout: 30 * time.Second,
+			Addr:         addr,
+			Handler:      handler,
+			ReadTimeout:  30 * time.Second,
+			WriteTimeout: 30 * time.Second,
+			IdleTimeout:  120 * time.Second,
 		},
 		stopWaitGroup: &sync.WaitGroup{}}
 }
 
 // Run the server for the API
 func (s *Server) Run() *sync.WaitGroup {
-	s.stopWaitGroup.Add(1)
-	go func() {
-		if err := s.server.ListenAndServe(); err != nil {
-			log.Errorf("Server's not running: %s\n", err)
-		}
-		s.stopWaitGroup.Done()
-	}()
+	s.listenAndServe()
+	s.ensureGracefulShutdown()
 	return s.stopWaitGroup
 }
 
@@ -219,4 +219,23 @@ func (s *Server) Close() error {
 		err = s.server.Shutdown(ctx)
 	})
 	return err
+}
+
+func (s *Server) listenAndServe() {
+	s.stopWaitGroup.Go(
+		func() {
+			if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Errorf("Server's not running: %s\n", err)
+			}
+		})
+}
+
+func (s *Server) ensureGracefulShutdown() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		log.Info("Shutting down Application")
+		_ = s.Close()
+	}()
 }

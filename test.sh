@@ -9,7 +9,7 @@ echo "Prepare tests..."
 docker stop test-db | true
 docker rm -v test-db | true
 # run a mongo-db
-docker run -d --name=test-db -p 27018:27017 mongo:8
+docker run -d --name=test-db -p 27018:27017 mongo:7
 
 echo "Waiting for MongoDB to be ready..."
 until docker exec test-db mongosh --port 27017 --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
@@ -38,7 +38,7 @@ mkdir -p test/coverage
 
 # remove existing test container
 # or ignore the error if the container does not exist
-#docker stop test-db | true
-#docker rm -v test-db | true
+docker stop test-db | true
+docker rm -v test-db | true
 
 echo "Cleanup..."
