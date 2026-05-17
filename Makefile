@@ -43,7 +43,7 @@ release: ; $(info $(M) building executable…) @ ## Build the app's binary relea
 	@$(GO) build \
 		-tags release \
 		-ldflags "-s -w -X $(VERSIONPKG)=$(RECIPES_MANAGER_VERSION)" \
-		-o $(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION) \
+		-o $(if $(APP_OUTPUT),$(APP_OUTPUT),$(RECIPES_MANAGER_APP)-$(RECIPES_MANAGER_VERSION)) \
 		*.go
 
 .PHONY: snapshot
