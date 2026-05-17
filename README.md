@@ -32,7 +32,7 @@ We briefly describe two deployment options. First, a Kubernetes-based deployment
 
     1. Run the container
         
-            docker run -p 8080:8080 --name=backend-recipes-manager -v <local-config>:/etc/recipes-manager/recipes-manager-config.yml ottenwbe/recipes-manager:v0.3.0
+            docker run -p 8080:8080 --name=backend-recipes-manager -v <local-config>:/etc/recipes-manager/recipes-manager-config.yml ottenwbe/recipes-manager:latest
     
     1. Check if everything is running:
 
@@ -88,7 +88,7 @@ By prepending all variables (see file-based configuration) with ```GO_COOK_``` t
 
 ### Dependencies
 
-* Go >= 1.22
+* Go >= 1.25
   
 * For testing install ``ginkgo``
     ```
@@ -98,7 +98,21 @@ By prepending all variables (see file-based configuration) with ```GO_COOK_``` t
 
 ## Building recipes-manager
 
-A Makefile supports the build process. This includes building a development and release version of the recipes-manager service. Furthermore, it includes building docker images to easily deploy the recipes-manager service.
+A Makefile supports the build process. This includes building a development and release version of the recipes-manager service, running tests, and building docker images to easily deploy the recipes-manager service.
+
+### Quality Assurance
+
+```
+make verify
+```
+
+Runs all QA steps including dependency verification, linting, and tests.
+
+```
+make test
+```
+
+Runs the test suite.
 
 ### Build Snapshot
 
@@ -106,7 +120,7 @@ A Makefile supports the build process. This includes building a development and 
 make snapshot 
 ```
 
-Builds a fully functioning binary named ```recipes-manager-snapshot```. In contrast to the release version, there is still debugging informaiton included.
+Builds a fully functioning binary named ```recipes-manager-snapshot```. In contrast to the release version, there is still debugging information included.
 
 ### Build Release Version
 
@@ -114,7 +128,7 @@ Builds a fully functioning binary named ```recipes-manager-snapshot```. In contr
 make release
 ```
 
-Builds a fully functioning binary named ```recipes-manager```. 
+Builds a fully functioning binary named ```recipes-manager-<VERSION>``` where VERSION is determined from git tags. 
 
 ### Docker builds
 
@@ -122,30 +136,47 @@ Builds a fully functioning binary named ```recipes-manager```.
 make docker
 ```
 
+Builds and tags a Docker image with the current version.
+
+```
+make docker-dev
+```
+
+Builds a development Docker image with debugging enabled.
+
 ### Docker Tips and Tricks
 
-* If necessary, stop all container; i.e., if they hang
+* If necessary, stop all containers; i.e., if they hang
     ```    
     docker stop $(docker ps -a -q)
     ```    
 
-* Remove all container and their volumes
+* Remove all containers and their volumes
     ```    
     docker rm -v $(docker ps -a -q)      
     ``` 
 
 ## API Documentation
 
- ### Generate the Documentation 
+### Generate the Documentation 
  
 The Swagger API documentation is based on [gin-swagger](https://github.com/swaggo/gin-swagger):
  
-    swag init --exclude vendor
- 
- ### Disclaimer
- 
- I created this project for the purpose of educating myself and personal use.
- If you are interested in the outcome, feel free to contribute; this work is published under the MIT license. 
- 
-### Notice
-The base MAKEFILE is adapted from: https://github.com/vincentbernat/hellogopher 
+```
+swag init --exclude vendor
+```
+
+Alternatively, use:
+
+```
+make api-docu
+```
+
+## Disclaimer
+
+I created this project for the purpose of educating myself and personal use.
+If you are interested in the outcome, feel free to contribute; this work is published under the MIT license.
+
+## Notice
+
+The base Makefile is adapted from: https://github.com/vincentbernat/hellogopher 

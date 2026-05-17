@@ -34,7 +34,7 @@ RECIPES_MANAGER_DOCKER_PARAMS	= \
 								--label "version=$(RECIPES_MANAGER_VERSION)" \
 								--label "go=$(GO_VERSION)" \
 								--label "build_date=$(DATE)" \
-								--label "maintaner=$(RECIPES_MANAGER_MAINTAINER)" \
+								--label "maintainer=$(RECIPES_MANAGER_MAINTAINER)" \
 								--label "git-hash=$(RECIPES_MANAGER_GIT_HASH)" \
 								--label "git-repo=$(RECIPES_MANAGER_REPO)"
 
@@ -48,7 +48,7 @@ release: ; $(info $(M) building executable…) @ ## Build the app's binary relea
 
 .PHONY: snapshot
 snapshot:  ; $(info $(M) building snapshot…) @ ## Build the app's snapshot version
-		@$(GO) build \
+	@$(GO) build \
 		-o $(SNAPSHOT) \
 		-ldflags "-X $(VERSIONPKG)=$(RECIPES_MANAGER_VERSION)" \
 		*.go
@@ -56,8 +56,8 @@ snapshot:  ; $(info $(M) building snapshot…) @ ## Build the app's snapshot ver
 .PHONY: start
 start: fmt ; $(info $(M) running the app locally…) @ ## Run the program's snapshot version
 	@$(GO) build \
-	    -o $(TMPAPP) \
-    	-ldflags "-X $(VERSIONPKG)=$(RECIPES_MANAGER_VERSION)" \
+		-o $(TMPAPP) \
+		-ldflags "-X $(VERSIONPKG)=$(RECIPES_MANAGER_VERSION)" \
     	*.go && ./$(TMPAPP)
 
 # Quality and Testing
@@ -89,11 +89,11 @@ test: ; $(info $(M) running tests…) @ ## Run tests
 # Misc
 
 .PHONY: docker-arm
-docker-arm: ; $(info $(M) building arm docker image...) @  ## Create docker image for arm
+docker-arm: ; $(info $(M) building arm docker image...) @ ## Create docker image for arm
 ifndef RECIPES_MANAGER_BUILD_DOCKER_HOST
 	docker build $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile.armhf .
 else
-	docker -H $(RECIPES_MANAGER_BUILD_DOCKER_HOST)  build $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile.armhf .
+	docker -H $(RECIPES_MANAGER_BUILD_DOCKER_HOST) build $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile.armhf .
 endif
 
 .PHONY: docker
@@ -101,7 +101,7 @@ docker: ; $(info $(M) building docker image...) @ ## Create docker image
 ifndef RECIPES_MANAGER_BUILD_DOCKER_HOST
 	docker build $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
 else
-	docker -H $(RECIPES_MANAGER_BUILD_DOCKER_HOST) $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
+	docker -H $(RECIPES_MANAGER_BUILD_DOCKER_HOST) build $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
 endif
 
 .PHONY: docker-dev
@@ -141,14 +141,14 @@ docker-stop: ; $(info $(M) stopping docker containers...) @ ## Stop and remove r
 
 .PHONY: docker-login
 docker-login: ; $(info $(M) login to docker hub...) @ ## Login to Dockerhub
-	echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) $(DOCKER_REGISTRY) --password-stdin
+	docker login -u $(DOCKER_USERNAME) $(DOCKER_REGISTRY)
 
 .PHONY: docker-push-dev
 docker-push-dev: ; $(info $(M) push snapshot to registry...) @ ## Push docker image with a development version
-	docker push $(RECIPES_MANAGER_DOCKER_IMAGE):development --tls-verify=false 
+	docker push $(RECIPES_MANAGER_DOCKER_IMAGE):development 
 
 .PHONY: dockerx
-dockerx: ; ## Build docker image with buildx
+dockerx: ; $(info $(M) building multi-arch docker image with buildx...) @ ## Build docker image with buildx
 	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm64/v8,linux/amd64 $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(RECIPES_MANAGER_VERSION) -f Dockerfile .
 
 .PHONY: dockerx-dev
