@@ -86,6 +86,11 @@ fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
 test: ; $(info $(M) running tests…) @ ## Run tests
 	@sh test.sh
 
+.PHONY: smoke-test
+smoke-test: ; $(info $(M) running smoke test…) @ ## Run smoke tests
+	@chmod +x smoke_test.sh
+	@./smoke_test.sh
+
 # Misc
 
 .PHONY: docker-arm
@@ -125,7 +130,7 @@ docker-start-db: docker-network ; $(info $(M) starting mongodb...) @ ## Start mo
 .PHONY: docker-start
 docker-start: docker-dev docker-start-db ; $(info $(M) starting docker containers...) @ ## Build and start dev containers (app and db)
 	@docker run -d --name=$(APP_CONTAINER_NAME) --network=$(DOCKER_NETWORK_NAME) -p 8080:8080 \
-		-e GO_COOK_RECIPEDB_HOST=mongodb://$(DB_CONTAINER_NAME):27017 \
+		-e RECIPES_MANAGER_RECIPEDB_HOST=mongodb://$(DB_CONTAINER_NAME):27017 \
 		$(RECIPES_MANAGER_DOCKER_IMAGE):development
 
 .PHONY: docker-stop-db

@@ -237,6 +237,12 @@ make test
 
 Runs the test suite.
 
+```
+make smoke-test
+```
+
+Runs the end-to-end smoke test using Podman to verify the containerized application and database connectivity.
+
 ### Build Snapshot
 
 ```
