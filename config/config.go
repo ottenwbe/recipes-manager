@@ -72,7 +72,7 @@ func (c *viperConfig) BindEnv(key string) {
 }
 
 func (c *viperConfig) configEnv() {
-	c.v.SetEnvPrefix("go_cook")
+	c.v.SetEnvPrefix("recipes_manager")
 	c.v.AutomaticEnv()
 	replacer := strings.NewReplacer(".", "_")
 	c.v.SetEnvKeyReplacer(replacer)
