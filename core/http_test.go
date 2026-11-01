@@ -55,5 +55,13 @@ var _ = Describe("http", func() {
 			Expect(v1.Path()).To(Equal("/api/v1"))
 			Expect(r.(*ginHandler).routerGroups).To(HaveKey("v1"))
 		})
+
+		It("should create and cache a root route", func() {
+			r := NewHandler("*")
+			root := r.Root()
+			Expect(root).ToNot(BeNil())
+			Expect(root.Path()).To(Equal("/"))
+			Expect(r.(*ginHandler).routerGroups).To(HaveKey("root"))
+		})
 	})
 })

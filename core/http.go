@@ -50,6 +50,8 @@ type Routes interface {
 // Handler is a facade for a HTTP handler and can be implemented by a concrete handler like gin.
 type Handler interface {
 	API(version int16) Routes
+	// Root returns a route group at the root path "/" for non-API endpoints (e.g. health checks)
+	Root() Routes
 	http.Handler
 }
 
@@ -100,6 +102,16 @@ func (g *ginHandler) API(version int16) Routes {
 	if !ok {
 		rg = g.addSubGroup(baseAPIPath, v(version))
 		g.routerGroups[v(version)] = rg
+	}
+	return rg
+}
+
+// Root returns a route group at the root path for non-API endpoints like health checks
+func (g *ginHandler) Root() Routes {
+	rg, ok := g.routerGroups["root"]
+	if !ok {
+		rg = g.route("/")
+		g.routerGroups["root"] = rg
 	}
 	return rg
 }
