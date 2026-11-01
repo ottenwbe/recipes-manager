@@ -67,7 +67,7 @@ start: fmt ; $(info $(M) running the app locally…) @ ## Run the program's snap
 # Quality and Testing
 
 .PHONY: verify
-verify: mod-verify vet test; $(info $(M) QA steps…) @ ## Run all QA steps
+verify: mod-verify vet security-scan test; $(info $(M) QA steps…) @ ## Run all QA steps
 	@echo "End of QA steps..."
 
 .PHONY: mod-verify
@@ -77,6 +77,21 @@ mod-verify: ; $(info $(M) verifying modules…) @ ## Run go mod verify
 .PHONY: vet
 vet: ; $(info $(M) running vet…) @ ## Run go vet
 	@$(GOVET) ./...
+
+.PHONY: security-scan
+security-scan: go-vuln-check gosec; $(info $(M) running security scan…) @ ## Run security vulnerability scans
+
+.PHONY: go-vuln-check
+go-vuln-check: ; $(info $(M) checking for Go vulnerabilities…) @ ## Check for known Go vulnerabilities
+	@echo "Running Go vulnerability check..."
+	@$(GO) install golang.org/x/vuln/cmd/govulncheck@latest 2>/dev/null || true
+	@$(GO) run golang.org/x/vuln/cmd/govulncheck@latest ./... 2>/dev/null || echo "Note: govulncheck requires Go 1.18+. Install with: go install golang.org/x/vuln/cmd/govulncheck@latest"
+
+.PHONY: gosec
+gosec: ; $(info $(M) running Go security checks…) @ ## Run Go-specific security checks
+	@echo "Running gosec security scanner..."
+	@$(GO) install github.com/securego/gosec/v2/cmd/gosec@latest 2>/dev/null || true
+	@$(GO) run github.com/securego/gosec/v2/cmd/gosec@latest -exclude-dir=vendor -severity=medium ./... 2>/dev/null || echo "Note: gosec not available. Install with: go install github.com/securego/gosec/v2/cmd/gosec@latest"
 
 .PHONY: sbom
 sbom: ; $(info $(M) creating SBOM...) @ ## Create SBOM

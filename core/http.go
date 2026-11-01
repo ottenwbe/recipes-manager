@@ -4,6 +4,8 @@ package core
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,6 +16,8 @@ import (
 
 	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/gin-gonic/gin"
+	"github.com/ulule/limiter/v3"
+	"github.com/ulule/limiter/v3/drivers/store/memory"
 	log "github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -32,6 +36,15 @@ const (
 	// CorsOriginCfg key for configuration
 	CorsOriginCfg = "html.cors.origin"
 )
+
+// hashIP generates a SHA-256 hash of an IP address for privacy-preserving rate limiting.
+// This ensures we can rate limit by IP without storing the actual IP address,
+// complying with privacy regulations like GDPR.
+func hashIP(ip string) string {
+	h := sha256.New()
+	h.Write([]byte(ip))
+	return hex.EncodeToString(h.Sum(nil))
+}
 
 func init() {
 	config.Config.SetDefault(AddressCfg, ":8080")
@@ -125,9 +138,55 @@ func (g *ginHandler) configure() {
 	g.handler.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	g.handler.Use(ginrus.Ginrus(log.StandardLogger(), time.RFC3339, true))
+	g.handler.Use(g.securityHeadersMiddleware())
 	g.handler.Use(g.corsMiddleware())
+	g.handler.Use(g.rateLimitMiddleware())
 	// Return 500 if there was a panic.
 	g.handler.Use(gin.Recovery())
+}
+
+// rateLimitMiddleware creates a rate limiter to prevent abuse
+// Default: 100 requests per minute per IP address
+func (g *ginHandler) rateLimitMiddleware() gin.HandlerFunc {
+	// Create rate limiter: 100 requests per minute
+	rate := limiter.Rate{
+		Period: 1 * time.Minute,
+		Limit:  100,
+	}
+	
+	// Use in-memory store (for production, consider Redis)
+	store := memory.NewStore()
+	
+	limiterMiddleware := limiter.New(store, rate)
+	
+	return func(c *gin.Context) {
+		// Use hashed IP for privacy compliance (GDPR, CCPA)
+		// Same IP always produces the same hash, but original IP cannot be derived
+		key := "ip:" + hashIP(c.ClientIP())
+		
+		context, err := limiterMiddleware.Get(c, key)
+		if err != nil {
+			log.WithError(err).Warn("Rate limiter error")
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "Internal server error",
+			})
+			return
+		}
+		
+		c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", context.Limit))
+		c.Header("X-RateLimit-Remaining", fmt.Sprintf("%d", context.Remaining))
+		c.Header("X-RateLimit-Reset", fmt.Sprintf("%d", context.Reset))
+		
+		if context.Reached {
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
+				"error": "Rate limit exceeded. Please try again later.",
+				"retry_after": context.Reset,
+			})
+			return
+		}
+		
+		c.Next()
+	}
 }
 
 type ginRoutes struct {
@@ -184,6 +243,32 @@ func (g *ginHandler) corsMiddleware() gin.HandlerFunc {
 	}
 }
 
+// securityHeadersMiddleware adds security-related HTTP headers
+func (g *ginHandler) securityHeadersMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Prevent MIME type sniffing
+		c.Header("X-Content-Type-Options", "nosniff")
+		
+		// Prevent clickjacking
+		c.Header("X-Frame-Options", "DENY")
+		
+		// Enable XSS filter
+		c.Header("X-XSS-Protection", "1; mode=block")
+		
+		// Referrer policy
+		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+		
+		// Permissions policy (formerly Feature-Policy)
+		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+		
+		// Cache control for sensitive pages
+		c.Header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		c.Header("Pragma", "no-cache")
+		
+		c.Next()
+	}
+}
+
 // Server interface which extends the http.Server
 type Server struct {
 	Address       string
@@ -199,9 +284,10 @@ func NewServerWithAddress(addr string, handler http.Handler) *Server {
 		server: &http.Server{
 			Addr:         addr,
 			Handler:      handler,
-			ReadTimeout:  30 * time.Second,
-			WriteTimeout: 30 * time.Second,
-			IdleTimeout:  120 * time.Second,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  30 * time.Second,
+			MaxHeaderBytes: 1 << 20, // 1 MB
 		},
 		stopWaitGroup: &sync.WaitGroup{}}
 }

@@ -1,11 +1,33 @@
 # IDE
 .idea/
 *iml
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
 
 # App and config
 client_secret.json
-token*json
+token*.json
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
 recipes-manager*
+recipes-manager-config.yml
+recipes-manager-config.yaml
+*.env
+.env
+.env.local
+.env.*.local
+config.local.yml
+config.local.yaml
+secrets.yml
+secrets.yaml
 
 # Test
 Test Results*
@@ -22,4 +44,26 @@ helper/
 vendor/
 .test-config
 recipes-manager.bom.json
+
+# Go
+.go
+*.exe
+*.so
+*.dll
+*.test
+
+# Docker
+.docker/
+
+# SBOM
+*.bom.json
+sbom-*.json
+
+# Logs
+*.log
+logs/
+
+# Local database
+*.db
+*.sqlite
 
