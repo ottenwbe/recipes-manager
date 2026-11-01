@@ -30,8 +30,7 @@ import "net/http"
 func AddCoreAPIToHandler(handler Handler) {
 	v1 := handler.API(1)
 	v1.GET("/version", prepareVersionRoutes)
-
-	handler.Root().GET("/health", prepareHealthRoute)
+	v1.GET("/health", prepareHealthRoute)
 }
 
 // Version example
