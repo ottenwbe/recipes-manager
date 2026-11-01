@@ -1,6 +1,4 @@
-/*
- * MIT License - see LICENSE file for details
- */
+// SPDX-License-Identifier: MIT
 
 package sources
 
@@ -14,7 +12,6 @@ import (
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/recipes"
 )
 
@@ -41,9 +38,6 @@ var _ = Describe("drive parser", func() {
 	const recipeFile = "fixtures/default-recipe.html"
 
 	BeforeEach(func() {
-		config.Config.SetDefault(DriveParserIngredientsTitle, "Zutaten")
-		config.Config.SetDefault(DriveRecipeInstructionsTitle, "Zubereitung")
-
 		var err error
 		recipeHTML, err = os.Open(recipeFile)
 		if err != nil {

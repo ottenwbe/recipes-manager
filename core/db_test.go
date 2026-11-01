@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package core_test
 
 import (
@@ -11,7 +13,7 @@ import (
 var _ = Describe("MongoDB", func() {
 	Context("can be connected to and", func() {
 
-		addr := config.Config.GetString("recipeDB.host")
+		addr := config.Config.GetString(core.RecipeDBHostCfg)
 		m, err := core.NewDatabaseClient(addr)
 
 		It("does not result in an error", func() {
@@ -23,7 +25,7 @@ var _ = Describe("MongoDB", func() {
 		})
 
 		It("cannot be created twice", func() {
-			addr := config.Config.GetString("recipeDB.host")
+			addr := config.Config.GetString(core.RecipeDBHostCfg)
 			_, err := core.NewDatabaseClient(addr)
 			Expect(err).To(BeNil())
 		})
@@ -32,7 +34,7 @@ var _ = Describe("MongoDB", func() {
 
 	Context("can be close", func() {
 
-		addr := config.Config.GetString("recipeDB.host")
+		addr := config.Config.GetString(core.RecipeDBHostCfg)
 		m, _ := core.NewDatabaseClient(addr)
 
 		It("does not result in an error", func() {

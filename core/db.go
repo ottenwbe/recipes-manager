@@ -1,12 +1,19 @@
-/*
- * MIT License - see LICENSE file for details
- */
+// SPDX-License-Identifier: MIT
 
 package core
 
 import (
 	"io"
+
+	"github.com/ottenwbe/recipes-manager/config"
 )
+
+// RecipeDBHostCfg key for configuration
+const RecipeDBHostCfg = "recipeDB.host"
+
+func init() {
+	config.Config.SetDefault(RecipeDBHostCfg, "mongodb://127.0.0.1:27017")
+}
 
 // DB is the interface that all DB implementations have to expose
 type DB interface {
