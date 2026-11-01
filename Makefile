@@ -4,6 +4,9 @@ SNAPSHOT			= $(RECIPES_MANAGER_APP)-snapshot
 GO_VERSION     		= $(shell go version)
 DATE     			= $(shell date +%F_%T)
 
+# Default tag for development builds
+TAG ?= development
+
 RECIPES_MANAGER_VERSION		= $(shell git describe --tags --always --match=v* 2> /dev/null || echo v0.0.0)
 RECIPES_MANAGER_GIT_HASH	= $(shell git rev-parse --short HEAD)
 
@@ -113,9 +116,9 @@ endif
 .PHONY: docker-dev
 docker-dev: ; $(info $(M) building development docker image...) @ ## Create docker image for development
 ifndef RECIPES_MANAGER_BUILD_DOCKER_HOST	
-	docker build $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):development -f Dockerfile .
+	docker build $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(TAG) -f Dockerfile .
 else
-	docker -H $(RECIPES_MANAGER_BUILD_DOCKER_HOST) build  $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):development -f Dockerfile .
+	docker -H $(RECIPES_MANAGER_BUILD_DOCKER_HOST) build  $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(TAG) -f Dockerfile .
 endif
 
 .PHONY: docker-network
@@ -159,7 +162,7 @@ dockerx: ; $(info $(M) building multi-arch docker image with buildx...) @ ## Bui
 
 .PHONY: dockerx-dev
 dockerx-dev:  ; ## Build development docker image with buildx
-	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm64/v8,linux/amd64 $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):development -f Dockerfile .
+	docker buildx build --output "type=image,push=$(RECIPES_MANAGER_DOCKER_SHOULD_PUSH)" --platform linux/arm64/v8,linux/amd64 $(RECIPES_MANAGER_DOCKER_PARAMS) -t $(RECIPES_MANAGER_DOCKER_IMAGE):$(TAG) -f Dockerfile .
 
 .PHONY: docker-push
 docker-push: ; ## Push docker image
