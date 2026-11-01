@@ -30,6 +30,7 @@ import "net/http"
 func AddCoreAPIToHandler(handler Handler) {
 	v1 := handler.API(1)
 	v1.GET("/version", prepareVersionRoutes)
+	v1.GET("/health", prepareHealthRoute)
 }
 
 // Version example
@@ -40,4 +41,14 @@ func AddCoreAPIToHandler(handler Handler) {
 // @Router /version [get]
 func prepareVersionRoutes(c *APICallContext) {
 	c.JSON(http.StatusOK, AppVersion())
+}
+
+// Health example
+// @Summary Health check endpoint
+// @Description Returns the health status of the service
+// @Produce  json
+// @Success 200 {object} map[string]string
+// @Router /health [get]
+func prepareHealthRoute(c *APICallContext) {
+	c.JSON(http.StatusOK, H{"status": "ok"})
 }

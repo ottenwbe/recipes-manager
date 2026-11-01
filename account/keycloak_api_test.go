@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package account
 
 import (
@@ -20,7 +22,7 @@ var (
 var _ = Describe("Keycloak API", func() {
 	BeforeEach(func() {
 		handler = core.NewHandler("*")
-		addr := config.Config.GetString("recipeDB.host")
+		addr := config.Config.GetString(core.RecipeDBHostCfg)
 		db, _ = core.NewDatabaseClient(addr)
 	})
 

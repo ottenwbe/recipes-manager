@@ -62,9 +62,9 @@ var _ = Describe("Config", func() {
 		})
 
 		It("can read values from environment variables with correct prefix and separator", func() {
-			// Config sets prefix "go_cook" and replaces "." with "_"
+			// Config sets prefix "recipes_manager" and replaces "." with "_"
 			key := "some.env.var"
-			envName := "GO_COOK_SOME_ENV_VAR"
+			envName := "RECIPES_MANAGER_SOME_ENV_VAR"
 			expected := "found_it"
 
 			_ = os.Setenv(envName, expected)
@@ -77,7 +77,7 @@ var _ = Describe("Config", func() {
 
 		It("should allow manual binding of environment variables", func() {
 			key := "manual.bind"
-			envName := "GO_COOK_MANUAL_BIND"
+			envName := "RECIPES_MANAGER_MANUAL_BIND"
 			expected := "manual_value"
 
 			_ = os.Setenv(envName, expected)

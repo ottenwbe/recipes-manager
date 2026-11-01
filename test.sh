@@ -2,17 +2,23 @@
 
 set -uex pipefail
 
+DB_CONTAINER_NAME="test-db"
+
+cleanup() {
+    echo "Cleaning up..."
+    docker stop "$DB_CONTAINER_NAME" > /dev/null 2>&1 || true
+    docker rm "$DB_CONTAINER_NAME" > /dev/null 2>&1 || true
+    echo "Cleanup complete."
+}
+trap cleanup EXIT
+
 echo "Prepare tests..."
 
-# remove existing test container
-# or ignore the error if the container does not exist
-docker stop test-db | true
-docker rm -v test-db | true
 # run a mongo-db
-docker run -d --name=test-db -p 27018:27017 mongo:7
+docker run -d --name=$DB_CONTAINER_NAME -p 27018:27017 mongo:7
 
 echo "Waiting for MongoDB to be ready..."
-until docker exec test-db mongosh --port 27017 --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+until docker exec $DB_CONTAINER_NAME mongosh --port 27017 --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
   sleep 1
 done
 

@@ -31,7 +31,7 @@ import (
 	"testing"
 )
 
-func TestGoCook(t *testing.T) {
+func TestRecipesManager(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Recipes Manager Suite")
 }

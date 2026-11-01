@@ -1,6 +1,5 @@
-/*
- * MIT License - see LICENSE file for details
- */
+// SPDX-License-Identifier: MIT
+
 package recipes
 
 import (
@@ -27,7 +26,7 @@ var (
 var _ = BeforeSuite(func() {
 	handler := core.NewHandler("*")
 	var err error
-	addr := config.Config.GetString("recipeDB.host")
+	addr := config.Config.GetString(core.RecipeDBHostCfg)
 	db, err = core.NewDatabaseClient(addr)
 	Expect(err).ToNot(HaveOccurred())
 	recipes, err = NewRecipeDB(db)

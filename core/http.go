@@ -1,6 +1,4 @@
-/*
- * MIT License
- */
+// SPDX-License-Identifier: MIT
 
 package core
 
@@ -20,13 +18,25 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
+	"github.com/ottenwbe/recipes-manager/config"
+
 	// based on swagger documentation
 	_ "github.com/ottenwbe/recipes-manager/docs"
 )
 
 const (
 	baseAPIPath = "api"
+
+	// AddressCfg key for configuration
+	AddressCfg = "html.address"
+	// CorsOriginCfg key for configuration
+	CorsOriginCfg = "html.cors.origin"
 )
+
+func init() {
+	config.Config.SetDefault(AddressCfg, ":8080")
+	config.Config.SetDefault(CorsOriginCfg, "*")
+}
 
 // Routes is managing a set of API endpoints.
 // Routes implementation(s) call handler function to perform typical CRUD operations (GET, 	POST, PATCH, ...).

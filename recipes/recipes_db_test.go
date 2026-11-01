@@ -1,6 +1,4 @@
-/*
- * MIT License - see LICENSE file for details
- */
+// SPDX-License-Identifier: MIT
 
 package recipes
 
@@ -47,7 +45,7 @@ var _ = Describe("recipes db", func() {
 		)
 
 		BeforeEach(func() {
-			addr := config.Config.GetString("recipeDB.host")
+			addr := config.Config.GetString(core.RecipeDBHostCfg)
 			coreDB, err = core.NewDatabaseClient(addr)
 			Expect(err).ToNot(HaveOccurred())
 			db, err = NewRecipeDB(coreDB)
@@ -96,7 +94,7 @@ var _ = Describe("recipes db", func() {
 		}
 
 		BeforeEach(func() {
-			addr := config.Config.GetString("recipeDB.host")
+			addr := config.Config.GetString(core.RecipeDBHostCfg)
 			coreDB, err = core.NewDatabaseClient(addr)
 			Expect(err).ToNot(HaveOccurred())
 			db, err = NewRecipeDB(coreDB)
@@ -189,7 +187,7 @@ var _ = Describe("recipes db", func() {
 		)
 
 		BeforeEach(func() {
-			addr := config.Config.GetString("recipeDB.host")
+			addr := config.Config.GetString(core.RecipeDBHostCfg)
 			coreDB, err = core.NewDatabaseClient(addr)
 			Expect(err).ToNot(HaveOccurred())
 			db, err = NewRecipeDB(coreDB)

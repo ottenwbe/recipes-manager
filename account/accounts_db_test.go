@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package account_test
 
 import (
@@ -20,7 +22,7 @@ var _ = Describe("Account DB", func() {
 	)
 
 	BeforeEach(func() {
-		addr := config.Config.GetString("recipeDB.host")
+		addr := config.Config.GetString(core.RecipeDBHostCfg)
 		database, err = core.NewDatabaseClient(addr)
 		mongoDatabase = account.NewMongoAccountService(database)
 	})

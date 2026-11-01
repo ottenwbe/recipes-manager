@@ -12,6 +12,20 @@
     },
     "basePath": "/api/v1",
     "paths": {
+        "/health": {
+            "get": {
+                "description": "Get the health status of the service",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/auth/keycloak/login": {
             "get": {
                 "description": "Login by creating a token",

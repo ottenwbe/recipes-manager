@@ -1,6 +1,4 @@
-/*
- * MIT License - see LICENSE file for details
- */
+// SPDX-License-Identifier: MIT
 
 package sources
 
@@ -176,6 +174,12 @@ const (
 	// DriveRecipesFolderNameCfg key for the configuration
 	DriveRecipesFolderNameCfg = "drive.recipes.folder"
 )
+
+func init() {
+	config.Config.SetDefault(DriveEnabledCfg, false)
+	config.Config.SetDefault(DriveConnectionSecretCfg, "client_secret.json")
+	config.Config.SetDefault(DriveRecipesFolderNameCfg, "Rezepte Test")
+}
 
 // DriveClient is handling the interaction with Drive
 type DriveClient struct {

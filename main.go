@@ -1,6 +1,4 @@
-/*
- * MIT License - see LICENSE file for details
- */
+// SPDX-License-Identifier: MIT
 
 package main
 
@@ -14,23 +12,6 @@ import (
 	"github.com/ottenwbe/recipes-manager/sources"
 )
 
-func init() {
-	config.Config.SetDefault("html.address", ":8080")
-	config.Config.SetDefault("html.cors.origin", "*")
-	config.Config.SetDefault("recipeDB.host", "mongodb://127.0.0.1:27017")
-	config.Config.SetDefault(sources.SOURCEREDIRECT, "http://localhost:8080/#!/src")
-	config.Config.SetDefault(sources.DriveEnabledCfg, false)
-	config.Config.SetDefault(sources.DriveConnectionSecretCfg, "client_secret.json")
-	config.Config.SetDefault(sources.DriveRecipesFolderNameCfg, "Rezepte Test")
-	config.Config.SetDefault(sources.DriveParserIngredientsTitle, "Zutaten")
-	config.Config.SetDefault(sources.DriveRecipeInstructionsTitle, "Zubereitung")
-	config.Config.SetDefault(account.KeycloakEnabledCfg, false)
-	config.Config.SetDefault(account.KeycloakAddressCfg, "http://localhost:8081/auth/realms/recipes")
-	config.Config.SetDefault(account.KeyCloakHostCfg, "localhost")
-
-	log.Infof("Initializing cooking application version=%v API=%v", core.AppVersion().App, core.AppVersion().API)
-}
-
 // @title Swagger API documentation for recipes-manager
 // @version 1.0
 // @description This is the API documentation for recipes-manager.
@@ -40,6 +21,8 @@ func init() {
 
 // @BasePath /api/v1
 func main() {
+
+	log.Infof("Initializing cooking application version=%v API=%v", core.AppVersion().App, core.AppVersion().API)
 
 	// configure the cooking app
 	coreDB := newCoreDatabase()
@@ -60,7 +43,7 @@ func main() {
 }
 
 func newCoreDatabase() core.DB {
-	addr := config.Config.GetString("recipeDB.host")
+	addr := config.Config.GetString(core.RecipeDBHostCfg)
 	db, err := core.NewDatabaseClient(addr)
 	failOnError(err)
 	return db
@@ -87,10 +70,10 @@ func closeServer(server *core.Server) {
 }
 
 func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) *core.Server {
-	corsOrigin := config.Config.GetString("html.cors.origin")
+	corsOrigin := config.Config.GetString(core.CorsOriginCfg)
 	handler := core.NewHandler(corsOrigin)
 
-	address := config.Config.GetString("html.address")
+	address := config.Config.GetString(core.AddressCfg)
 	server := core.NewServerWithAddress(address, handler)
 
 	addAPIsToServer(handler, recipesDB, srcRepository)
