@@ -4,8 +4,6 @@ package core
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"net/http"
 	"os"
@@ -16,8 +14,6 @@ import (
 
 	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/gin-gonic/gin"
-	"github.com/ulule/limiter/v3"
-	"github.com/ulule/limiter/v3/drivers/store/memory"
 	log "github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -36,31 +32,6 @@ const (
 	// CorsOriginCfg key for configuration
 	CorsOriginCfg = "html.cors.origin"
 )
-
-// Package-level rate limiter - shared across all handlers
-var (
-	rateLimiter     *limiter.Limiter
-	rateLimiterOnce sync.Once
-)
-
-// hashIP generates a SHA-256 hash of an IP address for privacy-preserving rate limiting.
-// This ensures we can rate limit by IP without storing the actual IP address,
-// complying with privacy regulations like GDPR.
-func hashIP(ip string) string {
-	h := sha256.New()
-	h.Write([]byte(ip))
-	return hex.EncodeToString(h.Sum(nil))
-}
-
-// initRateLimiter initializes the package-level rate limiter (thread-safe)
-func initRateLimiter() {
-	rate := limiter.Rate{
-		Period: 1 * time.Minute,
-		Limit:  100,
-	}
-	store := memory.NewStore()
-	rateLimiter = limiter.New(store, rate)
-}
 
 func init() {
 	config.Config.SetDefault(AddressCfg, ":8080")
@@ -156,45 +127,9 @@ func (g *ginHandler) configure() {
 	g.handler.Use(ginrus.Ginrus(log.StandardLogger(), time.RFC3339, true))
 	g.handler.Use(g.securityHeadersMiddleware())
 	g.handler.Use(g.corsMiddleware())
-	g.handler.Use(g.rateLimitMiddleware())
+	g.handler.Use(NewRateLimitMiddleware())
 	// Return 500 if there was a panic.
 	g.handler.Use(gin.Recovery())
-}
-
-// rateLimitMiddleware creates a rate limiter to prevent abuse
-// Default: 100 requests per minute per IP address
-func (g *ginHandler) rateLimitMiddleware() gin.HandlerFunc {
-	// Initialize package-level rate limiter (thread-safe, runs once)
-	rateLimiterOnce.Do(initRateLimiter)
-	
-	return func(c *gin.Context) {
-		// Use hashed IP for privacy compliance (GDPR, CCPA)
-		// Same IP always produces the same hash, but original IP cannot be derived
-		key := "ip:" + hashIP(c.ClientIP())
-		
-		context, err := rateLimiter.Get(c, key)
-		if err != nil {
-			log.WithError(err).Warn("Rate limiter error")
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "Internal server error",
-			})
-			return
-		}
-		
-		c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", context.Limit))
-		c.Header("X-RateLimit-Remaining", fmt.Sprintf("%d", context.Remaining))
-		c.Header("X-RateLimit-Reset", fmt.Sprintf("%d", context.Reset))
-		
-		if context.Reached {
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"error": "Rate limit exceeded. Please try again later.",
-				"retry_after": context.Reset,
-			})
-			return
-		}
-		
-		c.Next()
-	}
 }
 
 type ginRoutes struct {
@@ -256,23 +191,23 @@ func (g *ginHandler) securityHeadersMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Prevent MIME type sniffing
 		c.Header("X-Content-Type-Options", "nosniff")
-		
+
 		// Prevent clickjacking
 		c.Header("X-Frame-Options", "DENY")
-		
+
 		// Enable XSS filter
 		c.Header("X-XSS-Protection", "1; mode=block")
-		
+
 		// Referrer policy
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
-		
+
 		// Permissions policy (formerly Feature-Policy)
 		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
-		
+
 		// Cache control for sensitive pages
 		c.Header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
 		c.Header("Pragma", "no-cache")
-		
+
 		c.Next()
 	}
 }
@@ -290,11 +225,11 @@ func NewServerWithAddress(addr string, handler http.Handler) *Server {
 	return &Server{
 		Address: addr,
 		server: &http.Server{
-			Addr:         addr,
-			Handler:      handler,
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 10 * time.Second,
-			IdleTimeout:  30 * time.Second,
+			Addr:           addr,
+			Handler:        handler,
+			ReadTimeout:    5 * time.Second,
+			WriteTimeout:   10 * time.Second,
+			IdleTimeout:    30 * time.Second,
 			MaxHeaderBytes: 1 << 20, // 1 MB
 		},
 		stopWaitGroup: &sync.WaitGroup{}}
