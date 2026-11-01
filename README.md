@@ -108,6 +108,8 @@ keycloak:
 | `recipeDB.host` | string | `mongodb://127.0.0.1:27017` | ✓ Yes | MongoDB connection string |
 | `html.address` | string | `:8080` | No | Server listening address (host:port) |
 | `html.cors.origin` | string | `*` | No | CORS origin header for browser requests |
+| `accountDB.name` | string | `accounts` | No | MongoDB database name for accounts |
+| `accountDB.collection` | string | `accounts` | No | MongoDB collection name for accounts |
 | `log.level` | string | `info` | No | Logging level: debug, info, warning, error |
 | `source.redirect` | string | `http://localhost:8080/#!/src` | No | OAuth redirect URL after source authentication |
 | `drive.enabled` | boolean | `false` | No | Enable Google Drive recipe import |
@@ -305,6 +307,8 @@ make api-docu
 
 I created this project for the purpose of educating myself and personal use.
 If you are interested in the outcome, feel free to contribute; this work is published under the MIT license.
+
+Later changes and improvements have been supported by opencode and other AI Agents.
 
 ## Notice
 

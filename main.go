@@ -18,6 +18,8 @@ func init() {
 	config.Config.SetDefault("html.address", ":8080")
 	config.Config.SetDefault("html.cors.origin", "*")
 	config.Config.SetDefault("recipeDB.host", "mongodb://127.0.0.1:27017")
+	config.Config.SetDefault(account.AccountDBNameCfg, "accounts")
+	config.Config.SetDefault(account.AccountDBCollectionCfg, "accounts")
 	config.Config.SetDefault(sources.SOURCEREDIRECT, "http://localhost:8080/#!/src")
 	config.Config.SetDefault(sources.DriveEnabledCfg, false)
 	config.Config.SetDefault(sources.DriveConnectionSecretCfg, "client_secret.json")

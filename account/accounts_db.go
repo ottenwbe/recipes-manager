@@ -28,6 +28,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/core"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -45,6 +46,10 @@ const (
 	EMAIL = "name"
 	// ID key
 	ID = "id"
+	// AccountDBNameCfg is the config key for the account database name
+	AccountDBNameCfg = "accountDB.name"
+	// AccountDBCollectionCfg is the config key for the account collection name
+	AccountDBCollectionCfg = "accountDB.collection"
 )
 
 // NewMongoAccountService is created and configured
@@ -117,7 +122,9 @@ func (db *MongoAccountService) FindAccount(name string) (*Account, error) {
 }
 
 func (db *MongoAccountService) getAccountsCollection() *mongo.Collection {
-	return db.DbClient.Client.Database("accounts").Collection("accounts")
+	dbName := config.Config.GetString(AccountDBNameCfg)
+	collName := config.Config.GetString(AccountDBCollectionCfg)
+	return db.DbClient.Client.Database(dbName).Collection(collName)
 }
 
 func (*MongoAccountService) ctx() (context.Context, context.CancelFunc) {
