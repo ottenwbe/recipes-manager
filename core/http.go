@@ -37,6 +37,12 @@ const (
 	CorsOriginCfg = "html.cors.origin"
 )
 
+// Package-level rate limiter - shared across all handlers
+var (
+	rateLimiter     *limiter.Limiter
+	rateLimiterOnce sync.Once
+)
+
 // hashIP generates a SHA-256 hash of an IP address for privacy-preserving rate limiting.
 // This ensures we can rate limit by IP without storing the actual IP address,
 // complying with privacy regulations like GDPR.
@@ -44,6 +50,16 @@ func hashIP(ip string) string {
 	h := sha256.New()
 	h.Write([]byte(ip))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+// initRateLimiter initializes the package-level rate limiter (thread-safe)
+func initRateLimiter() {
+	rate := limiter.Rate{
+		Period: 1 * time.Minute,
+		Limit:  100,
+	}
+	store := memory.NewStore()
+	rateLimiter = limiter.New(store, rate)
 }
 
 func init() {
@@ -148,23 +164,15 @@ func (g *ginHandler) configure() {
 // rateLimitMiddleware creates a rate limiter to prevent abuse
 // Default: 100 requests per minute per IP address
 func (g *ginHandler) rateLimitMiddleware() gin.HandlerFunc {
-	// Create rate limiter: 100 requests per minute
-	rate := limiter.Rate{
-		Period: 1 * time.Minute,
-		Limit:  100,
-	}
-	
-	// Use in-memory store (for production, consider Redis)
-	store := memory.NewStore()
-	
-	limiterMiddleware := limiter.New(store, rate)
+	// Initialize package-level rate limiter (thread-safe, runs once)
+	rateLimiterOnce.Do(initRateLimiter)
 	
 	return func(c *gin.Context) {
 		// Use hashed IP for privacy compliance (GDPR, CCPA)
 		// Same IP always produces the same hash, but original IP cannot be derived
 		key := "ip:" + hashIP(c.ClientIP())
 		
-		context, err := limiterMiddleware.Get(c, key)
+		context, err := rateLimiter.Get(c, key)
 		if err != nil {
 			log.WithError(err).Warn("Rate limiter error")
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
