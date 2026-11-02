@@ -125,7 +125,9 @@ func (g *ginHandler) configure() {
 	g.handler.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	g.handler.Use(ginrus.Ginrus(log.StandardLogger(), time.RFC3339, true))
+	g.handler.Use(g.securityHeadersMiddleware())
 	g.handler.Use(g.corsMiddleware())
+	g.handler.Use(NewRateLimitMiddleware())
 	// Return 500 if there was a panic.
 	g.handler.Use(gin.Recovery())
 }
@@ -184,6 +186,32 @@ func (g *ginHandler) corsMiddleware() gin.HandlerFunc {
 	}
 }
 
+// securityHeadersMiddleware adds security-related HTTP headers
+func (g *ginHandler) securityHeadersMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Prevent MIME type sniffing
+		c.Header("X-Content-Type-Options", "nosniff")
+
+		// Prevent clickjacking
+		c.Header("X-Frame-Options", "DENY")
+
+		// Enable XSS filter
+		c.Header("X-XSS-Protection", "1; mode=block")
+
+		// Referrer policy
+		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+
+		// Permissions policy (formerly Feature-Policy)
+		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+
+		// Cache control for sensitive pages
+		c.Header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		c.Header("Pragma", "no-cache")
+
+		c.Next()
+	}
+}
+
 // Server interface which extends the http.Server
 type Server struct {
 	Address       string
@@ -197,11 +225,12 @@ func NewServerWithAddress(addr string, handler http.Handler) *Server {
 	return &Server{
 		Address: addr,
 		server: &http.Server{
-			Addr:         addr,
-			Handler:      handler,
-			ReadTimeout:  30 * time.Second,
-			WriteTimeout: 30 * time.Second,
-			IdleTimeout:  120 * time.Second,
+			Addr:           addr,
+			Handler:        handler,
+			ReadTimeout:    5 * time.Second,
+			WriteTimeout:   10 * time.Second,
+			IdleTimeout:    30 * time.Second,
+			MaxHeaderBytes: 1 << 20, // 1 MB
 		},
 		stopWaitGroup: &sync.WaitGroup{}}
 }
