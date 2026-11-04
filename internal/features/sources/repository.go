@@ -38,11 +38,7 @@ func (s *DefaultSources) JSON() ([]byte, error) {
 func (s *DefaultSources) List() (map[SourceID]*SourceDescription, error) {
 	log.Debugf("list %v", s.sources)
 
-	if len(s.sources) > 0 {
-		return s.descriptionMap(), nil
-	}
-
-	return nil, errors.New("empty List of Sources")
+	return s.descriptionMap(), nil
 }
 
 func (s *DefaultSources) descriptionMap() map[SourceID]*SourceDescription {
