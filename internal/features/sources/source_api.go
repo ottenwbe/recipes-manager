@@ -256,18 +256,6 @@ func sourceClient(sourceID string, sources Sources) (SourceClient, error) {
 	return src, err
 }
 
-func sourceDescription(sourceID string, c *server.APICallContext, sources Sources) (*SourceDescription, error) {
-	sid, err := SourceIDFromString(sourceID)
-	if err != nil {
-		return nil, err
-	}
-	src, err := sources.Description(sid)
-	if err != nil {
-		return nil, err
-	}
-	return src, err
-}
-
 func extractSourceRedirectOrDefault(query url.Values) string {
 	if len(query[REDIRECT]) > 0 {
 		log.Debugf("Got Redirect to %v", query[REDIRECT][0])
