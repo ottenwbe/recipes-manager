@@ -279,9 +279,8 @@ func (rAPI *API) postRecipes(c *server.APICallContext) {
 func (rAPI *API) deleteRecipe(c *server.APICallContext) {
 	recipeID := models.NewRecipeIDFromString(c.Param(RECIPE))
 	if err := rAPI.recipes.Remove(recipeID); err != nil {
-		// Assuming the DB layer returns an error when the item is not found.
-		c.JSON(http.StatusNotFound, server.H{"error": "recipe not found", "id": recipeID})
-		log.WithError(err).Debug("Could not Delete models.Recipe")
+		log.WithError(err).Error("Could not Delete models.Recipe")
+		c.JSON(http.StatusInternalServerError, server.H{"error": "could not delete recipe", "id": recipeID})
 	} else {
 		c.Status(http.StatusNoContent) // 204 is more idiomatic for a successful DELETE with no body
 	}
