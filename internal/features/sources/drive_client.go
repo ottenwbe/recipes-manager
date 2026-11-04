@@ -10,11 +10,12 @@ import (
 	"google.golang.org/api/drive/v3"
 
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
+	"math/big"
 	"os"
 	"sync"
 
@@ -144,10 +145,13 @@ func (r *driveRecipes) Num() int64 {
 func (r *driveRecipes) Random() *models.Recipe {
 	r.ensureCache()
 	list := r.List()
-	lenRecipes := len(list)
-	if lenRecipes > 0 {
-		n := rand.Int() % lenRecipes
-		return list[n]
+	if len(list) > 0 {
+		nBig, err := rand.Int(rand.Reader, big.NewInt(int64(len(list))))
+		if err != nil {
+			log.WithError(err).Error("Could not generate random recipe")
+			return models.NewInvalidRecipe()
+		}
+		return list[int(nBig.Int64())]
 	}
 	return models.NewInvalidRecipe()
 }
