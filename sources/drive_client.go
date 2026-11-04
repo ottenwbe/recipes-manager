@@ -20,17 +20,19 @@ import (
 
 	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/recipes"
+
+	"github.com/ottenwbe/recipes-manager/models"
 )
 
 // driveRecipes is a cache for recipes from Drive
 type driveRecipes struct {
 	driveService *drive.Service
-	pictures     map[recipes.RecipeID]map[string]*recipes.RecipePicture
-	recipes      []*recipes.Recipe
+	pictures     map[models.RecipeID]map[string]*models.RecipePicture
+	recipes      []*models.Recipe
 	initializer  sync.Once
 }
 
-func (r *driveRecipes) Find(search string) ([]*recipes.Recipe, error) {
+func (r *driveRecipes) Find(search string) ([]*models.Recipe, error) {
 	panic("implement me")
 }
 
@@ -40,15 +42,15 @@ func newDriveRecipes(driveService *drive.Service) *driveRecipes {
 	}
 }
 
-func cacheDriveRecipesFromFiles(driveService *drive.Service, fileList *drive.FileList) ([]*recipes.Recipe, map[recipes.RecipeID]map[string]*recipes.RecipePicture) {
-	resultRecipes := make([]*recipes.Recipe, 0)
-	resultPictures := make(map[recipes.RecipeID]map[string]*recipes.RecipePicture)
+func cacheDriveRecipesFromFiles(driveService *drive.Service, fileList *drive.FileList) ([]*models.Recipe, map[models.RecipeID]map[string]*models.RecipePicture) {
+	resultRecipes := make([]*models.Recipe, 0)
+	resultPictures := make(map[models.RecipeID]map[string]*models.RecipePicture)
 	for _, file := range fileList.Files {
 		htmlFile, err := downloadHTML(driveService, file.Id)
 		if err != nil {
 			log.WithError(err).Error("Could not download html...")
 		} else {
-			recipe, pictures, err := ParseRecipe(htmlFile, recipes.NewConsistentRecipeID(file.Id))
+			recipe, pictures, err := ParseRecipe(htmlFile, models.NewConsistentRecipeID(file.Id))
 			if err != nil {
 				log.WithError(err).Errorf("could not parse recipe")
 			}
@@ -59,14 +61,14 @@ func cacheDriveRecipesFromFiles(driveService *drive.Service, fileList *drive.Fil
 	return resultRecipes, resultPictures
 }
 
-func (r *driveRecipes) Update(id recipes.RecipeID, recipe *recipes.Recipe) error {
+func (r *driveRecipes) Update(id models.RecipeID, recipe *models.Recipe) error {
 	panic("Not yet supported")
 }
 
-func appendPictures(pictures map[string]*recipes.RecipePicture, resultPictures map[recipes.RecipeID]map[string]*recipes.RecipePicture, id recipes.RecipeID) map[recipes.RecipeID]map[string]*recipes.RecipePicture {
+func appendPictures(pictures map[string]*models.RecipePicture, resultPictures map[models.RecipeID]map[string]*models.RecipePicture, id models.RecipeID) map[models.RecipeID]map[string]*models.RecipePicture {
 	for name, pic := range pictures {
 		if _, ok := resultPictures[id]; !ok {
-			resultPictures[id] = make(map[string]*recipes.RecipePicture)
+			resultPictures[id] = make(map[string]*models.RecipePicture)
 		}
 		resultPictures[id][name] = pic
 	}
@@ -74,21 +76,21 @@ func appendPictures(pictures map[string]*recipes.RecipePicture, resultPictures m
 }
 
 // Insert is not supported for Drive
-func (r *driveRecipes) Insert(recipe *recipes.Recipe) error {
-	return errors.New(recipes.NotSupportedError)
+func (r *driveRecipes) Insert(recipe *models.Recipe) error {
+	return errors.New(models.NotSupportedError)
 }
 
 // Remove is not supported for Drive
 func (r *driveRecipes) RemoveByName(name string) error {
-	return errors.New(recipes.NotSupportedError)
+	return errors.New(models.NotSupportedError)
 }
 
-func (r *driveRecipes) Remove(id recipes.RecipeID) error {
-	return errors.New(recipes.NotSupportedError)
+func (r *driveRecipes) Remove(id models.RecipeID) error {
+	return errors.New(models.NotSupportedError)
 }
 
 // Picture by ID and name
-func (r *driveRecipes) Picture(id recipes.RecipeID, name string) *recipes.RecipePicture {
+func (r *driveRecipes) Picture(id models.RecipeID, name string) *models.RecipePicture {
 	r.ensureCache()
 	if pic, ok := r.pictures[id][name]; ok {
 		return pic
@@ -97,7 +99,7 @@ func (r *driveRecipes) Picture(id recipes.RecipeID, name string) *recipes.Recipe
 }
 
 // Pictures of a given recipe
-func (r *driveRecipes) Pictures(id recipes.RecipeID) map[string]*recipes.RecipePicture {
+func (r *driveRecipes) Pictures(id models.RecipeID) map[string]*models.RecipePicture {
 	r.ensureCache()
 	if pics, ok := r.pictures[id]; ok {
 		return pics
@@ -112,24 +114,24 @@ func (r *driveRecipes) ensureCache() {
 }
 
 // AddPicture is not supported for Drive
-func (r *driveRecipes) AddPicture(pic *recipes.RecipePicture) error {
-	return errors.New(recipes.NotSupportedError)
+func (r *driveRecipes) AddPicture(pic *models.RecipePicture) error {
+	return errors.New(models.NotSupportedError)
 }
 
 // GetByName is not supported for Drive
-func (r *driveRecipes) GetByName(name string) (*recipes.Recipe, error) {
-	return nil, errors.New(recipes.NotSupportedError)
+func (r *driveRecipes) GetByName(name string) (*models.Recipe, error) {
+	return nil, errors.New(models.NotSupportedError)
 }
 
 // Get a recipe by ID
-func (r *driveRecipes) Get(id recipes.RecipeID) *recipes.Recipe {
+func (r *driveRecipes) Get(id models.RecipeID) *models.Recipe {
 	r.ensureCache()
 	for _, recipe := range r.recipes {
 		if recipe.ID.String() == id.String() {
 			return recipe
 		}
 	}
-	return recipes.NewInvalidRecipe()
+	return models.NewInvalidRecipe()
 }
 
 // Num recipes that are found in Drive
@@ -139,7 +141,7 @@ func (r *driveRecipes) Num() int64 {
 }
 
 // Random recipe from Drive
-func (r *driveRecipes) Random() *recipes.Recipe {
+func (r *driveRecipes) Random() *models.Recipe {
 	r.ensureCache()
 	list := r.List()
 	lenRecipes := len(list)
@@ -147,21 +149,21 @@ func (r *driveRecipes) Random() *recipes.Recipe {
 		n := rand.Int() % lenRecipes
 		return list[n]
 	}
-	return recipes.NewInvalidRecipe()
+	return models.NewInvalidRecipe()
 }
 
 // IDs returns a list of all recipe IDs
-func (r *driveRecipes) IDs(*recipes.RecipeSearchFilter) recipes.RecipeList {
+func (r *driveRecipes) IDs(*models.RecipeSearchFilter) models.RecipeList {
 	r.ensureCache()
 	recipeNames := make([]string, 0)
 	for _, recipe := range r.List() {
 		recipeNames = append(recipeNames, recipe.Name)
 	}
-	return recipes.RecipeList{Recipes: recipeNames}
+	return models.RecipeList{Recipes: recipeNames}
 }
 
 // List all recipes
-func (r *driveRecipes) List() []*recipes.Recipe {
+func (r *driveRecipes) List() []*models.Recipe {
 	r.ensureCache()
 	return r.recipes
 }

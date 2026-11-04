@@ -12,20 +12,20 @@ import (
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/ottenwbe/recipes-manager/recipes"
+	"github.com/ottenwbe/recipes-manager/models"
 )
 
 var _ = Describe("drive parser", func() {
 
 	var (
 		recipeHTML          io.Reader
-		expectedIngredients = []recipes.Ingredients{
+		expectedIngredients = []models.Ingredients{
 			{Name: "Something", Amount: 150, Unit: "g"},
 			{Name: "Others", Amount: 2, Unit: "parts"},
 			{Name: "Flour", Amount: -1, Unit: ""},
 		}
-		expectedID     = recipes.NewRecipeID()
-		expectedRecipe = &recipes.Recipe{
+		expectedID     = models.NewRecipeID()
+		expectedRecipe = &models.Recipe{
 			ID:          expectedID,
 			Name:        "TestRecipe",
 			Ingredients: expectedIngredients,

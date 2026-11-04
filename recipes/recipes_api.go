@@ -12,6 +12,8 @@ import (
 	"strconv"
 
 	"github.com/ottenwbe/recipes-manager/internal/server"
+
+	"github.com/ottenwbe/recipes-manager/models"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -109,16 +111,16 @@ func (rAPI *API) getNumberOfRecipes(c *server.APICallContext) {
 // @Summary Get a picture of a
 // @Tags Recipes
 // @Description A specific picture of a specific recipe is returned
-// @Param recipe path string true "Recipe ID"
+// @Param recipe path string true "models.Recipe ID"
 // @Param name path string true "Name of Picture"
 // @Produce json
-// @Success 200 {object} RecipePicture
+// @Success 200 {object} models.RecipePicture
 // @Router /recipes/r/{recipe}/pictures/{name} [get]
 func (rAPI *API) getRecipePicture(c *server.APICallContext) {
-	recipeID := NewRecipeIDFromString(c.Param(RECIPE))
+	recipeID := models.NewRecipeIDFromString(c.Param(RECIPE))
 	name := c.Param(NAME)
 	picture := rAPI.recipes.Picture(recipeID, name)
-	if picture.ID == InvalidRecipeID() {
+	if picture.ID == models.InvalidRecipeID() {
 		c.JSON(http.StatusNotFound, server.H{"error": "picture not found", "id": recipeID, "name": name})
 	} else {
 		c.JSON(http.StatusOK, picture)
@@ -126,12 +128,12 @@ func (rAPI *API) getRecipePicture(c *server.APICallContext) {
 }
 
 // getRandomRecipe example
-// @Summary Get a Random Recipe
+// @Summary Get a Random models.Recipe
 // @Description A specific picture of a specific recipe is returned
 // @Tags Recipes
 // @Param servings query int false "Number of Servings"
 // @Produce json
-// @Success 200 {object} Recipe
+// @Success 200 {object} models.Recipe
 // @Router /recipes/rand [get]
 func (rAPI *API) getRandomRecipe(c *server.APICallContext) {
 	query := c.Request.URL.Query()
@@ -143,7 +145,7 @@ func (rAPI *API) getRandomRecipe(c *server.APICallContext) {
 		recipe.ScaleTo(servings)
 	}
 
-	if recipe.ID == InvalidRecipeID() {
+	if recipe.ID == models.InvalidRecipeID() {
 		c.JSON(http.StatusNotFound, server.H{"error": "no recipes found"})
 	} else {
 		c.JSON(http.StatusOK, recipe)
@@ -158,7 +160,7 @@ func (rAPI *API) getRandomRecipe(c *server.APICallContext) {
 // @Param description query string false "Search for a specific term in a description"
 // @Param ingredient query string false "Search for a specific ingredient"
 // @Produce json
-// @Success 200 {object} RecipeList
+// @Success 200 {object} models.RecipeList
 // @Router /recipes [get]
 func (rAPI *API) getRecipes(c *server.APICallContext) {
 
@@ -173,17 +175,17 @@ func (rAPI *API) getRecipes(c *server.APICallContext) {
 }
 
 // getRecipe documentation
-// @Summary Get a specific Recipe
+// @Summary Get a specific models.Recipe
 // @Description A specific recipe is returned
 // @Tags Recipes
 // @Param servings query int false "Number of Servings"
-// @Param recipe path string true "Recipe ID"
+// @Param recipe path string true "models.Recipe ID"
 // @Produce json
-// @Success 200 {object} Recipe
+// @Success 200 {object} models.Recipe
 // @Router /recipes/r/{recipe} [get]
 func (rAPI *API) getRecipe(c *server.APICallContext) {
 	recipeIDS := c.Param(RECIPE)
-	recipeID := NewRecipeIDFromString(recipeIDS)
+	recipeID := models.NewRecipeIDFromString(recipeIDS)
 
 	query := c.Request.URL.Query()
 	servings := extractServings(query)
@@ -194,7 +196,7 @@ func (rAPI *API) getRecipe(c *server.APICallContext) {
 		recipe.ScaleTo(servings)
 	}
 
-	if recipe.ID == InvalidRecipeID() {
+	if recipe.ID == models.InvalidRecipeID() {
 		c.JSON(http.StatusNotFound, server.H{"error": "recipe not found", "id": recipeIDS})
 	} else {
 		c.JSON(http.StatusOK, recipe)
@@ -202,11 +204,11 @@ func (rAPI *API) getRecipe(c *server.APICallContext) {
 }
 
 // putRecipe example
-// @Summary Update a specific Recipe
+// @Summary Update a specific models.Recipe
 // @Description A specific recipe is updates
 // @Tags Recipes
-// @Param recipe path string true "Recipe ID"
-// @Param message body Recipe true "Recipe"
+// @Param recipe path string true "models.Recipe ID"
+// @Param message body models.Recipe true "models.Recipe"
 // @Accept json
 // @Produce json
 // @Success 200
@@ -214,17 +216,17 @@ func (rAPI *API) getRecipe(c *server.APICallContext) {
 // @Router /recipes/r/{recipe} [put]
 func (rAPI *API) putRecipe(c *server.APICallContext) {
 
-	recipeID := NewRecipeIDFromString(c.Param(RECIPE))
-	log.WithField("id", recipeID).Debug("Put Recipe called")
+	recipeID := models.NewRecipeIDFromString(c.Param(RECIPE))
+	log.WithField("id", recipeID).Debug("Put models.Recipe called")
 
 	// 1. Check if recipe is valid
-	if rAPI.recipes.Get(recipeID).ID == InvalidRecipeID() {
+	if rAPI.recipes.Get(recipeID).ID == models.InvalidRecipeID() {
 		c.JSON(http.StatusNotFound, server.H{"error": "recipe not found", "id": recipeID})
 		return
 	}
 
 	// 2. Bind the request body
-	var recipe Recipe
+	var recipe models.Recipe
 	if err := c.BindJSON(&recipe); err != nil {
 		c.JSON(http.StatusBadRequest, server.H{"error": "invalid json format"})
 		return
@@ -240,22 +242,22 @@ func (rAPI *API) putRecipe(c *server.APICallContext) {
 }
 
 // postRecipes example
-// @Summary Add a new Recipe
+// @Summary Add a new models.Recipe
 // @Description Adds a new recipe, the id will automatically overriden by the backend
 // @Tags Recipes
-// @Param message body Recipe true "Recipe"
+// @Param message body models.Recipe true "models.Recipe"
 // @Accept json
 // @Produce json
 // @Success 201
 // @Router /recipes [post]
 func (rAPI *API) postRecipes(c *server.APICallContext) {
-	var recipe Recipe
+	var recipe models.Recipe
 	if err := c.BindJSON(&recipe); err != nil {
 		c.JSON(http.StatusBadRequest, server.H{"error": "invalid json format"})
 		return
 	}
 
-	recipe.ID = NewRecipeID() // Assign a new ID, ignoring any client-provided ID
+	recipe.ID = models.NewRecipeID() // Assign a new ID, ignoring any client-provided ID
 	if err := rAPI.recipes.Insert(&recipe); err != nil {
 		c.JSON(http.StatusInternalServerError, server.H{"error": "could not persist recipe"})
 	} else {
@@ -264,21 +266,21 @@ func (rAPI *API) postRecipes(c *server.APICallContext) {
 }
 
 // deleteRecipe example
-// @Summary Delete a Recipe
+// @Summary Delete a models.Recipe
 // @Description Deletes a recipe by id
 // @Tags Recipes
-// @Param recipe path string true "Recipe ID"
+// @Param recipe path string true "models.Recipe ID"
 // @Accept json
 // @Produce json
 // @Success 200
 // @Success 204
 // @Router /recipes/r/{recipe} [delete]
 func (rAPI *API) deleteRecipe(c *server.APICallContext) {
-	recipeID := NewRecipeIDFromString(c.Param(RECIPE))
+	recipeID := models.NewRecipeIDFromString(c.Param(RECIPE))
 	if err := rAPI.recipes.Remove(recipeID); err != nil {
 		// Assuming the DB layer returns an error when the item is not found.
 		c.JSON(http.StatusNotFound, server.H{"error": "recipe not found", "id": recipeID})
-		log.WithError(err).Debug("Could not Delete Recipe")
+		log.WithError(err).Debug("Could not Delete models.Recipe")
 	} else {
 		c.Status(http.StatusNoContent) // 204 is more idiomatic for a successful DELETE with no body
 	}
@@ -311,8 +313,8 @@ func extractIngredientSearchArray(query url.Values) []string {
 	return query[INGREDIENT]
 }
 
-func extractSearchFilter(query url.Values) *RecipeSearchFilter {
-	return &RecipeSearchFilter{
+func extractSearchFilter(query url.Values) *models.RecipeSearchFilter {
+	return &models.RecipeSearchFilter{
 		Ingredient:  extractIngredientSearchArray(query),
 		Name:        extractSearchString(query, NAME),
 		Description: extractSearchString(query, DESCRIPTION),

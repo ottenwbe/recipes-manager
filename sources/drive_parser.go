@@ -14,14 +14,15 @@ import (
 	"golang.org/x/net/html"
 
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/recipes"
+
+	"github.com/ottenwbe/recipes-manager/models"
 )
 
 // driveRecipeParser parses an html document to identify recipes
 type driveRecipeParser struct {
 	descriptionBuffer bytes.Buffer
-	recipe            *recipes.Recipe
-	pictures          map[string]*recipes.RecipePicture
+	recipe            *models.Recipe
+	pictures          map[string]*models.RecipePicture
 	lastErr           error
 	parseState        parseState
 }
@@ -37,15 +38,15 @@ const (
 )
 
 // ParseRecipe transforms a html file to the Recipe format
-func ParseRecipe(htmlFile io.Reader, fileID recipes.RecipeID) (*recipes.Recipe, map[string]*recipes.RecipePicture, error) {
+func ParseRecipe(htmlFile io.Reader, fileID models.RecipeID) (*models.Recipe, map[string]*models.RecipePicture, error) {
 	parser := newDriveRecipeParser(fileID)
 	return parser.parseHTML(htmlFile)
 }
 
-func newDriveRecipeParser(fileID recipes.RecipeID) *driveRecipeParser {
+func newDriveRecipeParser(fileID models.RecipeID) *driveRecipeParser {
 	return &driveRecipeParser{
-		recipe:     recipes.NewRecipe(fileID),
-		pictures:   make(map[string]*recipes.RecipePicture),
+		recipe:     models.NewRecipe(fileID),
+		pictures:   make(map[string]*models.RecipePicture),
 		lastErr:    nil,
 		parseState: titleState,
 	}
@@ -55,7 +56,7 @@ func (p *driveRecipeParser) nextState(state parseState) {
 	p.parseState = state
 }
 
-func (p *driveRecipeParser) parseHTML(htmlFile io.Reader) (*recipes.Recipe, map[string]*recipes.RecipePicture, error) {
+func (p *driveRecipeParser) parseHTML(htmlFile io.Reader) (*models.Recipe, map[string]*models.RecipePicture, error) {
 	tokenizer := html.NewTokenizer(htmlFile)
 
 	var (
@@ -119,7 +120,7 @@ func (p *driveRecipeParser) handleStartToken(tagName string, hasMore bool, token
 
 		p.recipe.PictureLink = append(p.recipe.PictureLink, name)
 		log.Debugf("img appending %v", name)
-		p.pictures[name] = &recipes.RecipePicture{ID: p.recipe.ID, Name: name, Picture: img64}
+		p.pictures[name] = &models.RecipePicture{ID: p.recipe.ID, Name: name, Picture: img64}
 	}
 }
 
@@ -184,7 +185,7 @@ func handleIngredient(p *driveRecipeParser, text string) {
 	num := validNumber.FindAllString(text, -1)
 	strs := validStrings.FindAllString(text, -1)
 
-	var amount = recipes.NoAmountIngredient
+	var amount = models.NoAmountIngredient
 	var err error
 	if len(num) > 0 {
 		amount, err = strconv.ParseFloat(num[0], 32)
@@ -205,18 +206,18 @@ func handleIngredient(p *driveRecipeParser, text string) {
 		name = strings.Join(strs[1:], " ")
 	}
 
-	p.recipe.Ingredients = append(p.recipe.Ingredients, recipes.Ingredients{Name: name, Amount: amount, Unit: unit})
+	p.recipe.Ingredients = append(p.recipe.Ingredients, models.Ingredients{Name: name, Amount: amount, Unit: unit})
 }
 
 func (p *driveRecipeParser) finalizeRecipe() {
 	p.recipe.Description = p.descriptionBuffer.String()
 }
 
-func (p *driveRecipeParser) handleParsingError(recipe *recipes.Recipe, err error) (*recipes.Recipe, error) {
+func (p *driveRecipeParser) handleParsingError(recipe *models.Recipe, err error) (*models.Recipe, error) {
 	if err != io.EOF {
-		return recipes.NewInvalidRecipe(), err
+		return models.NewInvalidRecipe(), err
 	} else if p.parseState != descriptionState {
-		return recipes.NewInvalidRecipe(), errors.New("malformed recipe")
+		return models.NewInvalidRecipe(), errors.New("malformed recipe")
 	}
 	return recipe, nil
 }

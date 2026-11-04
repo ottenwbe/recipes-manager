@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/ottenwbe/recipes-manager/internal/db"
+
+	"github.com/ottenwbe/recipes-manager/models"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -28,7 +30,7 @@ const (
 	PICTURES = "pics"
 )
 
-// MongoRecipeDB implements the Recipe interface to read and write Recipes to and from a Mongo DB
+// MongoRecipeDB implements the models.Recipe interface to read and write Recipes to and from a Mongo DB
 type MongoRecipeDB struct {
 	mongoClient *db.MongoClient
 }
@@ -55,11 +57,11 @@ func (m *MongoRecipeDB) Clear() {
 }
 
 // List all recipes from the db
-func (m *MongoRecipeDB) List() (recipes []*Recipe) {
+func (m *MongoRecipeDB) List() (recipes []*models.Recipe) {
 
 	collection := m.getRecipesCollection()
 
-	recipes = make([]*Recipe, 0)
+	recipes = make([]*models.Recipe, 0)
 	c, cancel := createContext()
 	defer cancel()
 	cursor, err := collection.Find(c, bson.M{})
@@ -91,8 +93,8 @@ func (m *MongoRecipeDB) Num() int64 {
 	return num
 }
 
-// RecipeToBsonM converts a RecipeSearchFilter to a search query (bson.M)
-func RecipeToBsonM(searchQuery *RecipeSearchFilter) bson.M {
+// RecipeToBsonM converts a models.RecipeSearchFilter to a search query (bson.M)
+func RecipeToBsonM(searchQuery *models.RecipeSearchFilter) bson.M {
 	query := bson.M{}
 
 	var queryPart = make([]bson.M, 0)
@@ -118,11 +120,11 @@ func RecipeToBsonM(searchQuery *RecipeSearchFilter) bson.M {
 }
 
 // IDs lists all ids of all recipes
-func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) RecipeList {
+func (m *MongoRecipeDB) IDs(searchQuery *models.RecipeSearchFilter) models.RecipeList {
 
 	collection := m.getRecipesCollection()
 
-	recipes := make([]*Recipe, 0)
+	recipes := make([]*models.Recipe, 0)
 	result := make([]string, 0)
 
 	dbSearch := RecipeToBsonM(searchQuery)
@@ -156,15 +158,15 @@ func (m *MongoRecipeDB) IDs(searchQuery *RecipeSearchFilter) RecipeList {
 		result = append(result, recipe.ID.String())
 	}
 
-	return RecipeList{Recipes: result}
+	return models.RecipeList{Recipes: result}
 }
 
 // Get a recipe by ID
-func (m *MongoRecipeDB) Get(id RecipeID) *Recipe {
+func (m *MongoRecipeDB) Get(id models.RecipeID) *models.Recipe {
 
 	collection := m.getRecipesCollection()
 
-	recipe := NewInvalidRecipe()
+	recipe := models.NewInvalidRecipe()
 	c, cancel := createContext()
 	defer cancel()
 	result := collection.FindOne(c, bson.M{"id": id})
@@ -178,12 +180,12 @@ func (m *MongoRecipeDB) Get(id RecipeID) *Recipe {
 }
 
 // Pictures returns all pictures for a given recipe
-func (m *MongoRecipeDB) Pictures(id RecipeID) map[string]*RecipePicture {
+func (m *MongoRecipeDB) Pictures(id models.RecipeID) map[string]*models.RecipePicture {
 
 	collection := m.getPictureCollection()
 
-	recipePictures := make([]*RecipePicture, 0)
-	result := make(map[string]*RecipePicture, 0)
+	recipePictures := make([]*models.RecipePicture, 0)
+	result := make(map[string]*models.RecipePicture, 0)
 
 	c, cancel := createContext()
 	defer cancel()
@@ -208,7 +210,7 @@ func (m *MongoRecipeDB) Pictures(id RecipeID) map[string]*RecipePicture {
 }
 
 // Remove removes a recipe by id
-func (m *MongoRecipeDB) Remove(id RecipeID) error {
+func (m *MongoRecipeDB) Remove(id models.RecipeID) error {
 	c := m.getRecipesCollection()
 
 	ctx, cancel := createContext()
@@ -219,11 +221,11 @@ func (m *MongoRecipeDB) Remove(id RecipeID) error {
 }
 
 // Picture returns a specific picture with a specific name for a specific recipe
-func (m *MongoRecipeDB) Picture(id RecipeID, name string) *RecipePicture {
+func (m *MongoRecipeDB) Picture(id models.RecipeID, name string) *models.RecipePicture {
 
 	collection := m.getPictureCollection()
 
-	recipePicture := NewInvalidRecipePicture()
+	recipePicture := models.NewInvalidRecipePicture()
 	c, cancel := createContext()
 	defer cancel()
 	dbResult := collection.FindOne(c, bson.M{"id": id, "name": name})
@@ -237,12 +239,12 @@ func (m *MongoRecipeDB) Picture(id RecipeID, name string) *RecipePicture {
 }
 
 // AddPicture to the database
-func (m *MongoRecipeDB) AddPicture(pic *RecipePicture) error {
+func (m *MongoRecipeDB) AddPicture(pic *models.RecipePicture) error {
 
 	collection := m.getPictureCollection()
 
 	recipe := m.Get(pic.ID)
-	if recipe.ID == InvalidRecipeID() {
+	if recipe.ID == models.InvalidRecipeID() {
 		return errors.New("could not find recipe")
 	}
 
@@ -266,7 +268,7 @@ func (m *MongoRecipeDB) AddPicture(pic *RecipePicture) error {
 }
 
 // Random picture will be returned
-func (m *MongoRecipeDB) Random() *Recipe {
+func (m *MongoRecipeDB) Random() *models.Recipe {
 
 	collection := m.getRecipesCollection()
 
@@ -275,22 +277,22 @@ func (m *MongoRecipeDB) Random() *Recipe {
 	cursor, err := collection.Aggregate(c, []bson.M{{"$sample": bson.M{"size": 1}}})
 	if err != nil {
 		log.WithError(err).Info("Error while finding recipe in MongoDB")
-		return NewInvalidRecipe()
+		return models.NewInvalidRecipe()
 	}
 	defer func() { _ = cursor.Close(c) }()
 
-	recipes := make([]*Recipe, 0)
+	recipes := make([]*models.Recipe, 0)
 	err = cursor.All(c, &recipes)
 	if err != nil || len(recipes) == 0 {
 		log.WithError(err).Info("Error while converting recipe from MongoDB")
-		return NewInvalidRecipe()
+		return models.NewInvalidRecipe()
 	}
 
 	return recipes[0]
 }
 
 // Update a recipe with a given recipe id
-func (m *MongoRecipeDB) Update(id RecipeID, recipe *Recipe) error {
+func (m *MongoRecipeDB) Update(id models.RecipeID, recipe *models.Recipe) error {
 
 	collection := m.getRecipesCollection()
 
@@ -306,7 +308,7 @@ func (m *MongoRecipeDB) Update(id RecipeID, recipe *Recipe) error {
 }
 
 // Insert a recipe into the database
-func (m *MongoRecipeDB) Insert(recipe *Recipe) error {
+func (m *MongoRecipeDB) Insert(recipe *models.Recipe) error {
 
 	collection := m.getRecipesCollection()
 
@@ -338,11 +340,11 @@ func (m *MongoRecipeDB) RemoveByName(name string) error {
 }
 
 // GetByName a recipe from the database
-func (m *MongoRecipeDB) GetByName(name string) (*Recipe, error) {
+func (m *MongoRecipeDB) GetByName(name string) (*models.Recipe, error) {
 
 	collection := m.getRecipesCollection()
 
-	recipe := *NewInvalidRecipe()
+	recipe := *models.NewInvalidRecipe()
 	c, cancel := createContext()
 	defer cancel()
 	cur := collection.FindOne(c, bson.M{"name": name})

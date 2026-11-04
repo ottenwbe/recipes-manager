@@ -1,8 +1,6 @@
-/*
- * MIT License - see LICENSE file for details
- */
+// SPDX-License-Identifier: MIT
 
-package recipes
+package models
 
 import (
 	"encoding/json"
@@ -17,23 +15,6 @@ const (
 	// NotSupportedError informs clients about operations that are not supported by a Recipes provider
 	NotSupportedError = "recipe operation not supported"
 )
-
-// Recipes interface is an abstraction for the provider of a collection of recipes, i.e., a data-base or a cache
-type Recipes interface {
-	List() []*Recipe
-	IDs(filterQuery *RecipeSearchFilter) RecipeList
-	Num() int64
-	Get(id RecipeID) *Recipe
-	GetByName(name string) (*Recipe, error)
-	Picture(id RecipeID, name string) *RecipePicture
-	Pictures(id RecipeID) map[string]*RecipePicture
-	Random() *Recipe
-	Insert(recipe *Recipe) error
-	Update(id RecipeID, recipe *Recipe) error
-	AddPicture(pic *RecipePicture) error
-	Remove(id RecipeID) error
-	RemoveByName(name string) error
-}
 
 // Ingredients of a recipe
 type Ingredients struct {

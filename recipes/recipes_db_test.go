@@ -7,31 +7,33 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/internal/db"
+
+	"github.com/ottenwbe/recipes-manager/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var _ = Describe("recipes db", func() {
 
 	Context("helper", func() {
-		It("can transform Recipe Query to BSON", func() {
+		It("can transform models.Recipe Query to BSON", func() {
 			expectedResult := bson.M{}
-			result := RecipeToBsonM(&RecipeSearchFilter{})
+			result := RecipeToBsonM(&models.RecipeSearchFilter{})
 
 			Expect(expectedResult).To(Equal(result))
 		})
 
-		It("can transform Recipe Query with 1 search parameter to BSON", func() {
+		It("can transform models.Recipe Query with 1 search parameter to BSON", func() {
 			expectedResult := bson.M{"name": bson.M{"$regex": "hi"}}
-			result := RecipeToBsonM(&RecipeSearchFilter{Name: "hi"})
+			result := RecipeToBsonM(&models.RecipeSearchFilter{Name: "hi"})
 
 			Expect(expectedResult).To(Equal(result))
 		})
 
-		It("can transform Recipe Query with 2 search parameter to BSON", func() {
+		It("can transform models.Recipe Query with 2 search parameter to BSON", func() {
 			expectedResult := bson.M{"$or": []bson.M{
 				{"name": bson.M{"$regex": "hi"}},
 				{"description": bson.M{"$regex": "there"}}}}
-			result := RecipeToBsonM(&RecipeSearchFilter{Name: "hi", Description: "there"})
+			result := RecipeToBsonM(&models.RecipeSearchFilter{Name: "hi", Description: "there"})
 
 			Expect(expectedResult).To(Equal(result))
 		})
@@ -80,15 +82,15 @@ var _ = Describe("recipes db", func() {
 			err         error
 			coreDB      db.DB
 			recipeDB    RecipeDB
-			testRecipe1 *Recipe
-			testRecipe2 *Recipe
+			testRecipe1 *models.Recipe
+			testRecipe2 *models.Recipe
 		)
 
 		prepareTestRecipes := func() {
-			testRecipe1 = NewRecipe(NewRecipeID())
+			testRecipe1 = models.NewRecipe(models.NewRecipeID())
 			err := recipeDB.Insert(testRecipe1)
 			Expect(err).ToNot(HaveOccurred())
-			testRecipe2 = NewRecipe(NewRecipeID())
+			testRecipe2 = models.NewRecipe(models.NewRecipeID())
 			err = recipeDB.Insert(testRecipe2)
 			Expect(err).ToNot(HaveOccurred())
 		}
@@ -115,7 +117,7 @@ var _ = Describe("recipes db", func() {
 		})
 
 		It("can insert a Picture and then read it", func() {
-			expectedResult := &RecipePicture{
+			expectedResult := &models.RecipePicture{
 				ID:      testRecipe1.ID,
 				Name:    "testRecipePic",
 				Picture: "thisisabas64picture",
@@ -128,7 +130,7 @@ var _ = Describe("recipes db", func() {
 		})
 
 		It("updates the recipe's picturelink", func() {
-			expectedResult := &RecipePicture{
+			expectedResult := &models.RecipePicture{
 				ID:      testRecipe1.ID,
 				Name:    "testRecipePic",
 				Picture: "thisisabas64picture",
@@ -140,13 +142,13 @@ var _ = Describe("recipes db", func() {
 		})
 
 		It("can insert multiple pictures and then read them", func() {
-			add := &RecipePicture{
+			add := &models.RecipePicture{
 				ID:      testRecipe1.ID,
 				Name:    "testRecipePic",
 				Picture: "thisisabas64picture",
 			}
 			err = recipeDB.AddPicture(add)
-			expectedResult := &RecipePicture{
+			expectedResult := &models.RecipePicture{
 				ID:      testRecipe1.ID,
 				Name:    "testRecipePic2",
 				Picture: "thisisabas64picture2",
@@ -159,13 +161,13 @@ var _ = Describe("recipes db", func() {
 		})
 
 		It("can find a picture based on id and name although the name is given multiple times", func() {
-			expectedResult1 := &RecipePicture{
+			expectedResult1 := &models.RecipePicture{
 				ID:      testRecipe1.ID,
 				Name:    "testRecipePic",
 				Picture: "thisisabas64picture",
 			}
 			err = recipeDB.AddPicture(expectedResult1)
-			expectedResult2 := &RecipePicture{
+			expectedResult2 := &models.RecipePicture{
 				ID:      testRecipe2.ID,
 				Name:    "testRecipePic",
 				Picture: "thisisabas64picture",
@@ -207,11 +209,11 @@ var _ = Describe("recipes db", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("can insert a Recipe and then read it", func() {
-			expectedResult := &Recipe{
-				ID:          NewRecipeID(),
+		It("can insert a models.Recipe and then read it", func() {
+			expectedResult := &models.Recipe{
+				ID:          models.NewRecipeID(),
 				Name:        "testRecipe",
-				Ingredients: []Ingredients{},
+				Ingredients: []models.Ingredients{},
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
@@ -223,11 +225,11 @@ var _ = Describe("recipes db", func() {
 			Expect(recipe).To(Equal(expectedResult))
 		})
 
-		It("can remove a Recipe by id", func() {
-			testInput := &Recipe{
-				ID:          NewRecipeID(),
+		It("can remove a models.Recipe by id", func() {
+			testInput := &models.Recipe{
+				ID:          models.NewRecipeID(),
 				Name:        "removeIDTestRecipe",
-				Ingredients: []Ingredients{},
+				Ingredients: []models.Ingredients{},
 				Description: "describes the remove test recipe",
 				PictureLink: []string{},
 			}
@@ -242,11 +244,11 @@ var _ = Describe("recipes db", func() {
 			Expect(recipe).ToNot(Equal(testInput))
 		})
 
-		It("can remove a Recipe by name", func() {
-			testInput := &Recipe{
-				ID:          NewRecipeID(),
+		It("can remove a models.Recipe by name", func() {
+			testInput := &models.Recipe{
+				ID:          models.NewRecipeID(),
 				Name:        "removeTestRecipe",
-				Ingredients: []Ingredients{},
+				Ingredients: []models.Ingredients{},
 				Description: "describes the remove test recipe",
 				PictureLink: []string{},
 			}
@@ -262,26 +264,26 @@ var _ = Describe("recipes db", func() {
 		})
 
 		It("can list all Recipes and filter them by name and description", func() {
-			expectedResult := &Recipe{
-				ID:          NewRecipeID(),
+			expectedResult := &models.Recipe{
+				ID:          models.NewRecipeID(),
 				Name:        "testRecipe",
-				Ingredients: []Ingredients{},
+				Ingredients: []models.Ingredients{},
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
 			recipeDB.Insert(expectedResult)
 			defer recipeDB.RemoveByName(expectedResult.Name)
-			expectedResult2 := &Recipe{
-				ID:          NewRecipeID(),
+			expectedResult2 := &models.Recipe{
+				ID:          models.NewRecipeID(),
 				Name:        "something",
-				Ingredients: []Ingredients{},
+				Ingredients: []models.Ingredients{},
 				Description: "to find",
 				PictureLink: []string{},
 			}
 			recipeDB.Insert(expectedResult2)
 			defer recipeDB.RemoveByName(expectedResult2.Name)
 
-			recipes := recipeDB.IDs(&RecipeSearchFilter{Name: "something", Description: "describes"})
+			recipes := recipeDB.IDs(&models.RecipeSearchFilter{Name: "something", Description: "describes"})
 
 			Expect(err).To(BeNil())
 			Expect(recipes.Recipes).To(ContainElement(expectedResult.ID.String()))
@@ -289,53 +291,53 @@ var _ = Describe("recipes db", func() {
 		})
 
 		It("can list all Recipes and filter them by description", func() {
-			expectedResult := &Recipe{
-				ID:          NewRecipeID(),
+			expectedResult := &models.Recipe{
+				ID:          models.NewRecipeID(),
 				Name:        "testRecipe",
-				Ingredients: []Ingredients{},
+				Ingredients: []models.Ingredients{},
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
 			recipeDB.Insert(expectedResult)
 			defer recipeDB.RemoveByName(expectedResult.Name)
-			unExpectedResult := &Recipe{
-				ID:          NewRecipeID(),
+			unExpectedResult := &models.Recipe{
+				ID:          models.NewRecipeID(),
 				Name:        "noValidTestRecipe",
-				Ingredients: []Ingredients{},
+				Ingredients: []models.Ingredients{},
 				Description: "none",
 				PictureLink: []string{},
 			}
 			recipeDB.Insert(unExpectedResult)
 			defer recipeDB.RemoveByName(unExpectedResult.Name)
 
-			recipes := recipeDB.IDs(&RecipeSearchFilter{Description: "describes"})
+			recipes := recipeDB.IDs(&models.RecipeSearchFilter{Description: "describes"})
 
 			Expect(err).To(BeNil())
 			Expect(recipes.Recipes).To(ContainElement(expectedResult.ID.String()))
 		})
 
 		It("can list all Recipes and filter them by name", func() {
-			expectedResult := &Recipe{
-				ID:          NewRecipeID(),
+			expectedResult := &models.Recipe{
+				ID:          models.NewRecipeID(),
 				Name:        "testRecipe",
-				Ingredients: []Ingredients{},
+				Ingredients: []models.Ingredients{},
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
 			recipeDB.Insert(expectedResult)
 			defer recipeDB.RemoveByName(expectedResult.Name)
 
-			recipes := recipeDB.IDs(&RecipeSearchFilter{Name: "test"})
+			recipes := recipeDB.IDs(&models.RecipeSearchFilter{Name: "test"})
 
 			Expect(err).To(BeNil())
 			Expect(recipes.Recipes).To(ContainElement(expectedResult.ID.String()))
 		})
 
 		It("can list all Recipes", func() {
-			expectedResult := &Recipe{
-				ID:          NewRecipeID(),
+			expectedResult := &models.Recipe{
+				ID:          models.NewRecipeID(),
 				Name:        "testRecipe",
-				Ingredients: []Ingredients{},
+				Ingredients: []models.Ingredients{},
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
@@ -349,10 +351,10 @@ var _ = Describe("recipes db", func() {
 		})
 
 		It("can count up all elements", func() {
-			expectedResult := &Recipe{
-				ID:          NewRecipeID(),
+			expectedResult := &models.Recipe{
+				ID:          models.NewRecipeID(),
 				Name:        "testRecipe",
-				Ingredients: []Ingredients{},
+				Ingredients: []models.Ingredients{},
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
@@ -364,11 +366,11 @@ var _ = Describe("recipes db", func() {
 			Expect(n).To(BeNumerically("==", 1))
 		})
 
-		It("can get a Recipe at random", func() {
-			expectedResult := &Recipe{
-				ID:          NewRecipeID(),
+		It("can get a models.Recipe at random", func() {
+			expectedResult := &models.Recipe{
+				ID:          models.NewRecipeID(),
 				Name:        "testRecipe",
-				Ingredients: []Ingredients{},
+				Ingredients: []models.Ingredients{},
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
@@ -382,17 +384,17 @@ var _ = Describe("recipes db", func() {
 		})
 
 		It("can aggregate the names of all elements", func() {
-			expectedResult := &Recipe{
-				ID:          NewRecipeID(),
+			expectedResult := &models.Recipe{
+				ID:          models.NewRecipeID(),
 				Name:        "testRecipe",
-				Ingredients: []Ingredients{},
+				Ingredients: []models.Ingredients{},
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
 			recipeDB.Insert(expectedResult)
 			defer recipeDB.RemoveByName(expectedResult.Name)
 
-			names := recipeDB.IDs(&RecipeSearchFilter{})
+			names := recipeDB.IDs(&models.RecipeSearchFilter{})
 
 			Expect(names.Recipes).To(ContainElement(expectedResult.ID.String()))
 		})

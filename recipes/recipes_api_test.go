@@ -12,7 +12,9 @@ import (
 
 	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/internal/db"
+
 	"github.com/ottenwbe/recipes-manager/internal/server"
+	"github.com/ottenwbe/recipes-manager/models"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -74,7 +76,7 @@ var _ = Describe("recipesAPI", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
 
-			var recipeIDs RecipeList
+			var recipeIDs models.RecipeList
 			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
 			Expect(len(recipeIDs.Recipes)).To(Equal(1))
 			Expect(expectedID.String()).To(Equal(recipeIDs.Recipes[0]))
@@ -93,7 +95,7 @@ var _ = Describe("recipesAPI", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
 
-			var recipeIDs RecipeList
+			var recipeIDs models.RecipeList
 			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
 			Expect(len(recipeIDs.Recipes)).To(Equal(1))
 			Expect(expectedID.String()).To(Equal(recipeIDs.Recipes[0]))
@@ -102,11 +104,11 @@ var _ = Describe("recipesAPI", func() {
 		It("should be able to filter by name and description", func() {
 
 			createRandomRecipes(5, recipes) //add noise
-			expectedID1 := createAndPersistNewRecipe("search", "none", Ingredients{Name: "hi"}, recipes)
+			expectedID1 := createAndPersistNewRecipe("search", "none", models.Ingredients{Name: "hi"}, recipes)
 			defer func() { // delete recently created recipe
 				recipes.Remove(expectedID1)
 			}()
-			expectedID2 := createAndPersistNewRecipe("none", "find", Ingredients{Name: "hi"}, recipes)
+			expectedID2 := createAndPersistNewRecipe("none", "find", models.Ingredients{Name: "hi"}, recipes)
 			defer func() { // delete recently created recipe
 				recipes.Remove(expectedID2)
 			}()
@@ -116,7 +118,7 @@ var _ = Describe("recipesAPI", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
 
-			var recipeIDs RecipeList
+			var recipeIDs models.RecipeList
 			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
 			Expect(len(recipeIDs.Recipes)).To(Equal(2))
 			Expect(recipeIDs.Recipes).To(ContainElement(expectedID1.String()))
@@ -126,7 +128,7 @@ var _ = Describe("recipesAPI", func() {
 		It("should not return elements that do not match the search query", func() {
 
 			createRandomRecipes(5, recipes) //add noise
-			expectedID := createAndPersistNewRecipe("search", "test", Ingredients{Name: "hi"}, recipes)
+			expectedID := createAndPersistNewRecipe("search", "test", models.Ingredients{Name: "hi"}, recipes)
 			defer func() { // delete recently created recipe
 				recipes.Remove(expectedID)
 			}()
@@ -151,7 +153,7 @@ var _ = Describe("recipesAPI", func() {
 
 			Expect(resp.StatusCode).To(Equal(200))
 
-			var recipe Recipe
+			var recipe models.Recipe
 			err = json.NewDecoder(resp.Body).Decode(&recipe)
 			Expect(recipe).To(Equal(*expectedRecipe[0]))
 		})
@@ -164,7 +166,7 @@ var _ = Describe("recipesAPI", func() {
 
 			Expect(resp.StatusCode).To(Equal(200))
 
-			var recipe Recipe
+			var recipe models.Recipe
 			err = json.NewDecoder(resp.Body).Decode(&recipe)
 			Expect(len(recipe.Ingredients)).ToNot(Equal(0))
 			Expect(recipe.Ingredients[0].Amount).To(Equal(200.0))
@@ -188,7 +190,7 @@ var _ = Describe("recipesAPI", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
 
-			var recipe Recipe
+			var recipe models.Recipe
 			err = json.NewDecoder(resp.Body).Decode(&recipe)
 
 			Expect(err).ToNot(HaveOccurred())
@@ -205,7 +207,7 @@ var _ = Describe("recipesAPI", func() {
 
 			Expect(resp.StatusCode).To(Equal(200))
 
-			var recipe Recipe
+			var recipe models.Recipe
 			err = json.NewDecoder(resp.Body).Decode(&recipe)
 			Expect(len(recipe.Ingredients)).ToNot(Equal(0))
 			Expect(recipe.Ingredients[0].Amount).To(Equal(200.0))
@@ -258,7 +260,7 @@ var _ = Describe("recipesAPI", func() {
 			const POSTTEST = "PostTest"
 			const POSTDESCRIPTION = "Test \n 123"
 
-			recipe := Recipe{Servings: 2, Name: POSTTEST, Description: POSTDESCRIPTION}
+			recipe := models.Recipe{Servings: 2, Name: POSTTEST, Description: POSTDESCRIPTION}
 			recipeJSON, _ := json.Marshal(recipe)
 
 			resp, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(recipeJSON))
@@ -293,7 +295,7 @@ var _ = Describe("recipesAPI", func() {
 			const POSTTEST = "PostTest"
 			const POSTDESCRIPTION = "Test \n 123"
 
-			recipe := Recipe{Servings: 2, Name: POSTTEST, Description: POSTDESCRIPTION}
+			recipe := models.Recipe{Servings: 2, Name: POSTTEST, Description: POSTDESCRIPTION}
 			recipeJSON, _ := json.Marshal(recipe)
 
 			_, err := http.Post("http://localhost:8080/api/v1/recipes", "application/json", bytes.NewBuffer(recipeJSON))
@@ -323,12 +325,12 @@ var _ = Describe("recipesAPI", func() {
 
 })
 
-func createAndPersistNewRecipe(name string, description string, ingredient Ingredients, recipes RecipeDB) RecipeID {
-	id := NewRecipeID()
+func createAndPersistNewRecipe(name string, description string, ingredient models.Ingredients, recipes RecipeDB) models.RecipeID {
+	id := models.NewRecipeID()
 
-	expectedRecipe := NewRecipe(id)
+	expectedRecipe := models.NewRecipe(id)
 	expectedRecipe.Name = name
-	expectedRecipe.Ingredients = make([]Ingredients, 0)
+	expectedRecipe.Ingredients = make([]models.Ingredients, 0)
 	expectedRecipe.Servings = 1
 	expectedRecipe.Description = description
 	expectedRecipe.Ingredients = append(expectedRecipe.Ingredients, ingredient)
@@ -337,21 +339,21 @@ func createAndPersistNewRecipe(name string, description string, ingredient Ingre
 	return id
 }
 
-func createAndPersistDefaultRecipe(recipes RecipeDB) RecipeID {
-	ingredient := Ingredients{Amount: 100,
+func createAndPersistDefaultRecipe(recipes RecipeDB) models.RecipeID {
+	ingredient := models.Ingredients{Amount: 100,
 		Unit: "g",
 		Name: "Test"}
 	return createAndPersistNewRecipe("retrieve recipe", "details", ingredient, recipes)
 }
 
-func createRandomRecipes(num int, recipes RecipeDB) ([]*Recipe, []RecipeID) {
+func createRandomRecipes(num int, recipes RecipeDB) ([]*models.Recipe, []models.RecipeID) {
 
-	randomRecipes := make([]*Recipe, num)
-	randomIds := make([]RecipeID, num)
+	randomRecipes := make([]*models.Recipe, num)
+	randomIds := make([]models.RecipeID, num)
 
 	for id := 0; id < num; id++ {
-		randomIds[id] = NewRecipeID()
-		randomRecipes[id] = NewRecipe(randomIds[id])
+		randomIds[id] = models.NewRecipeID()
+		randomRecipes[id] = models.NewRecipe(randomIds[id])
 	}
 
 	for _, id := range randomRecipes {

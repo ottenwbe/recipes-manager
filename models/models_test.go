@@ -1,15 +1,13 @@
-/*
- * MIT License - see LICENSE file for details
- */
+// SPDX-License-Identifier: MIT
 
-package recipes
+package models
 
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("recipes", func() {
+var _ = Describe("models", func() {
 
 	Context("id", func() {
 		It("should be able to produce a consistent invalid id", func() {
