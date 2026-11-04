@@ -2,7 +2,7 @@
 
 Go backend for Recipes Manager: Gin REST API, MongoDB, Viper config, Keycloak auth, Google Drive sources, Swagger.
 
-Module: `github.com/ottenwbe/recipes-manager` (Go 1.26). Packages live in `account/`, `config/`, `core/`, `docs/`, `recipes/`, `sources/`; entrypoint is `main.go` at the root.
+Module: `github.com/ottenwbe/recipes-manager` (Go 1.26). Packages live in `account/`, `config/`, `db/`, `docs/`, `logging/`, `recipes/`, `server/`, `sources/`, `version/`; entrypoint is `main.go` at the root. The former monolithic `core/` package has been split into these focused packages.
 
 ## Go standards
 

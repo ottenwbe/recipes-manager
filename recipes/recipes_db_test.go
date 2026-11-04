@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/db"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -39,26 +39,26 @@ var _ = Describe("recipes db", func() {
 
 	Context("connection", func() {
 		var (
-			err    error
-			coreDB core.DB
-			db     RecipeDB
+			err      error
+			coreDB   db.DB
+			recipeDB RecipeDB
 		)
 
 		BeforeEach(func() {
-			addr := config.Config.GetString(core.RecipeDBHostCfg)
-			coreDB, err = core.NewDatabaseClient(addr)
+			addr := config.Config.GetString(db.RecipeDBHostCfg)
+			coreDB, err = db.NewDatabaseClient(addr)
 			Expect(err).ToNot(HaveOccurred())
-			db, err = NewRecipeDB(coreDB)
+			recipeDB, err = NewRecipeDB(coreDB)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		AfterEach(func() {
 			// clean db for testing
 			c, cancel := createContext()
-			db.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("pics").Drop(c)
+			recipeDB.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("pics").Drop(c)
 			cancel()
 			c, cancel = createContext()
-			db.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("recipes").Drop(c)
+			recipeDB.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("recipes").Drop(c)
 			cancel()
 			err = coreDB.Close()
 			Expect(err).ToNot(HaveOccurred())
@@ -69,7 +69,7 @@ var _ = Describe("recipes db", func() {
 		})
 
 		It("can ping the db", func() {
-			err = db.Ping()
+			err = recipeDB.Ping()
 			Expect(err).To(BeNil())
 		})
 
@@ -78,26 +78,26 @@ var _ = Describe("recipes db", func() {
 	Context("picture collection", func() {
 		var (
 			err         error
-			coreDB      core.DB
-			db          RecipeDB
+			coreDB      db.DB
+			recipeDB    RecipeDB
 			testRecipe1 *Recipe
 			testRecipe2 *Recipe
 		)
 
 		prepareTestRecipes := func() {
 			testRecipe1 = NewRecipe(NewRecipeID())
-			err := db.Insert(testRecipe1)
+			err := recipeDB.Insert(testRecipe1)
 			Expect(err).ToNot(HaveOccurred())
 			testRecipe2 = NewRecipe(NewRecipeID())
-			err = db.Insert(testRecipe2)
+			err = recipeDB.Insert(testRecipe2)
 			Expect(err).ToNot(HaveOccurred())
 		}
 
 		BeforeEach(func() {
-			addr := config.Config.GetString(core.RecipeDBHostCfg)
-			coreDB, err = core.NewDatabaseClient(addr)
+			addr := config.Config.GetString(db.RecipeDBHostCfg)
+			coreDB, err = db.NewDatabaseClient(addr)
 			Expect(err).ToNot(HaveOccurred())
-			db, err = NewRecipeDB(coreDB)
+			recipeDB, err = NewRecipeDB(coreDB)
 			Expect(err).ToNot(HaveOccurred())
 			prepareTestRecipes()
 		})
@@ -105,10 +105,10 @@ var _ = Describe("recipes db", func() {
 		AfterEach(func() {
 			// clean db for testing
 			c, cancel := createContext()
-			db.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("pics").Drop(c)
+			recipeDB.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("pics").Drop(c)
 			cancel()
 			c, cancel = createContext()
-			db.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("recipes").Drop(c)
+			recipeDB.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("recipes").Drop(c)
 			cancel()
 			err = coreDB.Close()
 			Expect(err).ToNot(HaveOccurred())
@@ -120,9 +120,9 @@ var _ = Describe("recipes db", func() {
 				Name:    "testRecipePic",
 				Picture: "thisisabas64picture",
 			}
-			err = db.AddPicture(expectedResult)
+			err = recipeDB.AddPicture(expectedResult)
 			Expect(err).To(BeNil())
-			pic := db.Picture(expectedResult.ID, expectedResult.Name)
+			pic := recipeDB.Picture(expectedResult.ID, expectedResult.Name)
 			Expect(pic).NotTo(BeNil())
 			Expect(pic).To(Equal(expectedResult))
 		})
@@ -133,9 +133,9 @@ var _ = Describe("recipes db", func() {
 				Name:    "testRecipePic",
 				Picture: "thisisabas64picture",
 			}
-			err = db.AddPicture(expectedResult)
+			err = recipeDB.AddPicture(expectedResult)
 			Expect(err).To(BeNil())
-			recipe := db.Get(testRecipe1.ID)
+			recipe := recipeDB.Get(testRecipe1.ID)
 			Expect(recipe.PictureLink).To(ContainElement(expectedResult.Name))
 		})
 
@@ -145,15 +145,15 @@ var _ = Describe("recipes db", func() {
 				Name:    "testRecipePic",
 				Picture: "thisisabas64picture",
 			}
-			err = db.AddPicture(add)
+			err = recipeDB.AddPicture(add)
 			expectedResult := &RecipePicture{
 				ID:      testRecipe1.ID,
 				Name:    "testRecipePic2",
 				Picture: "thisisabas64picture2",
 			}
-			err = db.AddPicture(expectedResult)
+			err = recipeDB.AddPicture(expectedResult)
 			Expect(err).To(BeNil())
-			pic := db.Picture(expectedResult.ID, expectedResult.Name)
+			pic := recipeDB.Picture(expectedResult.ID, expectedResult.Name)
 			Expect(pic).To(Equal(expectedResult))
 			Expect(pic).NotTo(Equal(add))
 		})
@@ -164,15 +164,15 @@ var _ = Describe("recipes db", func() {
 				Name:    "testRecipePic",
 				Picture: "thisisabas64picture",
 			}
-			err = db.AddPicture(expectedResult1)
+			err = recipeDB.AddPicture(expectedResult1)
 			expectedResult2 := &RecipePicture{
 				ID:      testRecipe2.ID,
 				Name:    "testRecipePic",
 				Picture: "thisisabas64picture",
 			}
-			err = db.AddPicture(expectedResult2)
+			err = recipeDB.AddPicture(expectedResult2)
 			Expect(err).To(BeNil())
-			pics := db.Pictures(expectedResult1.ID)
+			pics := recipeDB.Pictures(expectedResult1.ID)
 			Expect(pics).To(HaveLen(1))
 		})
 
@@ -181,26 +181,26 @@ var _ = Describe("recipes db", func() {
 	Context("recipes collection", func() {
 
 		var (
-			err    error
-			coreDB core.DB
-			db     RecipeDB
+			err      error
+			coreDB   db.DB
+			recipeDB RecipeDB
 		)
 
 		BeforeEach(func() {
-			addr := config.Config.GetString(core.RecipeDBHostCfg)
-			coreDB, err = core.NewDatabaseClient(addr)
+			addr := config.Config.GetString(db.RecipeDBHostCfg)
+			coreDB, err = db.NewDatabaseClient(addr)
 			Expect(err).ToNot(HaveOccurred())
-			db, err = NewRecipeDB(coreDB)
+			recipeDB, err = NewRecipeDB(coreDB)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		AfterEach(func() {
 			// clean db for testing
 			c, cancel := createContext()
-			db.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("pics").Drop(c)
+			recipeDB.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("pics").Drop(c)
 			cancel()
 			c, cancel = createContext()
-			db.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("recipes").Drop(c)
+			recipeDB.(*MongoRecipeDB).MongoClient().Client.Database("recipes-manager").Collection("recipes").Drop(c)
 			cancel()
 
 			err = coreDB.Close()
@@ -215,10 +215,10 @@ var _ = Describe("recipes db", func() {
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
-			err = db.Insert(expectedResult)
+			err = recipeDB.Insert(expectedResult)
 			Expect(err).To(BeNil())
-			recipe, err := db.GetByName(expectedResult.Name)
-			defer db.RemoveByName(expectedResult.Name)
+			recipe, err := recipeDB.GetByName(expectedResult.Name)
+			defer recipeDB.RemoveByName(expectedResult.Name)
 			Expect(err).To(BeNil())
 			Expect(recipe).To(Equal(expectedResult))
 		})
@@ -231,13 +231,13 @@ var _ = Describe("recipes db", func() {
 				Description: "describes the remove test recipe",
 				PictureLink: []string{},
 			}
-			err = db.Insert(testInput)
+			err = recipeDB.Insert(testInput)
 			Expect(err).To(BeNil())
-			err := db.Remove(testInput.ID)
+			err := recipeDB.Remove(testInput.ID)
 			Expect(err).To(BeNil())
 
 			// Try to find it after it has been removed ...
-			recipe, err := db.GetByName(testInput.Name)
+			recipe, err := recipeDB.GetByName(testInput.Name)
 			Expect(err).ToNot(BeNil())
 			Expect(recipe).ToNot(Equal(testInput))
 		})
@@ -250,13 +250,13 @@ var _ = Describe("recipes db", func() {
 				Description: "describes the remove test recipe",
 				PictureLink: []string{},
 			}
-			err = db.Insert(testInput)
+			err = recipeDB.Insert(testInput)
 			Expect(err).To(BeNil())
-			err := db.RemoveByName(testInput.Name)
+			err := recipeDB.RemoveByName(testInput.Name)
 			Expect(err).To(BeNil())
 
 			// Try to find it after it has been removed ...
-			recipe, err := db.GetByName(testInput.Name)
+			recipe, err := recipeDB.GetByName(testInput.Name)
 			Expect(err).ToNot(BeNil())
 			Expect(recipe).ToNot(Equal(testInput))
 		})
@@ -269,8 +269,8 @@ var _ = Describe("recipes db", func() {
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
-			db.Insert(expectedResult)
-			defer db.RemoveByName(expectedResult.Name)
+			recipeDB.Insert(expectedResult)
+			defer recipeDB.RemoveByName(expectedResult.Name)
 			expectedResult2 := &Recipe{
 				ID:          NewRecipeID(),
 				Name:        "something",
@@ -278,10 +278,10 @@ var _ = Describe("recipes db", func() {
 				Description: "to find",
 				PictureLink: []string{},
 			}
-			db.Insert(expectedResult2)
-			defer db.RemoveByName(expectedResult2.Name)
+			recipeDB.Insert(expectedResult2)
+			defer recipeDB.RemoveByName(expectedResult2.Name)
 
-			recipes := db.IDs(&RecipeSearchFilter{Name: "something", Description: "describes"})
+			recipes := recipeDB.IDs(&RecipeSearchFilter{Name: "something", Description: "describes"})
 
 			Expect(err).To(BeNil())
 			Expect(recipes.Recipes).To(ContainElement(expectedResult.ID.String()))
@@ -296,8 +296,8 @@ var _ = Describe("recipes db", func() {
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
-			db.Insert(expectedResult)
-			defer db.RemoveByName(expectedResult.Name)
+			recipeDB.Insert(expectedResult)
+			defer recipeDB.RemoveByName(expectedResult.Name)
 			unExpectedResult := &Recipe{
 				ID:          NewRecipeID(),
 				Name:        "noValidTestRecipe",
@@ -305,10 +305,10 @@ var _ = Describe("recipes db", func() {
 				Description: "none",
 				PictureLink: []string{},
 			}
-			db.Insert(unExpectedResult)
-			defer db.RemoveByName(unExpectedResult.Name)
+			recipeDB.Insert(unExpectedResult)
+			defer recipeDB.RemoveByName(unExpectedResult.Name)
 
-			recipes := db.IDs(&RecipeSearchFilter{Description: "describes"})
+			recipes := recipeDB.IDs(&RecipeSearchFilter{Description: "describes"})
 
 			Expect(err).To(BeNil())
 			Expect(recipes.Recipes).To(ContainElement(expectedResult.ID.String()))
@@ -322,10 +322,10 @@ var _ = Describe("recipes db", func() {
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
-			db.Insert(expectedResult)
-			defer db.RemoveByName(expectedResult.Name)
+			recipeDB.Insert(expectedResult)
+			defer recipeDB.RemoveByName(expectedResult.Name)
 
-			recipes := db.IDs(&RecipeSearchFilter{Name: "test"})
+			recipes := recipeDB.IDs(&RecipeSearchFilter{Name: "test"})
 
 			Expect(err).To(BeNil())
 			Expect(recipes.Recipes).To(ContainElement(expectedResult.ID.String()))
@@ -339,10 +339,10 @@ var _ = Describe("recipes db", func() {
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
-			db.Insert(expectedResult)
-			defer db.RemoveByName(expectedResult.Name)
+			recipeDB.Insert(expectedResult)
+			defer recipeDB.RemoveByName(expectedResult.Name)
 
-			recipes := db.List()
+			recipes := recipeDB.List()
 
 			Expect(err).To(BeNil())
 			Expect(recipes).To(ContainElement(expectedResult))
@@ -356,10 +356,10 @@ var _ = Describe("recipes db", func() {
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
-			db.Insert(expectedResult)
-			defer db.RemoveByName(expectedResult.Name)
+			recipeDB.Insert(expectedResult)
+			defer recipeDB.RemoveByName(expectedResult.Name)
 
-			n := db.Num()
+			n := recipeDB.Num()
 
 			Expect(n).To(BeNumerically("==", 1))
 		})
@@ -372,10 +372,10 @@ var _ = Describe("recipes db", func() {
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
-			db.Insert(expectedResult)
-			defer db.RemoveByName(expectedResult.Name)
+			recipeDB.Insert(expectedResult)
+			defer recipeDB.RemoveByName(expectedResult.Name)
 
-			r := db.Random()
+			r := recipeDB.Random()
 
 			Expect(err).To(BeNil())
 			Expect(r).To(Equal(expectedResult))
@@ -389,10 +389,10 @@ var _ = Describe("recipes db", func() {
 				Description: "describes the test recipe",
 				PictureLink: []string{},
 			}
-			db.Insert(expectedResult)
-			defer db.RemoveByName(expectedResult.Name)
+			recipeDB.Insert(expectedResult)
+			defer recipeDB.RemoveByName(expectedResult.Name)
 
-			names := db.IDs(&RecipeSearchFilter{})
+			names := recipeDB.IDs(&RecipeSearchFilter{})
 
 			Expect(names.Recipes).To(ContainElement(expectedResult.ID.String()))
 		})

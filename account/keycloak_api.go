@@ -9,7 +9,8 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/db"
+	"github.com/ottenwbe/recipes-manager/server"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -35,12 +36,12 @@ func init() {
 
 // AuthKeyCloakAPI for authorization
 type AuthKeyCloakAPI struct {
-	handler core.Handler
+	handler server.Handler
 	db      *MongoAccountService
 }
 
 // AddAuthAPIsToHandler constructs an API for recipes
-func AddAuthAPIsToHandler(handler core.Handler, db core.DB) {
+func AddAuthAPIsToHandler(handler server.Handler, database db.DB) {
 
 	keycloakEnabled := config.Config.GetBool(KeycloakEnabledCfg)
 	if keycloakEnabled {
@@ -52,7 +53,7 @@ func AddAuthAPIsToHandler(handler core.Handler, db core.DB) {
 
 		authKeyCloakApi := &AuthKeyCloakAPI{
 			handler: handler,
-			db:      NewMongoAccountService(db),
+			db:      NewMongoAccountService(database),
 		}
 		if err := authKeyCloakApi.prepareAPI(); err != nil {
 			log.WithField("Component", "Auth Keycloak API").Fatalf("Failed to prepare API: %v", err)
@@ -110,8 +111,8 @@ func (*AuthKeyCloakAPI) prepareConfig() (*oidc.Provider, *oauth2.Config, error) 
 // @Produce json
 // @Success 200 {integer} number
 // @Router /oauth [get]
-func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
-	return func(c *core.APICallContext) {
+func (a *AuthKeyCloakAPI) handleOAUTHResponse(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *server.APICallContext) {
+	return func(c *server.APICallContext) {
 		log.Info("Return Auth response")
 
 		state := c.Query("state")
@@ -194,8 +195,8 @@ func getTokenFromKeyCloak(keyCloakConfig *oauth2.Config, code string) (*Token, e
 // @Produce json
 // @Success 200 {integer} number
 // @Router /auth/keycloak/token [get]
-func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *core.APICallContext) {
-	return func(c *core.APICallContext) {
+func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provider *oidc.Provider) func(c *server.APICallContext) {
+	return func(c *server.APICallContext) {
 
 		if token, err := GetTokenFromCookie(c, provider, keyCloakConfig); err != nil {
 			c.String(http.StatusNotFound, "you have to login first")
@@ -224,8 +225,8 @@ func (a *AuthKeyCloakAPI) getKeyCloakToken(keyCloakConfig *oauth2.Config, provid
 // @Produce json
 // @Success 200 {integer} number
 // @Router /auth/keycloak/login [get]
-func (*AuthKeyCloakAPI) getKeyCloakLogin(keyCloakConfig *oauth2.Config) func(c *core.APICallContext) {
-	return func(c *core.APICallContext) {
+func (*AuthKeyCloakAPI) getKeyCloakLogin(keyCloakConfig *oauth2.Config) func(c *server.APICallContext) {
+	return func(c *server.APICallContext) {
 
 		signup := c.Query("signup")
 		url := c.Query("returnTo")
@@ -246,8 +247,8 @@ func (*AuthKeyCloakAPI) getKeyCloakLogin(keyCloakConfig *oauth2.Config) func(c *
 // @Produce json
 // @Success 200 {integer} number
 // @Router /auth/keycloak/logout [get]
-func (*AuthKeyCloakAPI) handleLogout() func(c *core.APICallContext) {
-	return func(c *core.APICallContext) {
+func (*AuthKeyCloakAPI) handleLogout() func(c *server.APICallContext) {
+	return func(c *server.APICallContext) {
 		DeleteTokenCookie(c)
 		c.JSON(http.StatusOK, nil)
 	}

@@ -9,21 +9,21 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/ottenwbe/recipes-manager/account"
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/db"
 	"github.com/sirupsen/logrus"
 )
 
 var _ = Describe("Account DB", func() {
 
 	var (
-		database      core.DB
+		database      db.DB
 		mongoDatabase *account.MongoAccountService
 		err           error
 	)
 
 	BeforeEach(func() {
-		addr := config.Config.GetString(core.RecipeDBHostCfg)
-		database, err = core.NewDatabaseClient(addr)
+		addr := config.Config.GetString(db.RecipeDBHostCfg)
+		database, err = db.NewDatabaseClient(addr)
 		mongoDatabase = account.NewMongoAccountService(database)
 	})
 

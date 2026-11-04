@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-package core
+package server
 
 import (
 	"context"

@@ -7,9 +7,11 @@ import (
 
 	"github.com/ottenwbe/recipes-manager/account"
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/db"
 	"github.com/ottenwbe/recipes-manager/recipes"
+	"github.com/ottenwbe/recipes-manager/server"
 	"github.com/ottenwbe/recipes-manager/sources"
+	"github.com/ottenwbe/recipes-manager/version"
 )
 
 // @title Swagger API documentation for recipes-manager
@@ -22,13 +24,13 @@ import (
 // @BasePath /api/v1
 func main() {
 
-	log.Infof("Initializing cooking application version=%v API=%v", core.AppVersion().App, core.AppVersion().API)
+	log.Infof("Initializing cooking application version=%v API=%v", version.AppVersion().App, version.AppVersion().API)
 
 	// configure the cooking app
-	coreDB := newCoreDatabase()
-	defer closeDatabase(coreDB)
+	database := newDatabase()
+	defer closeDatabase(database)
 
-	recipesDB := newRecipeDatabase(coreDB)
+	recipesDB := newRecipeDatabase(database)
 
 	srcRepository := newSources()
 
@@ -42,51 +44,51 @@ func main() {
 	log.Info("Stopping cooking application")
 }
 
-func newCoreDatabase() core.DB {
-	addr := config.Config.GetString(core.RecipeDBHostCfg)
-	db, err := core.NewDatabaseClient(addr)
+func newDatabase() db.DB {
+	addr := config.Config.GetString(db.RecipeDBHostCfg)
+	database, err := db.NewDatabaseClient(addr)
 	failOnError(err)
-	return db
+	return database
 }
 
-func newRecipeDatabase(db core.DB) recipes.RecipeDB {
-	recipesDB, err := recipes.NewRecipeDB(db)
+func newRecipeDatabase(database db.DB) recipes.RecipeDB {
+	recipesDB, err := recipes.NewRecipeDB(database)
 	failOnError(err)
 	return recipesDB
 }
 
-func closeDatabase(db core.DB) {
-	if db != nil {
-		err := db.Close()
+func closeDatabase(database db.DB) {
+	if database != nil {
+		err := database.Close()
 		logOnError(err, "Could not close database")
 	}
 }
 
-func closeServer(server *core.Server) {
+func closeServer(server *server.Server) {
 	if server != nil {
 		err := server.Close()
 		logOnError(err, "Error closing server")
 	}
 }
 
-func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) *core.Server {
-	corsOrigin := config.Config.GetString(core.CorsOriginCfg)
-	handler := core.NewHandler(corsOrigin)
+func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) *server.Server {
+	corsOrigin := config.Config.GetString(server.CorsOriginCfg)
+	handler := server.NewHandler(corsOrigin)
 
-	address := config.Config.GetString(core.AddressCfg)
-	server := core.NewServerWithAddress(address, handler)
+	address := config.Config.GetString(server.AddressCfg)
+	server := server.NewServerWithAddress(address, handler)
 
 	addAPIsToServer(handler, recipesDB, srcRepository)
 
 	return server
 }
 
-func addAPIsToServer(handler core.Handler, recipesDB recipes.RecipeDB, srcRepository sources.Sources) {
+func addAPIsToServer(handler server.Handler, recipesDB recipes.RecipeDB, srcRepository sources.Sources) {
 	err := recipes.AddRecipesAPIToHandler(handler, recipesDB)
 	failOnError(err)
 	err = sources.AddSourcesAPIToHandler(handler, srcRepository, recipesDB)
 	failOnError(err)
-	core.AddCoreAPIToHandler(handler)
+	server.AddServerAPIToHandler(handler)
 	account.AddAuthAPIsToHandler(handler, recipesDB)
 }
 

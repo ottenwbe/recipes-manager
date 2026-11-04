@@ -5,12 +5,12 @@
 package recipes
 
 import (
-	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/db"
 )
 
 // RecipeDB is the interface that all DB implementations have to expose
 type RecipeDB interface {
-	core.DB
+	db.DB
 	Recipes
 	Clear()
 }

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/db"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -16,7 +16,7 @@ import (
 
 // MongoAccountService stores and manipulates stored accounts in a DB
 type MongoAccountService struct {
-	DbClient *core.MongoClient
+	DbClient *db.MongoClient
 }
 
 const (
@@ -36,10 +36,10 @@ func init() {
 }
 
 // NewMongoAccountService is created and configured
-func NewMongoAccountService(db core.DB) *MongoAccountService {
+func NewMongoAccountService(database db.DB) *MongoAccountService {
 
 	accountDB := &MongoAccountService{
-		DbClient: db.(*core.MongoClient),
+		DbClient: database.(*db.MongoClient),
 	}
 
 	err := accountDB.createTextIndex()

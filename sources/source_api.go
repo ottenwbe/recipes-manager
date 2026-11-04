@@ -12,8 +12,8 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/core"
 	"github.com/ottenwbe/recipes-manager/recipes"
+	"github.com/ottenwbe/recipes-manager/server"
 )
 
 // SourceResponse describes a sourceClient in detail
@@ -46,18 +46,18 @@ type API struct {
 }
 
 // AddSourcesAPIToHandler creates the API for sources
-func AddSourcesAPIToHandler(handler core.Handler, sources Sources, recipesDB recipes.RecipeDB) error {
+func AddSourcesAPIToHandler(handler server.Handler, sources Sources, recipesDB recipes.RecipeDB) error {
 	sourcesAPI := API{sources, recipesDB}
 	sourcesAPI.PrepareAPI(handler)
 	return nil
 }
 
 // PrepareAPI registers all api endpoints
-func (s API) PrepareAPI(router core.Handler) {
+func (s API) PrepareAPI(router server.Handler) {
 	s.prepareV1API(router, s.sources, s.recipes)
 }
 
-func (s API) prepareV1API(router core.Handler, sources Sources, recipes recipes.RecipeDB) {
+func (s API) prepareV1API(router server.Handler, sources Sources, recipes recipes.RecipeDB) {
 
 	v1 := router.API(1)
 
@@ -82,8 +82,8 @@ func (s API) prepareV1API(router core.Handler, sources Sources, recipes recipes.
 // @Param source path string true "Source ID"
 // @Success 301 {string} redirect
 // @Router /sources/{source}/oauth [get]
-func oAuthHandler(sources Sources) func(c *core.APICallContext) {
-	return func(c *core.APICallContext) {
+func oAuthHandler(sources Sources) func(c *server.APICallContext) {
+	return func(c *server.APICallContext) {
 		sourceID := c.Param("source")
 
 		state := c.Query("state")
@@ -128,7 +128,7 @@ func oAuthHandler(sources Sources) func(c *core.APICallContext) {
 	}
 }
 
-func redirectWithError(c *core.APICallContext, target string, errorMsg string) {
+func redirectWithError(c *server.APICallContext, target string, errorMsg string) {
 	u, err := url.Parse(target)
 	if err != nil {
 		c.String(http.StatusBadRequest, "Invalid redirect url in state")
@@ -148,8 +148,8 @@ func redirectWithError(c *core.APICallContext, target string, errorMsg string) {
 // @Param source path string true "Source ID"
 // @Success 200 {object} SourceOAuthConnectResponse
 // @Router /sources/{source}/connect [get]
-func oAuthConnect(sources Sources) func(c *core.APICallContext) {
-	return func(c *core.APICallContext) {
+func oAuthConnect(sources Sources) func(c *server.APICallContext) {
+	return func(c *server.APICallContext) {
 		sourceID := c.Param("source")
 		log.Infof("Exchange Token with Source %v", sourceID)
 
@@ -186,8 +186,8 @@ func oAuthConnect(sources Sources) func(c *core.APICallContext) {
 // @Produce json
 // @Success 200 {object} map[string]SourceResponse
 // @Router /sources [get]
-func listSources(sources Sources) func(c *core.APICallContext) {
-	return func(c *core.APICallContext) {
+func listSources(sources Sources) func(c *server.APICallContext) {
+	return func(c *server.APICallContext) {
 		sources, err := sources.List()
 		if err != nil {
 			c.String(http.StatusBadRequest, "Sources could not be listed")
@@ -210,8 +210,8 @@ func listSources(sources Sources) func(c *core.APICallContext) {
 // @Param source path string true "Source ID"
 // @Success 200
 // @Router /sources/{source}/recipes [get]
-func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c *core.APICallContext) {
-	return func(c *core.APICallContext) {
+func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c *server.APICallContext) {
+	return func(c *server.APICallContext) {
 		sourceID := c.Param("source")
 		log.WithField("sourceID", sourceID).Debugf("Patch source %v", sourceID)
 
@@ -240,7 +240,7 @@ func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c 
 			count++
 		}
 
-		c.JSON(http.StatusOK, core.H{"synced": count})
+		c.JSON(http.StatusOK, server.H{"synced": count})
 	}
 }
 
@@ -256,7 +256,7 @@ func sourceClient(sourceID string, sources Sources) (SourceClient, error) {
 	return src, err
 }
 
-func sourceDescription(sourceID string, c *core.APICallContext, sources Sources) (*SourceDescription, error) {
+func sourceDescription(sourceID string, c *server.APICallContext, sources Sources) (*SourceDescription, error) {
 	sid, err := SourceIDFromString(sourceID)
 	if err != nil {
 		return nil, err

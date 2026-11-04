@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/db"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -30,11 +30,11 @@ const (
 
 // MongoRecipeDB implements the Recipe interface to read and write Recipes to and from a Mongo DB
 type MongoRecipeDB struct {
-	mongoClient *core.MongoClient
+	mongoClient *db.MongoClient
 }
 
-// MongoClient returns the underlying core.MongoClient
-func (m *MongoRecipeDB) MongoClient() *core.MongoClient {
+// MongoClient returns the underlying db.MongoClient
+func (m *MongoRecipeDB) MongoClient() *db.MongoClient {
 	return m.mongoClient
 }
 
@@ -359,7 +359,7 @@ func (m *MongoRecipeDB) Close() error {
 // StartDB initializes the database connection
 func (m *MongoRecipeDB) StartDB(addr string) error {
 	if m.mongoClient == nil {
-		m.mongoClient = &core.MongoClient{}
+		m.mongoClient = &db.MongoClient{}
 	}
 	return m.mongoClient.StartDB(addr)
 }

@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/server"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -54,7 +54,7 @@ type IDTokenClaim struct {
 }
 
 // GetTokenFromCookie returns the token or an error
-func GetTokenFromCookie(c *core.APICallContext, provider *oidc.Provider, config *oauth2.Config) (*Token, error) {
+func GetTokenFromCookie(c *server.APICallContext, provider *oidc.Provider, config *oauth2.Config) (*Token, error) {
 	cookie, err := c.Cookie(cookieTokenName)
 
 	if err != nil {
@@ -75,12 +75,12 @@ func GetTokenFromCookie(c *core.APICallContext, provider *oidc.Provider, config 
 }
 
 // DeleteTokenCookie by setting the cookie maxAge to -1
-func DeleteTokenCookie(c *core.APICallContext) {
+func DeleteTokenCookie(c *server.APICallContext) {
 	c.SetCookie(cookieTokenName, "", -1, "/", "", false, false)
 }
 
 // WriteTokenToCookie stores the token in a cookie
-func WriteTokenToCookie(c *core.APICallContext, oauth2Config *oauth2.Config, provider *oidc.Provider, token *Token) {
+func WriteTokenToCookie(c *server.APICallContext, oauth2Config *oauth2.Config, provider *oidc.Provider, token *Token) {
 
 	idToken, err := ValidateToken(provider, oauth2Config, token)
 	if err != nil {

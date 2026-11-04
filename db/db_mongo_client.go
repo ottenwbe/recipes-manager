@@ -1,8 +1,6 @@
-/*
- * MIT License - see LICENSE file for details
- */
+// SPDX-License-Identifier: MIT
 
-package core
+package db
 
 import (
 	"context"

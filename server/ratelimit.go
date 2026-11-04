@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-package core
+package server
 
 import (
 	"crypto/sha256"
@@ -40,7 +40,7 @@ type visitor struct {
 }
 
 var (
-	oneRateLimiter     sync.Once
+	oneRateLimiter    sync.Once
 	globalRateLimiter *RateLimiter
 	cleanupDone       = make(chan struct{})
 )

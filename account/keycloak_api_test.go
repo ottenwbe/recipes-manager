@@ -10,42 +10,45 @@ import (
 	"time"
 
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/db"
+	"github.com/ottenwbe/recipes-manager/server"
 )
 
 var (
-	db      core.DB
-	server  *core.Server
-	handler core.Handler
+	database  db.DB
+	appServer *server.Server
+	handler   server.Handler
 )
 
 var _ = Describe("Keycloak API", func() {
 	BeforeEach(func() {
-		handler = core.NewHandler("*")
-		addr := config.Config.GetString(core.RecipeDBHostCfg)
-		db, _ = core.NewDatabaseClient(addr)
+		handler = server.NewHandler("*")
+		addr := config.Config.GetString(db.RecipeDBHostCfg)
+		var err error
+		database, err = db.NewDatabaseClient(addr)
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	AfterEach(func() {
-		err := server.Close()
+		err := appServer.Close()
 		if err != nil {
 			Fail(err.Error())
 		}
-		if db != nil {
-			err = db.Close()
+		if database != nil {
+			err = database.Close()
 			if err != nil {
 				Fail(err.Error())
 			}
-			db = nil
+			database = nil
 		}
 	})
 
 	Context("Keycloak Disabled", func() {
 		It("disables keycloak endpoints endpoints (by default)", func() {
 
-			AddAuthAPIsToHandler(handler, db)
-			server = core.NewServerWithAddress(":8090", handler)
-			server.Run()
+			AddAuthAPIsToHandler(handler, database)
+			appServer = server.NewServerWithAddress(":8090", handler)
+			appServer.Run()
 			time.Sleep(500 * time.Millisecond)
 
 			resp, err := http.Get("http://localhost:8090/api/v1/auth/keycloak/token")

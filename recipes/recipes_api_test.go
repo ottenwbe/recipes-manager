@@ -11,39 +11,40 @@ import (
 	"time"
 
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/db"
+	"github.com/ottenwbe/recipes-manager/server"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var (
-	server  *core.Server
-	db      core.DB
-	recipes RecipeDB
+	appServer *server.Server
+	database  db.DB
+	recipes   RecipeDB
 )
 
 var _ = BeforeSuite(func() {
-	handler := core.NewHandler("*")
+	handler := server.NewHandler("*")
 	var err error
-	addr := config.Config.GetString(core.RecipeDBHostCfg)
-	db, err = core.NewDatabaseClient(addr)
+	addr := config.Config.GetString(db.RecipeDBHostCfg)
+	database, err = db.NewDatabaseClient(addr)
 	Expect(err).ToNot(HaveOccurred())
-	recipes, err = NewRecipeDB(db)
+	recipes, err = NewRecipeDB(database)
 	Expect(err).ToNot(HaveOccurred())
 	err = AddRecipesAPIToHandler(handler, recipes)
 	Expect(err).ToNot(HaveOccurred())
-	server = core.NewServerWithAddress(":8080", handler)
-	server.Run()
+	appServer = server.NewServerWithAddress(":8080", handler)
+	appServer.Run()
 	time.Sleep(500 * time.Millisecond)
 })
 
 var _ = AfterSuite(func() {
-	err := server.Close()
+	err := appServer.Close()
 	if err != nil {
 		Fail(err.Error())
 	}
-	err = db.Close()
+	err = database.Close()
 	if err != nil {
 		Fail(err.Error())
 	}

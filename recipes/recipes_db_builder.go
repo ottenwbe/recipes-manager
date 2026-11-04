@@ -8,12 +8,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ottenwbe/recipes-manager/core"
+	"github.com/ottenwbe/recipes-manager/db"
 )
 
-// NewRecipeDB builds a client to communicate with a database from a generic db client
-func NewRecipeDB(db core.DB) (RecipeDB, error) {
-	mongoClient, ok := db.(*core.MongoClient)
+// NewRecipeDB builds a client to communicate with a generic db client from a generic db client
+func NewRecipeDB(database db.DB) (RecipeDB, error) {
+	mongoClient, ok := database.(*db.MongoClient)
 	if !ok {
 		return nil, errors.New("provided database is not a mongo client")
 	}
