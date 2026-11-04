@@ -6,7 +6,6 @@ package recipes
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -104,7 +103,7 @@ func (rAPI *API) prepareV1API() {
 func (rAPI *API) getNumberOfRecipes(c *server.APICallContext) {
 	num := rAPI.recipes.Num()
 	log.Debugf("Number of Recipes %v", num)
-	c.String(http.StatusOK, fmt.Sprintf("%v", num))
+	c.JSON(http.StatusOK, num)
 }
 
 // getRecipePicture example
