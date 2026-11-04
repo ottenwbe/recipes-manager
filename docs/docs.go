@@ -467,7 +467,7 @@ const docTemplate = `{
             }
         },
         "/sources/{source}/recipes": {
-            "get": {
+            "patch": {
                 "description": "Download recipes from a source",
                 "produces": [
                     "application/json"

@@ -377,7 +377,7 @@ paths:
       tags:
       - Sources
   /sources/{source}/recipes:
-    get:
+    patch:
       description: Download recipes from a source
       parameters:
       - description: Source ID
