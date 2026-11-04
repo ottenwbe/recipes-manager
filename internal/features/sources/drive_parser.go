@@ -1,0 +1,235 @@
+// SPDX-License-Identifier: MIT
+
+package sources
+
+import (
+	"bytes"
+	"errors"
+	"io"
+	"regexp"
+	"strconv"
+	"strings"
+
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/net/html"
+
+	"github.com/ottenwbe/recipes-manager/internal/config"
+
+	"github.com/ottenwbe/recipes-manager/models"
+)
+
+// driveRecipeParser parses an html document to identify recipes
+type driveRecipeParser struct {
+	descriptionBuffer bytes.Buffer
+	recipe            *models.Recipe
+	pictures          map[string]*models.RecipePicture
+	lastErr           error
+	parseState        parseState
+}
+
+// parseState enumerates all states of the driveRecipeParser
+type parseState int
+
+const (
+	titleState parseState = iota
+	imgState
+	ingredientState
+	descriptionState
+)
+
+// ParseRecipe transforms a html file to the Recipe format
+func ParseRecipe(htmlFile io.Reader, fileID models.RecipeID) (*models.Recipe, map[string]*models.RecipePicture, error) {
+	parser := newDriveRecipeParser(fileID)
+	return parser.parseHTML(htmlFile)
+}
+
+func newDriveRecipeParser(fileID models.RecipeID) *driveRecipeParser {
+	return &driveRecipeParser{
+		recipe:     models.NewRecipe(fileID),
+		pictures:   make(map[string]*models.RecipePicture),
+		lastErr:    nil,
+		parseState: titleState,
+	}
+}
+
+func (p *driveRecipeParser) nextState(state parseState) {
+	p.parseState = state
+}
+
+func (p *driveRecipeParser) parseHTML(htmlFile io.Reader) (*models.Recipe, map[string]*models.RecipePicture, error) {
+	tokenizer := html.NewTokenizer(htmlFile)
+
+	var (
+		parsing = true
+		err     error
+	)
+
+	for parsing {
+
+		tokenType := tokenizer.Next()
+
+		//Debug
+		n, hasMore := tokenizer.TagName()
+		tagName := string(n)
+		text := string(tokenizer.Text())
+
+		log.Debugf("Parsing: %v (%v): %v", tagName, tokenType, text)
+
+		switch tokenType {
+		case html.ErrorToken:
+
+			parsing = false
+
+			err = tokenizer.Err()
+			p.finalizeRecipe()
+
+			log.Debugf("Parsing Error: %v (%v): %v", tagName, tokenType, err)
+
+			p.recipe, err = p.handleParsingError(p.recipe, err)
+
+		case html.TextToken:
+
+			p.handleText(text)
+
+		case html.StartTagToken:
+
+			p.handleStartToken(tagName, hasMore, tokenizer)
+
+		default:
+
+		}
+	}
+
+	return p.recipe, p.pictures, err
+}
+
+func (p *driveRecipeParser) handleStartToken(tagName string, hasMore bool, tokenizer *html.Tokenizer) {
+	switch tagName {
+
+	case "p":
+		if p.parseState == descriptionState {
+			log.Debug("p added to description")
+			p.descriptionBuffer.WriteString("\n")
+		}
+	case "img":
+
+		p.nextState(imgState)
+		log.Debug("Entering image state... ")
+
+		name, img64 := extractImg(hasMore, tokenizer)
+
+		p.recipe.PictureLink = append(p.recipe.PictureLink, name)
+		log.Debugf("img appending %v", name)
+		p.pictures[name] = &models.RecipePicture{ID: p.recipe.ID, Name: name, Picture: img64}
+	}
+}
+
+func extractImg(hasMore bool, tokenizer *html.Tokenizer) (string, string) {
+	var (
+		name  = ""
+		img64 = ""
+		err   error
+	)
+	for hasMore {
+		var key, val []byte
+		key, val, hasMore = tokenizer.TagAttr()
+
+		if string(key) == "alt" {
+			name = string(val)
+		} else if string(key) == "src" {
+			img64, err = DownloadIMGAsBase64(string(val))
+			if err != nil {
+				log.WithError(err).Error("Could not download image")
+			}
+			log.Debugf("new image: %v", img64)
+		}
+	}
+	return name, img64
+}
+
+func (p *driveRecipeParser) handleText(text string) {
+	ingredients := config.Config.GetString(DriveParserIngredientsTitle)
+	instruction := config.Config.GetString(DriveRecipeInstructionsTitle)
+
+	trimmedText := strings.TrimSpace(text)
+
+	if ingredients != "" && strings.HasPrefix(trimmedText, ingredients) {
+		log.Debug("Now parsing ingredients...")
+		p.nextState(ingredientState)
+	} else if instruction != "" && strings.HasPrefix(trimmedText, instruction) {
+		log.Debug("Now parsing the description...")
+		p.nextState(descriptionState)
+	} else if p.parseState == titleState {
+		log.Debugf("Title - add: %v", text)
+		if strings.TrimSpace(text) != "" {
+			p.recipe.Name = text
+		}
+	} else if p.parseState == ingredientState {
+		log.Debugf("Ingredient - add: %v", text)
+		if strings.TrimSpace(text) != "" {
+			handleIngredient(p, strings.TrimSpace(text))
+		}
+	} else if p.parseState == descriptionState {
+		log.Debugf("Description - add: %v", text)
+		p.descriptionBuffer.WriteString(text)
+	}
+}
+
+var (
+	validNumber  = regexp.MustCompile(`^[0-9]+`)
+	validStrings = regexp.MustCompile(`[a-zA-zßäüöÄÜÖ]+`)
+)
+
+func handleIngredient(p *driveRecipeParser, text string) {
+
+	num := validNumber.FindAllString(text, -1)
+	strs := validStrings.FindAllString(text, -1)
+
+	var amount = models.NoAmountIngredient
+	var err error
+	if len(num) > 0 {
+		amount, err = strconv.ParseFloat(num[0], 32)
+		if err != nil {
+			log.WithError(err).Error("Unexpected error while parsing a number")
+		}
+	}
+
+	var unit = ""
+	if len(strs) > 1 {
+		unit = strs[0]
+	}
+
+	var name = ""
+	if len(strs) == 1 {
+		name = strs[0]
+	} else if len(strs) > 1 {
+		name = strings.Join(strs[1:], " ")
+	}
+
+	p.recipe.Ingredients = append(p.recipe.Ingredients, models.Ingredients{Name: name, Amount: amount, Unit: unit})
+}
+
+func (p *driveRecipeParser) finalizeRecipe() {
+	p.recipe.Description = p.descriptionBuffer.String()
+}
+
+func (p *driveRecipeParser) handleParsingError(recipe *models.Recipe, err error) (*models.Recipe, error) {
+	if err != io.EOF {
+		return models.NewInvalidRecipe(), err
+	} else if p.parseState != descriptionState {
+		return models.NewInvalidRecipe(), errors.New("malformed recipe")
+	}
+	return recipe, nil
+}
+
+const (
+	// DriveParserIngredientsTitle key for configuration
+	DriveParserIngredientsTitle = "drive.recipes.ingredients"
+	// DriveRecipeInstructionsTitle key for configuration
+	DriveRecipeInstructionsTitle = "drive.recipes.instructions"
+)
+
+func init() {
+	config.Config.SetDefault(DriveParserIngredientsTitle, "Zutaten")
+	config.Config.SetDefault(DriveRecipeInstructionsTitle, "Zubereitung")
+}
