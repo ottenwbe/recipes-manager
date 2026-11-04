@@ -3,7 +3,7 @@
 package logging
 
 import (
-	"github.com/ottenwbe/recipes-manager/config"
+	"github.com/ottenwbe/recipes-manager/internal/config"
 	log "github.com/sirupsen/logrus"
 )
 

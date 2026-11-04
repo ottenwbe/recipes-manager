@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/ottenwbe/recipes-manager/config"
+	"github.com/ottenwbe/recipes-manager/internal/config"
 )
 
 var _ = Describe("Config", func() {

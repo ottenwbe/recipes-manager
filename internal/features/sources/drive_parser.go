@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/html"
 
-	"github.com/ottenwbe/recipes-manager/config"
+	"github.com/ottenwbe/recipes-manager/internal/config"
 
 	"github.com/ottenwbe/recipes-manager/models"
 )

@@ -2,7 +2,7 @@
 
 Go backend for Recipes Manager: Gin REST API, MongoDB, Viper config, Keycloak auth, Google Drive sources, Swagger.
 
-Module: `github.com/ottenwbe/recipes-manager` (Go 1.26). Application-internal packages live under `internal/` (currently `internal/server`, `internal/db`, `internal/version`, `internal/logging`, and `internal/features/` with the feature packages `internal/features/account`, `internal/features/recipes` and `internal/features/sources`). The shared recipe domain types live in `models/`. Feature packages live in `internal/features/`; entrypoint is `main.go` at the root. The former monolithic `core/` package has been split into focused packages.
+Module: `github.com/ottenwbe/recipes-manager` (Go 1.26). Application-internal packages live under `internal/` (currently `internal/config`, `internal/db`, `internal/logging`, `internal/server`, `internal/version`, and `internal/features/` with the feature packages `internal/features/account`, `internal/features/recipes` and `internal/features/sources`). The shared recipe domain types live in `models/`. Feature packages live in `internal/features/`; entrypoint is `main.go` at the root. The former monolithic `core/` package has been split into focused packages.
 
 ## Go standards
 

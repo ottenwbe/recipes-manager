@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ottenwbe/recipes-manager/config"
+	"github.com/ottenwbe/recipes-manager/internal/config"
 	"github.com/ottenwbe/recipes-manager/internal/db"
 	"github.com/ottenwbe/recipes-manager/internal/server"
 )

@@ -5,7 +5,7 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 
-	"github.com/ottenwbe/recipes-manager/config"
+	"github.com/ottenwbe/recipes-manager/internal/config"
 	"github.com/ottenwbe/recipes-manager/internal/db"
 	"github.com/ottenwbe/recipes-manager/internal/features/account"
 	"github.com/ottenwbe/recipes-manager/internal/features/recipes"

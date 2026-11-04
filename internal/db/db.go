@@ -5,7 +5,7 @@ package db
 import (
 	"io"
 
-	"github.com/ottenwbe/recipes-manager/config"
+	"github.com/ottenwbe/recipes-manager/internal/config"
 )
 
 // RecipeDBHostCfg key for configuration
