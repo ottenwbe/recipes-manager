@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 
-	"github.com/ottenwbe/recipes-manager/recipes"
+	"github.com/ottenwbe/recipes-manager/internal/features/recipes"
 )
 
 // SourceID represents a unique id of a sourceClient

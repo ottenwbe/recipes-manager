@@ -5,13 +5,13 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 
-	"github.com/ottenwbe/recipes-manager/account"
 	"github.com/ottenwbe/recipes-manager/config"
 	"github.com/ottenwbe/recipes-manager/internal/db"
+	"github.com/ottenwbe/recipes-manager/internal/features/account"
+	"github.com/ottenwbe/recipes-manager/internal/features/recipes"
+	"github.com/ottenwbe/recipes-manager/internal/features/sources"
 	"github.com/ottenwbe/recipes-manager/internal/server"
 	"github.com/ottenwbe/recipes-manager/internal/version"
-	"github.com/ottenwbe/recipes-manager/recipes"
-	"github.com/ottenwbe/recipes-manager/sources"
 )
 
 // @title Swagger API documentation for recipes-manager

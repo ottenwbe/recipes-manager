@@ -19,7 +19,7 @@ import (
 	"sync"
 
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/recipes"
+	"github.com/ottenwbe/recipes-manager/internal/features/recipes"
 
 	"github.com/ottenwbe/recipes-manager/models"
 )

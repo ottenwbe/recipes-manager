@@ -12,8 +12,8 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/ottenwbe/recipes-manager/config"
+	"github.com/ottenwbe/recipes-manager/internal/features/recipes"
 	"github.com/ottenwbe/recipes-manager/internal/server"
-	"github.com/ottenwbe/recipes-manager/recipes"
 )
 
 // SourceResponse describes a sourceClient in detail

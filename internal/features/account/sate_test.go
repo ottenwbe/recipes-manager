@@ -3,7 +3,7 @@ package account_test
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/ottenwbe/recipes-manager/account"
+	"github.com/ottenwbe/recipes-manager/internal/features/account"
 )
 
 var _ = Describe("Account DB", func() {
