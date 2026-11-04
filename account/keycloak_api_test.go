@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/db"
-	"github.com/ottenwbe/recipes-manager/server"
+	"github.com/ottenwbe/recipes-manager/internal/db"
+	"github.com/ottenwbe/recipes-manager/internal/server"
 )
 
 var (

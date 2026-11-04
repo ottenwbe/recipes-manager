@@ -7,11 +7,11 @@ import (
 
 	"github.com/ottenwbe/recipes-manager/account"
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/db"
+	"github.com/ottenwbe/recipes-manager/internal/db"
+	"github.com/ottenwbe/recipes-manager/internal/server"
+	"github.com/ottenwbe/recipes-manager/internal/version"
 	"github.com/ottenwbe/recipes-manager/recipes"
-	"github.com/ottenwbe/recipes-manager/server"
 	"github.com/ottenwbe/recipes-manager/sources"
-	"github.com/ottenwbe/recipes-manager/version"
 )
 
 // @title Swagger API documentation for recipes-manager

@@ -5,7 +5,7 @@ package server
 import (
 	"net/http"
 
-	"github.com/ottenwbe/recipes-manager/version"
+	"github.com/ottenwbe/recipes-manager/internal/version"
 )
 
 // AddServerAPIToHandler constructs the base API for the server, i.e., version and health

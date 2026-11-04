@@ -5,7 +5,7 @@
 package recipes
 
 import (
-	"github.com/ottenwbe/recipes-manager/db"
+	"github.com/ottenwbe/recipes-manager/internal/db"
 )
 
 // RecipeDB is the interface that all DB implementations have to expose

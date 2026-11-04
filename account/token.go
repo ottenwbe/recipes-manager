@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/ottenwbe/recipes-manager/server"
+	"github.com/ottenwbe/recipes-manager/internal/server"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )

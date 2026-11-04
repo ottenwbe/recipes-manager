@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ottenwbe/recipes-manager/db"
+	"github.com/ottenwbe/recipes-manager/internal/db"
 )
 
 // NewRecipeDB builds a client to communicate with a generic db client from a generic db client

@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/ottenwbe/recipes-manager/account"
 	"github.com/ottenwbe/recipes-manager/config"
-	"github.com/ottenwbe/recipes-manager/db"
+	"github.com/ottenwbe/recipes-manager/internal/db"
 	"github.com/sirupsen/logrus"
 )
 

@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/ottenwbe/recipes-manager/server"
+	"github.com/ottenwbe/recipes-manager/internal/server"
 	log "github.com/sirupsen/logrus"
 )
 

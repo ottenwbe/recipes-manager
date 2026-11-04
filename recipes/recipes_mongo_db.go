@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ottenwbe/recipes-manager/db"
+	"github.com/ottenwbe/recipes-manager/internal/db"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
