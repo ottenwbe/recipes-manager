@@ -416,7 +416,7 @@ func (*MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
 	defer cancel()
 	_, err := c.Indexes().CreateMany(ctx, []mongo.IndexModel{indexID, indexName})
 	if err != nil {
-		log.Info("idx error", err)
+		log.WithError(err).Info("idx error")
 	}
 	return err
 }
