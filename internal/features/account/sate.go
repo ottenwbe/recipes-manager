@@ -2,9 +2,8 @@ package account
 
 import (
 	"crypto/rand"
-	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -51,12 +50,11 @@ func (sm *StateMap) FindAndDelete(key string) *State {
 
 // CreateState to reuse later
 func (sm *StateMap) CreateState(url string, signup bool) *State {
-	var stateSeed uint64
-	err := binary.Read(rand.Reader, binary.LittleEndian, &stateSeed)
-	if err != nil {
-		log.Error(err.Error())
+	var stateSeed [16]byte
+	if _, err := rand.Read(stateSeed[:]); err != nil {
+		log.WithError(err).Error("Could not create oauth state")
 	}
-	stateString := fmt.Sprintf("%x", stateSeed)
+	stateString := hex.EncodeToString(stateSeed[:])
 
 	state := newState(url, signup, stateString)
 

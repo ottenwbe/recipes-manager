@@ -76,7 +76,7 @@ func GetTokenFromCookie(c *server.APICallContext, provider *oidc.Provider, confi
 
 // DeleteTokenCookie by setting the cookie maxAge to -1
 func DeleteTokenCookie(c *server.APICallContext) {
-	c.SetCookie(cookieTokenName, "", -1, "/", "", false, false)
+	c.SetCookie(cookieTokenName, "", -1, "/", "", true, true)
 }
 
 // WriteTokenToCookie stores the token in a cookie
@@ -86,7 +86,7 @@ func WriteTokenToCookie(c *server.APICallContext, oauth2Config *oauth2.Config, p
 	if err != nil {
 		log.WithField("Token", "WriteTokenToCookie").Error(err)
 	} else {
-		c.SetCookie(cookieTokenName, token.Token, 3600, "/", "", false, false)
+		c.SetCookie(cookieTokenName, token.Token, 3600, "/", "", true, true)
 	}
 
 	log.Debugf("Cookie value: %s \n", idToken)
