@@ -1,15 +1,6 @@
 basePath: /api/v1
 definitions:
-  core.Version:
-    properties:
-      api:
-        description: API is the MAJOR API Version supported by the app
-        type: string
-      app:
-        description: APP is the version of the current app
-        type: string
-    type: object
-  recipes.Ingredients:
+  models.Ingredients:
     properties:
       amount:
         description: Amount needed in a recipe of an ingredient
@@ -21,11 +12,11 @@ definitions:
         description: Unit of the Amount
         type: string
     type: object
-  recipes.Recipe:
+  models.Recipe:
     properties:
       components:
         items:
-          $ref: '#/definitions/recipes.Ingredients'
+          $ref: '#/definitions/models.Ingredients'
         type: array
       description:
         type: string
@@ -40,14 +31,14 @@ definitions:
       servings:
         type: integer
     type: object
-  recipes.RecipeList:
+  models.RecipeList:
     properties:
       recipes:
         items:
           type: string
         type: array
     type: object
-  recipes.RecipePicture:
+  models.RecipePicture:
     properties:
       id:
         type: string
@@ -72,6 +63,15 @@ definitions:
       name:
         type: string
       version:
+        type: string
+    type: object
+  version.Version:
+    properties:
+      api:
+        description: API is the MAJOR API Version supported by the app
+        type: string
+      app:
+        description: APP is the version of the current app
         type: string
     type: object
 info:
@@ -122,6 +122,19 @@ paths:
       summary: Get the token
       tags:
       - Auth
+  /health:
+    get:
+      description: Returns the health status of the service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check endpoint
   /oauth:
     get:
       description: OAuth endpoint
@@ -157,7 +170,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/recipes.RecipeList'
+            $ref: '#/definitions/models.RecipeList'
       summary: Get Recipes
       tags:
       - Recipes
@@ -166,18 +179,18 @@ paths:
       - application/json
       description: Adds a new recipe, the id will automatically overriden by the backend
       parameters:
-      - description: Recipe
+      - description: models.Recipe
         in: body
         name: message
         required: true
         schema:
-          $ref: '#/definitions/recipes.Recipe'
+          $ref: '#/definitions/models.Recipe'
       produces:
       - application/json
       responses:
         "201":
           description: Created
-      summary: Add a new Recipe
+      summary: Add a new models.Recipe
       tags:
       - Recipes
   /recipes/num:
@@ -199,7 +212,7 @@ paths:
       - application/json
       description: Deletes a recipe by id
       parameters:
-      - description: Recipe ID
+      - description: models.Recipe ID
         in: path
         name: recipe
         required: true
@@ -211,7 +224,7 @@ paths:
           description: OK
         "204":
           description: No Content
-      summary: Delete a Recipe
+      summary: Delete a models.Recipe
       tags:
       - Recipes
     get:
@@ -221,7 +234,7 @@ paths:
         in: query
         name: servings
         type: integer
-      - description: Recipe ID
+      - description: models.Recipe ID
         in: path
         name: recipe
         required: true
@@ -232,8 +245,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/recipes.Recipe'
-      summary: Get a specific Recipe
+            $ref: '#/definitions/models.Recipe'
+      summary: Get a specific models.Recipe
       tags:
       - Recipes
     put:
@@ -241,17 +254,17 @@ paths:
       - application/json
       description: A specific recipe is updates
       parameters:
-      - description: Recipe ID
+      - description: models.Recipe ID
         in: path
         name: recipe
         required: true
         type: string
-      - description: Recipe
+      - description: models.Recipe
         in: body
         name: message
         required: true
         schema:
-          $ref: '#/definitions/recipes.Recipe'
+          $ref: '#/definitions/models.Recipe'
       produces:
       - application/json
       responses:
@@ -259,14 +272,14 @@ paths:
           description: OK
         "204":
           description: No Content
-      summary: Update a specific Recipe
+      summary: Update a specific models.Recipe
       tags:
       - Recipes
   /recipes/r/{recipe}/pictures/{name}:
     get:
       description: A specific picture of a specific recipe is returned
       parameters:
-      - description: Recipe ID
+      - description: models.Recipe ID
         in: path
         name: recipe
         required: true
@@ -282,7 +295,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/recipes.RecipePicture'
+            $ref: '#/definitions/models.RecipePicture'
       summary: Get a picture of a
       tags:
       - Recipes
@@ -300,8 +313,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/recipes.Recipe'
-      summary: Get a Random Recipe
+            $ref: '#/definitions/models.Recipe'
+      summary: Get a Random models.Recipe
       tags:
       - Recipes
   /sources:
@@ -383,6 +396,6 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/core.Version'
+            $ref: '#/definitions/version.Version'
       summary: Get the curent version
 swagger: "2.0"

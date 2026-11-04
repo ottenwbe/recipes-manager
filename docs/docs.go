@@ -79,6 +79,26 @@ const docTemplate = `{
                 }
             }
         },
+        "/health": {
+            "get": {
+                "description": "Returns the health status of the service",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Health check endpoint",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/oauth": {
             "get": {
                 "description": "OAuth endpoint",
@@ -133,7 +153,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/recipes.RecipeList"
+                            "$ref": "#/definitions/models.RecipeList"
                         }
                     }
                 }
@@ -149,15 +169,15 @@ const docTemplate = `{
                 "tags": [
                     "Recipes"
                 ],
-                "summary": "Add a new Recipe",
+                "summary": "Add a new models.Recipe",
                 "parameters": [
                     {
-                        "description": "Recipe",
+                        "description": "models.Recipe",
                         "name": "message",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/recipes.Recipe"
+                            "$ref": "#/definitions/models.Recipe"
                         }
                     }
                 ],
@@ -197,7 +217,7 @@ const docTemplate = `{
                 "tags": [
                     "Recipes"
                 ],
-                "summary": "Get a specific Recipe",
+                "summary": "Get a specific models.Recipe",
                 "parameters": [
                     {
                         "type": "integer",
@@ -207,7 +227,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Recipe ID",
+                        "description": "models.Recipe ID",
                         "name": "recipe",
                         "in": "path",
                         "required": true
@@ -217,7 +237,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/recipes.Recipe"
+                            "$ref": "#/definitions/models.Recipe"
                         }
                     }
                 }
@@ -233,22 +253,22 @@ const docTemplate = `{
                 "tags": [
                     "Recipes"
                 ],
-                "summary": "Update a specific Recipe",
+                "summary": "Update a specific models.Recipe",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Recipe ID",
+                        "description": "models.Recipe ID",
                         "name": "recipe",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Recipe",
+                        "description": "models.Recipe",
                         "name": "message",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/recipes.Recipe"
+                            "$ref": "#/definitions/models.Recipe"
                         }
                     }
                 ],
@@ -272,11 +292,11 @@ const docTemplate = `{
                 "tags": [
                     "Recipes"
                 ],
-                "summary": "Delete a Recipe",
+                "summary": "Delete a models.Recipe",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Recipe ID",
+                        "description": "models.Recipe ID",
                         "name": "recipe",
                         "in": "path",
                         "required": true
@@ -305,7 +325,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Recipe ID",
+                        "description": "models.Recipe ID",
                         "name": "recipe",
                         "in": "path",
                         "required": true
@@ -322,7 +342,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/recipes.RecipePicture"
+                            "$ref": "#/definitions/models.RecipePicture"
                         }
                     }
                 }
@@ -337,7 +357,7 @@ const docTemplate = `{
                 "tags": [
                     "Recipes"
                 ],
-                "summary": "Get a Random Recipe",
+                "summary": "Get a Random models.Recipe",
                 "parameters": [
                     {
                         "type": "integer",
@@ -350,7 +370,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/recipes.Recipe"
+                            "$ref": "#/definitions/models.Recipe"
                         }
                     }
                 }
@@ -474,7 +494,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/core.Version"
+                            "$ref": "#/definitions/version.Version"
                         }
                     }
                 }
@@ -482,20 +502,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "core.Version": {
-            "type": "object",
-            "properties": {
-                "api": {
-                    "description": "API is the MAJOR API Version supported by the app",
-                    "type": "string"
-                },
-                "app": {
-                    "description": "APP is the version of the current app",
-                    "type": "string"
-                }
-            }
-        },
-        "recipes.Ingredients": {
+        "models.Ingredients": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -512,13 +519,13 @@ const docTemplate = `{
                 }
             }
         },
-        "recipes.Recipe": {
+        "models.Recipe": {
             "type": "object",
             "properties": {
                 "components": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/recipes.Ingredients"
+                        "$ref": "#/definitions/models.Ingredients"
                     }
                 },
                 "description": {
@@ -541,7 +548,7 @@ const docTemplate = `{
                 }
             }
         },
-        "recipes.RecipeList": {
+        "models.RecipeList": {
             "type": "object",
             "properties": {
                 "recipes": {
@@ -552,7 +559,7 @@ const docTemplate = `{
                 }
             }
         },
-        "recipes.RecipePicture": {
+        "models.RecipePicture": {
             "type": "object",
             "properties": {
                 "id": {
@@ -590,6 +597,19 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "version.Version": {
+            "type": "object",
+            "properties": {
+                "api": {
+                    "description": "API is the MAJOR API Version supported by the app",
+                    "type": "string"
+                },
+                "app": {
+                    "description": "APP is the version of the current app",
                     "type": "string"
                 }
             }

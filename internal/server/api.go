@@ -19,7 +19,7 @@ func AddServerAPIToHandler(handler Handler) {
 // @Summary Get the curent version
 // @Description get the current version
 // @Produce  json
-// @Success 200 {object} Version
+// @Success 200 {object} version.Version
 // @Router /version [get]
 func prepareVersionRoutes(c *APICallContext) {
 	c.JSON(http.StatusOK, version.AppVersion())
