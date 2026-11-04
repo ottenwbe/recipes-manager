@@ -141,15 +141,16 @@ func (rAPI *API) getRandomRecipe(c *server.APICallContext) {
 
 	recipe := rAPI.recipes.Random()
 
+	if recipe.ID == models.InvalidRecipeID() {
+		c.JSON(http.StatusNotFound, server.H{"error": "no recipes found"})
+		return
+	}
+
 	if servings > 0 {
 		recipe.ScaleTo(servings)
 	}
 
-	if recipe.ID == models.InvalidRecipeID() {
-		c.JSON(http.StatusNotFound, server.H{"error": "no recipes found"})
-	} else {
-		c.JSON(http.StatusOK, recipe)
-	}
+	c.JSON(http.StatusOK, recipe)
 }
 
 // getRecipes example
@@ -192,15 +193,16 @@ func (rAPI *API) getRecipe(c *server.APICallContext) {
 
 	recipe := rAPI.recipes.Get(recipeID)
 
+	if recipe.ID == models.InvalidRecipeID() {
+		c.JSON(http.StatusNotFound, server.H{"error": "recipe not found", "id": recipeIDS})
+		return
+	}
+
 	if servings > 0 {
 		recipe.ScaleTo(servings)
 	}
 
-	if recipe.ID == models.InvalidRecipeID() {
-		c.JSON(http.StatusNotFound, server.H{"error": "recipe not found", "id": recipeIDS})
-	} else {
-		c.JSON(http.StatusOK, recipe)
-	}
+	c.JSON(http.StatusOK, recipe)
 }
 
 // putRecipe example
