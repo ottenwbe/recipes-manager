@@ -107,7 +107,7 @@ func RecipeToBsonM(searchQuery *models.RecipeSearchFilter) bson.M {
 	}
 	if len(searchQuery.Ingredient) > 0 {
 		rgx := fmt.Sprintf("(%v)", strings.Join(searchQuery.Ingredient, "|"))
-		queryPart = append(queryPart, bson.M{"description": bson.M{"$regex": rgx}})
+		queryPart = append(queryPart, bson.M{"ingredients": bson.M{"$elemMatch": bson.M{"name": bson.M{"$regex": rgx}}}})
 	}
 
 	if len(queryPart) > 1 {
