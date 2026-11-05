@@ -107,7 +107,7 @@ func RecipeToBsonM(searchQuery *models.RecipeSearchFilter) bson.M {
 	}
 	if len(searchQuery.Ingredient) > 0 {
 		rgx := fmt.Sprintf("(%v)", strings.Join(searchQuery.Ingredient, "|"))
-		queryPart = append(queryPart, bson.M{"description": bson.M{"$regex": rgx}})
+		queryPart = append(queryPart, bson.M{"ingredients": bson.M{"$elemMatch": bson.M{"name": bson.M{"$regex": rgx}}}})
 	}
 
 	if len(queryPart) > 1 {
@@ -416,7 +416,7 @@ func (*MongoRecipeDB) createDefaultRecipeIndex(c *mongo.Collection) error {
 	defer cancel()
 	_, err := c.Indexes().CreateMany(ctx, []mongo.IndexModel{indexID, indexName})
 	if err != nil {
-		log.Info("idx error", err)
+		log.WithError(err).Info("idx error")
 	}
 	return err
 }

@@ -207,9 +207,9 @@ func listSources(sources Sources) func(c *server.APICallContext) {
 // @Description Download recipes from a source
 // @Tags Sources
 // @Produce json
-// @Param source path string true "Source ID"
+// @Param source path string true "Source ID" format string
 // @Success 200
-// @Router /sources/{source}/recipes [get]
+// @Router /sources/{source}/recipes [patch]
 func synchronizeSourceRecipes(sources Sources, recipes recipes.RecipeDB) func(c *server.APICallContext) {
 	return func(c *server.APICallContext) {
 		sourceID := c.Param("source")
@@ -250,18 +250,6 @@ func sourceClient(sourceID string, sources Sources) (SourceClient, error) {
 		return nil, err
 	}
 	src, err := sources.Client(sid)
-	if err != nil {
-		return nil, err
-	}
-	return src, err
-}
-
-func sourceDescription(sourceID string, c *server.APICallContext, sources Sources) (*SourceDescription, error) {
-	sid, err := SourceIDFromString(sourceID)
-	if err != nil {
-		return nil, err
-	}
-	src, err := sources.Description(sid)
 	if err != nil {
 		return nil, err
 	}

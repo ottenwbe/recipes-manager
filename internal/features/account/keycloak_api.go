@@ -5,6 +5,7 @@ package account
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -180,8 +181,10 @@ func getTokenFromKeyCloak(keyCloakConfig *oauth2.Config, code string) (*Token, e
 	log.Debugf("Token received %s", s)
 
 	rawIDToken, ok := token.Extra("id_token").(string)
-	if !ok {
-		log.Error("id_token is missing")
+	if !ok || rawIDToken == "" {
+		err := errors.New("id_token is missing in token response")
+		log.WithField("Token", "getTokenFromKeyCloak").WithError(err).Error("Could not get id_token from token")
+		return nil, err
 	}
 
 	storedToken := NewToken(rawIDToken)

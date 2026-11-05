@@ -95,6 +95,15 @@ const docTemplate = `{
                                 "type": "string"
                             }
                         }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             }
@@ -458,7 +467,7 @@ const docTemplate = `{
             }
         },
         "/sources/{source}/recipes": {
-            "get": {
+            "patch": {
                 "description": "Download recipes from a source",
                 "produces": [
                     "application/json"

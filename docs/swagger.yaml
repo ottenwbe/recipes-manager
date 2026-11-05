@@ -134,6 +134,12 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Health check endpoint
   /oauth:
     get:
@@ -371,7 +377,7 @@ paths:
       tags:
       - Sources
   /sources/{source}/recipes:
-    get:
+    patch:
       description: Download recipes from a source
       parameters:
       - description: Source ID

@@ -6,7 +6,6 @@ package recipes
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -104,7 +103,7 @@ func (rAPI *API) prepareV1API() {
 func (rAPI *API) getNumberOfRecipes(c *server.APICallContext) {
 	num := rAPI.recipes.Num()
 	log.Debugf("Number of Recipes %v", num)
-	c.String(http.StatusOK, fmt.Sprintf("%v", num))
+	c.JSON(http.StatusOK, num)
 }
 
 // getRecipePicture example
@@ -141,15 +140,16 @@ func (rAPI *API) getRandomRecipe(c *server.APICallContext) {
 
 	recipe := rAPI.recipes.Random()
 
+	if recipe.ID == models.InvalidRecipeID() {
+		c.JSON(http.StatusNotFound, server.H{"error": "no recipes found"})
+		return
+	}
+
 	if servings > 0 {
 		recipe.ScaleTo(servings)
 	}
 
-	if recipe.ID == models.InvalidRecipeID() {
-		c.JSON(http.StatusNotFound, server.H{"error": "no recipes found"})
-	} else {
-		c.JSON(http.StatusOK, recipe)
-	}
+	c.JSON(http.StatusOK, recipe)
 }
 
 // getRecipes example
@@ -192,15 +192,16 @@ func (rAPI *API) getRecipe(c *server.APICallContext) {
 
 	recipe := rAPI.recipes.Get(recipeID)
 
+	if recipe.ID == models.InvalidRecipeID() {
+		c.JSON(http.StatusNotFound, server.H{"error": "recipe not found", "id": recipeIDS})
+		return
+	}
+
 	if servings > 0 {
 		recipe.ScaleTo(servings)
 	}
 
-	if recipe.ID == models.InvalidRecipeID() {
-		c.JSON(http.StatusNotFound, server.H{"error": "recipe not found", "id": recipeIDS})
-	} else {
-		c.JSON(http.StatusOK, recipe)
-	}
+	c.JSON(http.StatusOK, recipe)
 }
 
 // putRecipe example
@@ -278,9 +279,8 @@ func (rAPI *API) postRecipes(c *server.APICallContext) {
 func (rAPI *API) deleteRecipe(c *server.APICallContext) {
 	recipeID := models.NewRecipeIDFromString(c.Param(RECIPE))
 	if err := rAPI.recipes.Remove(recipeID); err != nil {
-		// Assuming the DB layer returns an error when the item is not found.
-		c.JSON(http.StatusNotFound, server.H{"error": "recipe not found", "id": recipeID})
-		log.WithError(err).Debug("Could not Delete models.Recipe")
+		log.WithError(err).Error("Could not Delete models.Recipe")
+		c.JSON(http.StatusInternalServerError, server.H{"error": "could not delete recipe", "id": recipeID})
 	} else {
 		c.Status(http.StatusNoContent) // 204 is more idiomatic for a successful DELETE with no body
 	}

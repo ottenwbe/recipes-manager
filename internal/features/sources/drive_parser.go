@@ -177,7 +177,7 @@ func (p *driveRecipeParser) handleText(text string) {
 
 var (
 	validNumber  = regexp.MustCompile(`^[0-9]+`)
-	validStrings = regexp.MustCompile(`[a-zA-zßäüöÄÜÖ]+`)
+	validStrings = regexp.MustCompile(`[a-zA-ZßäüöÄÜÖ]+`)
 )
 
 func handleIngredient(p *driveRecipeParser, text string) {

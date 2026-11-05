@@ -172,8 +172,33 @@ func (g *ginRoutes) Path() string {
 
 func (g *ginHandler) corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", g.corsOrigin)
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		origin := c.GetHeader("Origin")
+		allowOrigin := g.corsOrigin
+
+		// The CORS specification does not allow combining a wildcard origin with
+		// credentials. If a wildcard is configured, echo back the request origin
+		// instead so that credentialed cross-origin requests remain valid.
+		if allowOrigin == "*" {
+			allowOrigin = origin
+			if allowOrigin == "" {
+				allowOrigin = "*"
+			}
+		}
+
+		allowed := true
+		if allowOrigin != "*" && origin != "" && origin != allowOrigin {
+			allowed = false
+		}
+
+		if !allowed {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+
+		c.Writer.Header().Set("Access-Control-Allow-Origin", allowOrigin)
+		if allowOrigin != "*" {
+			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		}
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, PATCH, POST, PUT, DELETE")
 
