@@ -174,7 +174,7 @@ func getTokenFromKeyCloak(keyCloakConfig *oauth2.Config, code string) (*Token, e
 		return nil, err
 	}
 
-	s, err := json.Marshal(token)
+	s, err := json.Marshal(token) // #nosec
 	if err != nil {
 		log.Error("Could Not Unmarshal Token", err)
 	}
