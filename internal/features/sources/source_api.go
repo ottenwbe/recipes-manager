@@ -46,10 +46,9 @@ type API struct {
 }
 
 // AddSourcesAPIToHandler creates the API for sources
-func AddSourcesAPIToHandler(handler server.Handler, sources Sources, recipesDB recipes.RecipeDB) error {
+func AddSourcesAPIToHandler(handler server.Handler, sources Sources, recipesDB recipes.RecipeDB) {
 	sourcesAPI := API{sources, recipesDB}
 	sourcesAPI.PrepareAPI(handler)
-	return nil
 }
 
 // PrepareAPI registers all api endpoints
@@ -80,7 +79,7 @@ func (s API) prepareV1API(router server.Handler, sources Sources, recipes recipe
 // @Tags Sources
 // @Produce json
 // @Param source path string true "Source ID"
-// @Success 301 {string} redirect
+// @Success 302 {string} redirect
 // @Router /sources/{source}/oauth [get]
 func oAuthHandler(sources Sources) func(c *server.APICallContext) {
 	return func(c *server.APICallContext) {
@@ -184,7 +183,7 @@ func oAuthConnect(sources Sources) func(c *server.APICallContext) {
 // @Description List sources
 // @Tags Sources
 // @Produce json
-// @Success 200 {object} map[string]SourceResponse
+// @Success 200 {object} map[string]*SourceResponse
 // @Router /sources [get]
 func listSources(sources Sources) func(c *server.APICallContext) {
 	return func(c *server.APICallContext) {
