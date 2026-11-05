@@ -183,7 +183,7 @@ func oAuthConnect(sources Sources) func(c *server.APICallContext) {
 // @Description List sources
 // @Tags Sources
 // @Produce json
-// @Success 200 {object} map[string]*SourceResponse
+// @Success 200 {object} map[string]SourceResponse
 // @Router /sources [get]
 func listSources(sources Sources) func(c *server.APICallContext) {
 	return func(c *server.APICallContext) {

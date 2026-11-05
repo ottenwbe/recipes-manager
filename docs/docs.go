@@ -457,8 +457,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "301": {
-                        "description": "Moved Permanently",
+                    "302": {
+                        "description": "Found",
                         "schema": {
                             "type": "string"
                         }
