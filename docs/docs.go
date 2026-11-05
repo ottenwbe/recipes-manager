@@ -168,7 +168,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Adds a new recipe, the id will automatically overriden by the backend",
+                "description": "Adds a new recipe, the id will automatically be overridden by the backend",
                 "consumes": [
                     "application/json"
                 ],
@@ -252,7 +252,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "A specific recipe is updates",
+                "description": "A specific recipe is updated",
                 "consumes": [
                     "application/json"
                 ],
@@ -330,7 +330,7 @@ const docTemplate = `{
                 "tags": [
                     "Recipes"
                 ],
-                "summary": "Get a picture of a",
+                "summary": "Get a picture of a recipe",
                 "parameters": [
                     {
                         "type": "string",

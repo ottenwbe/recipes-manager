@@ -183,7 +183,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Adds a new recipe, the id will automatically overriden by the backend
+      description: Adds a new recipe, the id will automatically be overridden by the
+        backend
       parameters:
       - description: models.Recipe
         in: body
@@ -258,7 +259,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: A specific recipe is updates
+      description: A specific recipe is updated
       parameters:
       - description: models.Recipe ID
         in: path
@@ -302,7 +303,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.RecipePicture'
-      summary: Get a picture of a
+      summary: Get a picture of a recipe
       tags:
       - Recipes
   /recipes/rand:

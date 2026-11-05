@@ -85,7 +85,7 @@ func (rAPI *API) prepareV1API() {
 	// PUT updates a specific recipe
 	v1.PUT("/recipes/r/:recipe", rAPI.putRecipe)
 
-	// PUT updates a specific recipe
+	// DELETE removes a specific recipe
 	v1.DELETE("/recipes/r/:recipe", rAPI.deleteRecipe)
 
 	// GET a specific recipe's picture
@@ -107,7 +107,7 @@ func (rAPI *API) getNumberOfRecipes(c *server.APICallContext) {
 }
 
 // getRecipePicture example
-// @Summary Get a picture of a
+// @Summary Get a picture of a recipe
 // @Tags Recipes
 // @Description A specific picture of a specific recipe is returned
 // @Param recipe path string true "models.Recipe ID"
@@ -206,7 +206,7 @@ func (rAPI *API) getRecipe(c *server.APICallContext) {
 
 // putRecipe example
 // @Summary Update a specific models.Recipe
-// @Description A specific recipe is updates
+// @Description A specific recipe is updated
 // @Tags Recipes
 // @Param recipe path string true "models.Recipe ID"
 // @Param message body models.Recipe true "models.Recipe"
@@ -244,7 +244,7 @@ func (rAPI *API) putRecipe(c *server.APICallContext) {
 
 // postRecipes example
 // @Summary Add a new models.Recipe
-// @Description Adds a new recipe, the id will automatically overriden by the backend
+// @Description Adds a new recipe, the id will automatically be overridden by the backend
 // @Tags Recipes
 // @Param message body models.Recipe true "models.Recipe"
 // @Accept json
