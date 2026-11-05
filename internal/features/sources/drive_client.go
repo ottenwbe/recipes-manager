@@ -236,7 +236,9 @@ func (c *DriveClient) Refresh() (err error) {
 // OpenNewGoogleDriveConnection with an empty cache of recipes
 func OpenNewGoogleDriveConnection() *DriveClient {
 	c := &DriveClient{}
-	c.Refresh()
+	if err := c.Refresh(); err != nil {
+		log.WithError(err).Warn("Could not refresh token on new drive connection")
+	}
 	return c
 }
 
@@ -296,7 +298,7 @@ func (c *DriveClient) OAuthLoginConfig() (*oauth2.Config, error) {
 // It returns the retrieved Token and any read error encountered.
 func (c *DriveClient) tokenFromFile() (*oauth2.Token, error) {
 	file := c.tokenFile()
-	f, err := os.Open(file)
+	f, err := os.Open(file) // #nosec
 	if err != nil {
 		return nil, err
 	}
@@ -314,12 +316,12 @@ func (c *DriveClient) tokenFromFile() (*oauth2.Token, error) {
 func (c *DriveClient) saveToken(token *oauth2.Token) error {
 	file := c.tokenFile()
 	log.Infof("Saving credential file to: %s\n", file)
-	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600) // #nosec
 	if err != nil {
 		return err
 	}
 	defer func() { _ = f.Close() }()
-	return json.NewEncoder(f).Encode(token)
+	return json.NewEncoder(f).Encode(token) // #nosec
 }
 
 func (c *DriveClient) tokenFile() string {

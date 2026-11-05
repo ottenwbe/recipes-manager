@@ -44,7 +44,7 @@ func DownloadIMGAsBase64(url string) (base64img string, err error) {
 
 // IMGFileToBase64 reads an image from a file at given path, i.e., /home/user/test.jpeg. This image is returned as base64 encoded string.
 func IMGFileToBase64(path string) (string, error) {
-	buf, err := os.ReadFile(path)
+	buf, err := os.ReadFile(path) // #nosec
 	if err != nil {
 		log.WithError(err).Error("Could not open image")
 		return "", err

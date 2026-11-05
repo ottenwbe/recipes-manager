@@ -68,7 +68,9 @@ func (c *viperConfig) SetDefault(key string, val interface{}) {
 
 // BindEnv binds a key to an environment variable
 func (c *viperConfig) BindEnv(key string) {
-	c.v.BindEnv(key)
+	if err := c.v.BindEnv(key); err != nil {
+		log.WithError(err).Error("Error while binding env variable")
+	}
 }
 
 func (c *viperConfig) configEnv() {
