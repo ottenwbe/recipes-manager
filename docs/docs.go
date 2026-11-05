@@ -359,7 +359,7 @@ const docTemplate = `{
         },
         "/recipes/rand": {
             "get": {
-                "description": "A specific picture of a specific recipe is returned",
+                "description": "A random recipe is returned",
                 "produces": [
                     "application/json"
                 ],
@@ -494,11 +494,11 @@ const docTemplate = `{
         },
         "/version": {
             "get": {
-                "description": "get the current version",
+                "description": "Get the current version",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Get the curent version",
+                "summary": "Get the current version",
                 "responses": {
                     "200": {
                         "description": "OK",

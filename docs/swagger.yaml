@@ -307,7 +307,7 @@ paths:
       - Recipes
   /recipes/rand:
     get:
-      description: A specific picture of a specific recipe is returned
+      description: A random recipe is returned
       parameters:
       - description: Number of Servings
         in: query
@@ -395,7 +395,7 @@ paths:
       - Sources
   /version:
     get:
-      description: get the current version
+      description: Get the current version
       produces:
       - application/json
       responses:
@@ -403,5 +403,5 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/version.Version'
-      summary: Get the curent version
+      summary: Get the current version
 swagger: "2.0"

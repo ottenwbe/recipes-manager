@@ -128,7 +128,7 @@ func (rAPI *API) getRecipePicture(c *server.APICallContext) {
 
 // getRandomRecipe example
 // @Summary Get a Random models.Recipe
-// @Description A specific picture of a specific recipe is returned
+// @Description A random recipe is returned
 // @Tags Recipes
 // @Param servings query int false "Number of Servings"
 // @Produce json
