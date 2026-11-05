@@ -236,7 +236,9 @@ func (c *DriveClient) Refresh() (err error) {
 // OpenNewGoogleDriveConnection with an empty cache of recipes
 func OpenNewGoogleDriveConnection() *DriveClient {
 	c := &DriveClient{}
-	c.Refresh()
+	if err := c.Refresh(); err != nil {
+		log.WithError(err).Warn("Could not refresh token on new drive connection")
+	}
 	return c
 }
 
