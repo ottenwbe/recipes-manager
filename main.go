@@ -86,8 +86,7 @@ func newServer(recipesDB recipes.RecipeDB, srcRepository sources.Sources) *serve
 func addAPIsToServer(handler server.Handler, recipesDB recipes.RecipeDB, srcRepository sources.Sources) {
 	err := recipes.AddRecipesAPIToHandler(handler, recipesDB)
 	failOnError(err)
-	err = sources.AddSourcesAPIToHandler(handler, srcRepository, recipesDB)
-	failOnError(err)
+	sources.AddSourcesAPIToHandler(handler, srcRepository, recipesDB)
 	server.AddServerAPIToHandler(handler, func() error { return recipesDB.Ping() })
 	account.AddAuthAPIsToHandler(handler, recipesDB)
 }

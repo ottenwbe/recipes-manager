@@ -16,8 +16,8 @@ func AddServerAPIToHandler(handler Handler, healthCheck func() error) {
 }
 
 // Version example
-// @Summary Get the curent version
-// @Description get the current version
+// @Summary Get the current version
+// @Description Get the current version
 // @Produce  json
 // @Success 200 {object} version.Version
 // @Router /version [get]

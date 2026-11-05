@@ -183,7 +183,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Adds a new recipe, the id will automatically overriden by the backend
+      description: Adds a new recipe, the id will automatically be overridden by the
+        backend
       parameters:
       - description: models.Recipe
         in: body
@@ -258,7 +259,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: A specific recipe is updates
+      description: A specific recipe is updated
       parameters:
       - description: models.Recipe ID
         in: path
@@ -302,12 +303,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.RecipePicture'
-      summary: Get a picture of a
+      summary: Get a picture of a recipe
       tags:
       - Recipes
   /recipes/rand:
     get:
-      description: A specific picture of a specific recipe is returned
+      description: A random recipe is returned
       parameters:
       - description: Number of Servings
         in: query
@@ -369,8 +370,8 @@ paths:
       produces:
       - application/json
       responses:
-        "301":
-          description: Moved Permanently
+        "302":
+          description: Found
           schema:
             type: string
       summary: Handles Tokens
@@ -395,7 +396,7 @@ paths:
       - Sources
   /version:
     get:
-      description: get the current version
+      description: Get the current version
       produces:
       - application/json
       responses:
@@ -403,5 +404,5 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/version.Version'
-      summary: Get the curent version
+      summary: Get the current version
 swagger: "2.0"

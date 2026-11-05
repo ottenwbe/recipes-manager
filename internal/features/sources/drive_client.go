@@ -8,6 +8,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/option"
 
 	"context"
 	"crypto/rand"
@@ -268,7 +269,7 @@ func (c *DriveClient) getToken(code string) (*oauth2.Token, error) {
 
 func (c *DriveClient) configureDriveConnection(token *oauth2.Token) (err error) {
 	client := c.oAuthConfig.Client(context.Background(), token)
-	service, err := drive.New(client)
+	service, err := drive.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
 		return err
 	}

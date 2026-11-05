@@ -168,7 +168,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Adds a new recipe, the id will automatically overriden by the backend",
+                "description": "Adds a new recipe, the id will automatically be overridden by the backend",
                 "consumes": [
                     "application/json"
                 ],
@@ -252,7 +252,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "A specific recipe is updates",
+                "description": "A specific recipe is updated",
                 "consumes": [
                     "application/json"
                 ],
@@ -330,7 +330,7 @@ const docTemplate = `{
                 "tags": [
                     "Recipes"
                 ],
-                "summary": "Get a picture of a",
+                "summary": "Get a picture of a recipe",
                 "parameters": [
                     {
                         "type": "string",
@@ -359,7 +359,7 @@ const docTemplate = `{
         },
         "/recipes/rand": {
             "get": {
-                "description": "A specific picture of a specific recipe is returned",
+                "description": "A random recipe is returned",
                 "produces": [
                     "application/json"
                 ],
@@ -457,8 +457,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "301": {
-                        "description": "Moved Permanently",
+                    "302": {
+                        "description": "Found",
                         "schema": {
                             "type": "string"
                         }
@@ -494,11 +494,11 @@ const docTemplate = `{
         },
         "/version": {
             "get": {
-                "description": "get the current version",
+                "description": "Get the current version",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Get the curent version",
+                "summary": "Get the current version",
                 "responses": {
                     "200": {
                         "description": "OK",

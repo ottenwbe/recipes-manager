@@ -77,7 +77,7 @@ var _ = Describe("recipesAPI", func() {
 			Expect(resp.StatusCode).To(Equal(200))
 
 			var recipeIDs models.RecipeList
-			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
+			_ = json.NewDecoder(resp.Body).Decode(&recipeIDs)
 			Expect(len(recipeIDs.Recipes)).To(Equal(1))
 			Expect(expectedID.String()).To(Equal(recipeIDs.Recipes[0]))
 		})
@@ -96,7 +96,7 @@ var _ = Describe("recipesAPI", func() {
 			Expect(resp.StatusCode).To(Equal(200))
 
 			var recipeIDs models.RecipeList
-			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
+			_ = json.NewDecoder(resp.Body).Decode(&recipeIDs)
 			Expect(len(recipeIDs.Recipes)).To(Equal(1))
 			Expect(expectedID.String()).To(Equal(recipeIDs.Recipes[0]))
 		})
@@ -119,7 +119,7 @@ var _ = Describe("recipesAPI", func() {
 			Expect(resp.StatusCode).To(Equal(200))
 
 			var recipeIDs models.RecipeList
-			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
+			_ = json.NewDecoder(resp.Body).Decode(&recipeIDs)
 			Expect(len(recipeIDs.Recipes)).To(Equal(2))
 			Expect(recipeIDs.Recipes).To(ContainElement(expectedID1.String()))
 			Expect(recipeIDs.Recipes).To(ContainElement(expectedID2.String()))
@@ -139,7 +139,7 @@ var _ = Describe("recipesAPI", func() {
 			Expect(resp.StatusCode).To(Equal(200))
 
 			var recipeIDs []string
-			err = json.NewDecoder(resp.Body).Decode(&recipeIDs)
+			_ = json.NewDecoder(resp.Body).Decode(&recipeIDs)
 			Expect(len(recipeIDs)).To(Equal(0))
 		})
 	})
@@ -154,7 +154,7 @@ var _ = Describe("recipesAPI", func() {
 			Expect(resp.StatusCode).To(Equal(200))
 
 			var recipe models.Recipe
-			err = json.NewDecoder(resp.Body).Decode(&recipe)
+			_ = json.NewDecoder(resp.Body).Decode(&recipe)
 			Expect(recipe).To(Equal(*expectedRecipe[0]))
 		})
 
@@ -167,7 +167,7 @@ var _ = Describe("recipesAPI", func() {
 			Expect(resp.StatusCode).To(Equal(200))
 
 			var recipe models.Recipe
-			err = json.NewDecoder(resp.Body).Decode(&recipe)
+			_ = json.NewDecoder(resp.Body).Decode(&recipe)
 			Expect(len(recipe.Ingredients)).ToNot(Equal(0))
 			Expect(recipe.Ingredients[0].Amount).To(Equal(200.0))
 		})
@@ -191,7 +191,7 @@ var _ = Describe("recipesAPI", func() {
 			Expect(resp.StatusCode).To(Equal(200))
 
 			var recipe models.Recipe
-			err = json.NewDecoder(resp.Body).Decode(&recipe)
+			_ = json.NewDecoder(resp.Body).Decode(&recipe)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(recipe.ID).To(BeElementOf(expectedRecipesIDs))
@@ -208,7 +208,7 @@ var _ = Describe("recipesAPI", func() {
 			Expect(resp.StatusCode).To(Equal(200))
 
 			var recipe models.Recipe
-			err = json.NewDecoder(resp.Body).Decode(&recipe)
+			_ = json.NewDecoder(resp.Body).Decode(&recipe)
 			Expect(len(recipe.Ingredients)).ToNot(Equal(0))
 			Expect(recipe.Ingredients[0].Amount).To(Equal(200.0))
 		})
@@ -280,7 +280,7 @@ var _ = Describe("recipesAPI", func() {
 		It("removes a persisted recipe", func() {
 			id := createAndPersistDefaultRecipe(recipes)
 			client := &http.Client{}
-			request, err := http.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/recipes/r/"+id.String(), bytes.NewBuffer(nil))
+			request, _ := http.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/recipes/r/"+id.String(), bytes.NewBuffer(nil))
 			response, err := client.Do(request)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(response.StatusCode).To(Equal(http.StatusNoContent))
@@ -309,7 +309,7 @@ var _ = Describe("recipesAPI", func() {
 			client := &http.Client{}
 			recipeJSON, _ = json.Marshal(recipe)
 			retrievedRecipe, _ := recipes.GetByName(POSTTEST)
-			request, err := http.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/recipes/r/"+retrievedRecipe.ID.String(), bytes.NewBuffer(recipeJSON))
+			request, _ := http.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/recipes/r/"+retrievedRecipe.ID.String(), bytes.NewBuffer(recipeJSON))
 			request.Header.Set("Content-Type", "application/json")
 			resp, err := client.Do(request)
 			Expect(err).ToNot(HaveOccurred())
