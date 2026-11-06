@@ -231,6 +231,27 @@ paths:
       summary: Get a Random models.Recipe
       tags:
       - Recipes
+  /recipes/{recipe}/pictures:
+    get:
+      description: Get all pictures of a recipe
+      parameters:
+      - description: models.Recipe ID
+        in: path
+        name: recipe
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/models.RecipePicture'
+            type: object
+      summary: Get all pictures of a recipe
+      tags:
+      - Recipes
   /recipes/r/{recipe}:
     delete:
       consumes:

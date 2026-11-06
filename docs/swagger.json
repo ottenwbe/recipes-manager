@@ -378,6 +378,38 @@
                 }
             }
         },
+        "/recipes/{recipe}/pictures": {
+            "get": {
+                "description": "Get all pictures of a recipe",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recipes"
+                ],
+                "summary": "Get all pictures of a recipe",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "models.Recipe ID",
+                        "name": "recipe",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/models.RecipePicture"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sources": {
             "get": {
                 "description": "List sources",

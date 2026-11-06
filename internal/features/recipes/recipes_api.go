@@ -91,6 +91,9 @@ func (rAPI *API) prepareV1API() {
 	// GET a specific recipe's picture
 	v1.GET("/recipes/:recipe/pictures/:name", rAPI.getRecipePicture)
 
+	// GET all pictures of a specific recipe
+	v1.GET("/recipes/:recipe/pictures", rAPI.getRecipePictures)
+
 }
 
 // getNumberOfRecipes example
@@ -150,6 +153,26 @@ func (rAPI *API) getRandomRecipe(c *server.APICallContext) {
 	}
 
 	c.JSON(http.StatusOK, recipe)
+}
+
+// getRecipePictures example
+// @Summary Get all pictures of a recipe
+// @Description Get all pictures of a recipe
+// @Tags Recipes
+// @Param recipe path string true "models.Recipe ID"
+// @Produce json
+// @Success 200 {object} map[string]models.RecipePicture
+// @Router /recipes/{recipe}/pictures [get]
+func (rAPI *API) getRecipePictures(c *server.APICallContext) {
+	recipeID := models.NewRecipeIDFromString(c.Param("recipe"))
+	recipe := rAPI.recipes.Get(recipeID)
+	if recipe.ID == models.InvalidRecipeID() {
+		c.JSON(http.StatusNotFound, server.H{"error": "recipe not found", "id": recipeID})
+		return
+	}
+
+	pictures := rAPI.recipes.Pictures(recipeID)
+	c.JSON(http.StatusOK, pictures)
 }
 
 // getRecipes example
