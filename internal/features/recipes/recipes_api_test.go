@@ -173,6 +173,45 @@ var _ = Describe("recipesAPI", func() {
 		})
 	})
 
+	Context("Get Recipes Pictures", func() {
+		It("returns a 404 when no recipe exists", func() {
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes/" + models.InvalidRecipeID().String() + "/pictures")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode).To(Equal(404))
+		})
+
+		It("returns all pictures of a persisted recipe", func() {
+			id := createAndPersistDefaultRecipe(recipes)
+			defer func() { // delete recently created recipe
+				recipes.Remove(id)
+			}()
+
+			err := recipes.AddPicture(&models.RecipePicture{
+				ID:      id,
+				Name:    "testRecipePic1",
+				Picture: "thisisabas64picture",
+			})
+			Expect(err).ToNot(HaveOccurred())
+			err = recipes.AddPicture(&models.RecipePicture{
+				ID:      id,
+				Name:    "testRecipePic2",
+				Picture: "thisisabas64picture2",
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes/" + id.String() + "/pictures")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode).To(Equal(200))
+
+			var pictures map[string]models.RecipePicture
+			_ = json.NewDecoder(resp.Body).Decode(&pictures)
+			Expect(len(pictures)).To(Equal(2))
+			Expect(pictures).To(HaveKey("testRecipePic1"))
+			Expect(pictures).To(HaveKey("testRecipePic2"))
+			Expect(pictures["testRecipePic1"].Picture).To(Equal("thisisabas64picture"))
+		})
+	})
+
 	Context("Randomly getting recipes", func() {
 		It("returns a 404 when no recipe exists ", func() {
 			recipes.Clear()
