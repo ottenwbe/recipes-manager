@@ -200,7 +200,7 @@ paths:
       summary: Add a new models.Recipe
       tags:
       - Recipes
-  /recipes/num:
+  /recipes-num:
     get:
       description: The number of recipes is returned that is managed by the service.
       produces:
@@ -211,6 +211,24 @@ paths:
           schema:
             type: integer
       summary: Get the number of recipes
+      tags:
+      - Recipes
+  /recipes-random:
+    get:
+      description: A random recipe is returned
+      parameters:
+      - description: Number of Servings
+        in: query
+        name: servings
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Recipe'
+      summary: Get a Random models.Recipe
       tags:
       - Recipes
   /recipes/r/{recipe}:
@@ -304,24 +322,6 @@ paths:
           schema:
             $ref: '#/definitions/models.RecipePicture'
       summary: Get a picture of a recipe
-      tags:
-      - Recipes
-  /recipes/rand:
-    get:
-      description: A random recipe is returned
-      parameters:
-      - description: Number of Servings
-        in: query
-        name: servings
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Recipe'
-      summary: Get a Random models.Recipe
       tags:
       - Recipes
   /sources:

@@ -177,7 +177,7 @@ var _ = Describe("recipesAPI", func() {
 		It("returns a 404 when no recipe exists ", func() {
 			recipes.Clear()
 
-			resp, err := http.Get("http://localhost:8080/api/v1/recipes/rand")
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes-random")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(404))
 		})
@@ -186,7 +186,7 @@ var _ = Describe("recipesAPI", func() {
 			recipes.Clear()
 			_, expectedRecipesIDs := createRandomRecipes(10, recipes) //recipes
 
-			resp, err := http.Get("http://localhost:8080/api/v1/recipes/rand")
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes-random")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
 
@@ -202,7 +202,7 @@ var _ = Describe("recipesAPI", func() {
 
 			_ = createAndPersistDefaultRecipe(recipes)
 
-			resp, err := http.Get("http://localhost:8080/api/v1/recipes/rand?servings=2")
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes-random?servings=2")
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(resp.StatusCode).To(Equal(200))
@@ -220,7 +220,7 @@ var _ = Describe("recipesAPI", func() {
 
 			_, _ = createRandomRecipes(10, recipes)
 
-			resp, err := http.Get("http://localhost:8080/api/v1/recipes/num")
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes-num")
 			Expect(err).ToNot(HaveOccurred())
 
 			result, err := io.ReadAll(resp.Body)
@@ -233,7 +233,7 @@ var _ = Describe("recipesAPI", func() {
 		It("returns the amount of persisted recipes", func() {
 			recipes.Clear()
 
-			resp, err := http.Get("http://localhost:8080/api/v1/recipes/num")
+			resp, err := http.Get("http://localhost:8080/api/v1/recipes-num")
 			Expect(err).ToNot(HaveOccurred())
 
 			result, err := io.ReadAll(resp.Body)

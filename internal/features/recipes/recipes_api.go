@@ -74,10 +74,10 @@ func (rAPI *API) prepareV1API() {
 	v1.POST("/recipes", rAPI.postRecipes)
 
 	// GET a random recipe
-	v1.GET("/recipes/rand", rAPI.getRandomRecipe)
+	v1.GET("/recipes-random", rAPI.getRandomRecipe)
 
 	// GET the number of recipe
-	v1.GET("/recipes/num", rAPI.getNumberOfRecipes)
+	v1.GET("/recipes-num", rAPI.getNumberOfRecipes)
 
 	// GET a specific recipe
 	v1.GET("/recipes/r/:recipe", rAPI.getRecipe)
@@ -99,7 +99,7 @@ func (rAPI *API) prepareV1API() {
 // @Tags Recipes
 // @Produce json
 // @Success 200 {integer} number
-// @Router /recipes/num [get]
+// @Router /recipes-num [get]
 func (rAPI *API) getNumberOfRecipes(c *server.APICallContext) {
 	num := rAPI.recipes.Num()
 	log.Debugf("Number of Recipes %v", num)
@@ -133,7 +133,7 @@ func (rAPI *API) getRecipePicture(c *server.APICallContext) {
 // @Param servings query int false "Number of Servings"
 // @Produce json
 // @Success 200 {object} models.Recipe
-// @Router /recipes/rand [get]
+// @Router /recipes-random [get]
 func (rAPI *API) getRandomRecipe(c *server.APICallContext) {
 	query := c.Request.URL.Query()
 	servings := extractServings(query)
