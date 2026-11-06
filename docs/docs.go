@@ -197,7 +197,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/recipes-num": {
+        "/recipes-count": {
             "get": {
                 "description": "The number of recipes is returned that is managed by the service.",
                 "produces": [

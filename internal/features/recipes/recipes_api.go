@@ -77,19 +77,19 @@ func (rAPI *API) prepareV1API() {
 	v1.GET("/recipes-random", rAPI.getRandomRecipe)
 
 	// GET the number of recipe
-	v1.GET("/recipes-num", rAPI.getNumberOfRecipes)
+	v1.GET("/recipes-count", rAPI.getNumberOfRecipes)
 
 	// GET a specific recipe
-	v1.GET("/recipes/r/:recipe", rAPI.getRecipe)
+	v1.GET("/recipes/:recipe", rAPI.getRecipe)
 
 	// PUT updates a specific recipe
-	v1.PUT("/recipes/r/:recipe", rAPI.putRecipe)
+	v1.PUT("/recipes/:recipe", rAPI.putRecipe)
 
 	// DELETE removes a specific recipe
-	v1.DELETE("/recipes/r/:recipe", rAPI.deleteRecipe)
+	v1.DELETE("/recipes/:recipe", rAPI.deleteRecipe)
 
 	// GET a specific recipe's picture
-	v1.GET("/recipes/r/:recipe/pictures/:name", rAPI.getRecipePicture)
+	v1.GET("/recipes/:recipe/pictures/:name", rAPI.getRecipePicture)
 
 }
 
@@ -99,7 +99,7 @@ func (rAPI *API) prepareV1API() {
 // @Tags Recipes
 // @Produce json
 // @Success 200 {integer} number
-// @Router /recipes-num [get]
+// @Router /recipes-count [get]
 func (rAPI *API) getNumberOfRecipes(c *server.APICallContext) {
 	num := rAPI.recipes.Num()
 	log.Debugf("Number of Recipes %v", num)

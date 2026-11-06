@@ -200,7 +200,7 @@ paths:
       summary: Add a new models.Recipe
       tags:
       - Recipes
-  /recipes-num:
+  /recipes-count:
     get:
       description: The number of recipes is returned that is managed by the service.
       produces:
