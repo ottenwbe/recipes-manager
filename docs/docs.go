@@ -197,7 +197,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/recipes/num": {
+        "/recipes-count": {
             "get": {
                 "description": "The number of recipes is returned that is managed by the service.",
                 "produces": [
@@ -212,6 +212,34 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "/recipes-random": {
+            "get": {
+                "description": "A random recipe is returned",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recipes"
+                ],
+                "summary": "Get a Random models.Recipe",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of Servings",
+                        "name": "servings",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Recipe"
                         }
                     }
                 }
@@ -357,29 +385,33 @@ const docTemplate = `{
                 }
             }
         },
-        "/recipes/rand": {
+        "/recipes/{recipe}/pictures": {
             "get": {
-                "description": "A random recipe is returned",
+                "description": "Get all pictures of a recipe",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Recipes"
                 ],
-                "summary": "Get a Random models.Recipe",
+                "summary": "Get all pictures of a recipe",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Number of Servings",
-                        "name": "servings",
-                        "in": "query"
+                        "type": "string",
+                        "description": "models.Recipe ID",
+                        "name": "recipe",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Recipe"
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/models.RecipePicture"
+                            }
                         }
                     }
                 }

@@ -74,22 +74,25 @@ func (rAPI *API) prepareV1API() {
 	v1.POST("/recipes", rAPI.postRecipes)
 
 	// GET a random recipe
-	v1.GET("/recipes/rand", rAPI.getRandomRecipe)
+	v1.GET("/recipes-random", rAPI.getRandomRecipe)
 
 	// GET the number of recipe
-	v1.GET("/recipes/num", rAPI.getNumberOfRecipes)
+	v1.GET("/recipes-count", rAPI.getNumberOfRecipes)
 
 	// GET a specific recipe
-	v1.GET("/recipes/r/:recipe", rAPI.getRecipe)
+	v1.GET("/recipes/:recipe", rAPI.getRecipe)
 
 	// PUT updates a specific recipe
-	v1.PUT("/recipes/r/:recipe", rAPI.putRecipe)
+	v1.PUT("/recipes/:recipe", rAPI.putRecipe)
 
 	// DELETE removes a specific recipe
-	v1.DELETE("/recipes/r/:recipe", rAPI.deleteRecipe)
+	v1.DELETE("/recipes/:recipe", rAPI.deleteRecipe)
 
 	// GET a specific recipe's picture
-	v1.GET("/recipes/r/:recipe/pictures/:name", rAPI.getRecipePicture)
+	v1.GET("/recipes/:recipe/pictures/:name", rAPI.getRecipePicture)
+
+	// GET all pictures of a specific recipe
+	v1.GET("/recipes/:recipe/pictures", rAPI.getRecipePictures)
 
 }
 
@@ -99,7 +102,7 @@ func (rAPI *API) prepareV1API() {
 // @Tags Recipes
 // @Produce json
 // @Success 200 {integer} number
-// @Router /recipes/num [get]
+// @Router /recipes-count [get]
 func (rAPI *API) getNumberOfRecipes(c *server.APICallContext) {
 	num := rAPI.recipes.Num()
 	log.Debugf("Number of Recipes %v", num)
@@ -133,7 +136,7 @@ func (rAPI *API) getRecipePicture(c *server.APICallContext) {
 // @Param servings query int false "Number of Servings"
 // @Produce json
 // @Success 200 {object} models.Recipe
-// @Router /recipes/rand [get]
+// @Router /recipes-random [get]
 func (rAPI *API) getRandomRecipe(c *server.APICallContext) {
 	query := c.Request.URL.Query()
 	servings := extractServings(query)
@@ -150,6 +153,26 @@ func (rAPI *API) getRandomRecipe(c *server.APICallContext) {
 	}
 
 	c.JSON(http.StatusOK, recipe)
+}
+
+// getRecipePictures example
+// @Summary Get all pictures of a recipe
+// @Description Get all pictures of a recipe
+// @Tags Recipes
+// @Param recipe path string true "models.Recipe ID"
+// @Produce json
+// @Success 200 {object} map[string]models.RecipePicture
+// @Router /recipes/{recipe}/pictures [get]
+func (rAPI *API) getRecipePictures(c *server.APICallContext) {
+	recipeID := models.NewRecipeIDFromString(c.Param("recipe"))
+	recipe := rAPI.recipes.Get(recipeID)
+	if recipe.ID == models.InvalidRecipeID() {
+		c.JSON(http.StatusNotFound, server.H{"error": "recipe not found", "id": recipeID})
+		return
+	}
+
+	pictures := rAPI.recipes.Pictures(recipeID)
+	c.JSON(http.StatusOK, pictures)
 }
 
 // getRecipes example
